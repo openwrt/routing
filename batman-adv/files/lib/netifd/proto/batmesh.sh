@@ -1,35 +1,40 @@
 #!/bin/sh
 
+. /lib/functions.sh
+. ../netifd-proto.sh
+init_proto "$@"
+
 bat_load_module()
 {
 	[ -d "/sys/module/batman_adv/" ] && return
-
-	. /lib/functions.sh
 	load_modules /etc/modules.d/*-crc16 /etc/modules.d/*-crypto* /etc/modules.d/*-lib-crc* /etc/modules.d/*-batman-adv*
 }
 
-bat_config()
-{
-	local mesh="$1"
+proto_batmesh_init_config() {
+	proto_config_add_string "aggregated_ogms"
+	proto_config_add_string "ap_isolation"
+	proto_config_add_string "bonding"
+	proto_config_add_string "bridge_loop_avoidance"
+	proto_config_add_string "distributed_arp_table"
+	proto_config_add_string "fragmentation"
+	proto_config_add_string "gw_bandwidth"
+	proto_config_add_string "gw_mode"
+	proto_config_add_string "gw_sel_class"
+	proto_config_add_string "hop_penalty"
+	proto_config_add_string "network_coding"
+	proto_config_add_string "log_level"
+	proto_config_add_string "orig_interval"
+	proto_config_add_string "vis_mode"
+}
+
+proto_batmesh_setup() {
+	local config="$1"
+	local mesh="$2"
 	local aggregated_ogms ap_isolation bonding bridge_loop_avoidance distributed_arp_table fragmentation
 	local gw_bandwidth gw_mode gw_sel_class hop_penalty network_coding log_level orig_interval vis_mode
-
-	config_get aggregated_ogms "$mesh" aggregated_ogms
-	config_get ap_isolation "$mesh" ap_isolation
-	config_get bonding "$mesh" bonding
-	config_get bridge_loop_avoidance "$mesh" bridge_loop_avoidance
-	config_get distributed_arp_table "$mesh" distributed_arp_table
-	config_get fragmentation "$mesh" fragmentation
-	config_get gw_bandwidth "$mesh" gw_bandwidth
-	config_get gw_mode "$mesh" gw_mode
-	config_get gw_sel_class "$mesh" gw_sel_class
-	config_get hop_penalty "$mesh" hop_penalty
-	config_get network_coding "$mesh" network_coding
-	config_get log_level "$mesh" log_level
-	config_get orig_interval "$mesh" orig_interval
-	config_get vis_mode "$mesh" vis_mode
-
-	[ ! -f "/sys/class/net/$mesh/mesh/orig_interval" ] && echo "batman-adv mesh $mesh does not exist - check your interface configuration" && return 1
+	
+	json_get_vars aggregated_ogms ap_isolation bonding bridge_loop_avoidance distributed_arp_table fragmentation
+	json_get_vars gw_bandwidth gw_mode gw_sel_class hop_penalty network_coding log_level orig_interval vis_mode
 
 	[ -n "$aggregate_ogms" ] && echo $aggregate_ogms > /sys/class/net/$mesh/mesh/aggregate_ogms
 	[ -n "$ap_isolation" ] && echo $ap_isolation > /sys/class/net/$mesh/mesh/ap_isolation
@@ -45,4 +50,9 @@ bat_config()
 	[ -n "$log_level" ] && echo $log_level > /sys/class/net/$mesh/mesh/log_level 2>&-
 	[ -n "$orig_interval" ] && echo $orig_interval > /sys/class/net/$mesh/mesh/orig_interval
 	[ -n "$vis_mode" ] && echo $vis_mode > /sys/class/net/$mesh/mesh/vis_mode
+
+	proto_init_update "$mesh" 1
+	proto_send_update "$config"
 }
+
+add_protocol batmesh

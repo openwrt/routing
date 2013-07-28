@@ -4,12 +4,6 @@
 . ../netifd-proto.sh
 init_proto "$@"
 
-bat_load_module()
-{
-	[ -d "/sys/module/batman_adv/" ] && return
-	load_modules /etc/modules.d/*-crc16 /etc/modules.d/*-crypto* /etc/modules.d/*-lib-crc* /etc/modules.d/*-batman-adv*
-}
-
 proto_batmesh_init_config() {
 	proto_config_add_string "aggregated_ogms"
 	proto_config_add_string "ap_isolation"

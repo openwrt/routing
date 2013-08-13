@@ -1,0 +1,38 @@
+#!/bin/sh
+# Copyright (C) 2012 Gui Iribarren
+# This is free software, licensed under the GNU General Public License v3.
+
+local batmeshes="$(uci -q show batman-adv \
+                 | sed -ne 's/^batman-adv.\([^.]*\)=mesh$/\1/p')"
+
+for mesh in $batmeshes ; do
+
+  local batifaces="$(uci -q get batman-adv.$mesh.interfaces)"
+
+  for iface in $batifaces ; do
+    if [ "$(uci -q get "network.$iface")" == "interface" ] ; then
+      uci set network.$iface.proto=batadv
+      uci set network.$iface.mesh=$mesh
+      uci set batman-adv.$mesh.interfaces="$(echo $batifaces | sed "s/\<$iface\>//g")"
+    fi
+  done
+
+  local batparams="aggregated_ogms ap_isolation bonding bridge_loop_avoidance \
+              distributed_arp_table fragmentation gw_bandwidth gw_mode gw_sel_class \
+              hop_penalty network_coding log_level orig_interval vis_mode"
+
+  for param in $batparams ; do
+    local value="$(uci -q get batman-adv.$mesh.$param)"
+    if [ "$value" ] ; then
+      uci set network.$mesh=interface
+      uci set network.$mesh.proto=batmesh
+      uci set network.$mesh.ifname=$mesh
+      uci set network.$mesh.$param=$value
+      uci delete batman-adv.$mesh.$param
+    fi
+  done
+
+  uci commit network
+  uci commit batman-adv
+done
+

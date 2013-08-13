@@ -124,11 +124,10 @@ define Build/Clean
 endef
 
 define KernelPackage/batman-adv/install
-	$(INSTALL_DIR) $(1)/etc/config $(1)/etc/hotplug.d/net $(1)/etc/hotplug.d/iface $(1)/lib/batman-adv $(1)/usr/sbin $(1)/lib/netifd/proto
-	$(INSTALL_DATA) ./files/etc/config/batman-adv $(1)/etc/config
-	$(INSTALL_DATA) ./files/lib/batman-adv/config.sh $(1)/lib/batman-adv
-	$(INSTALL_BIN) ./files/etc/hotplug.d/net/99-batman-adv $(1)/etc/hotplug.d/net
+	$(INSTALL_DIR) $(1)/usr/sbin $(1)/lib/netifd/proto
 	$(INSTALL_BIN) ./files/lib/netifd/proto/batadv.sh $(1)/lib/netifd/proto
+	$(INSTALL_BIN) ./files/lib/netifd/proto/batmesh.sh $(1)/lib/netifd/proto
+	$(INSTALL_BIN) ./files/etc/uci-defaults/batadv-netifd-uci-migrations $(1)/etc/uci-defaults/
 	$(BATCTL_INSTALL)
 endef
 

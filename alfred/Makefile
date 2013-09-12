@@ -12,7 +12,7 @@ include $(TOPDIR)/rules.mk
 #
 PKG_NAME:=alfred
 PKG_VERSION:=2013.3.0
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_MD5SUM:=018ef6262cdd11e900af31d71a864b13
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -74,6 +74,8 @@ define Package/alfred/install
 	$(INSTALL_BIN) ./files/alfred.init $(1)/etc/init.d/alfred
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/alfred.config $(1)/etc/config/alfred
+	$(INSTALL_DIR) $(1)/etc/alfred
+	$(INSTALL_BIN) ./files/bat-hosts.lua $(1)/etc/alfred/bat-hosts.lua
 endef
 
 $(eval $(call BuildPackage,alfred))

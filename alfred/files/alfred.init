@@ -73,6 +73,7 @@ start()
 	fi
 
 	if [ "$run_facters" = "1" ]; then
+		( for file in $facters_dir/* ; do [ -x $file ] && $file ; done )
 		if ! ( grep -q "for file in $facters_dir/\* ; do " /etc/crontabs/root 2>/dev/null ) ; then
 			echo "*/5 * * * * ( for file in $facters_dir/* ; do [ -x \$file ] && \$file ; done )" >> /etc/crontabs/root
 			/etc/init.d/cron enable

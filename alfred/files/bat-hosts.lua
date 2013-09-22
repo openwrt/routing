@@ -11,13 +11,12 @@ function get_hostname()
 end
 
 function get_interfaces_names()
-  local i, ret
-  i = 0
-  ret = {}
+  local ret = {}
+
   for name in io.popen("ls -1 /sys/class/net/"):lines() do
+    -- skip loopback ("lo") mac (00:00:00:00:00:00)
     if name ~= "lo" then
-      i = i + 1
-      ret[i] = name
+      table.insert(ret, name)
     end
   end
 
@@ -41,7 +40,6 @@ local function generate_bat_hosts()
 
   local hostname = get_hostname()
 
-  -- skip loopback ("lo") mac (00:00:00:00:00:00)
   for n, i in ipairs(get_interfaces_names()) do
     local address = get_interface_address(i)
     ifaces[address] = i

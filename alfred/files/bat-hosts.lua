@@ -1,8 +1,37 @@
 #!/usr/bin/lua
 
-local nxo = require "nixio"
-
 local type_id = 64  -- bat-hosts
+
+function get_hostname()
+  local hostfile = io.open("/proc/sys/kernel/hostname", "r")
+  local ret_string = hostfile:read("*a")
+  ret_string = string.gsub(ret_string, "\n", "")
+  hostfile:close()
+  return ret_string
+end
+
+function get_interfaces_names()
+  local i, ret
+  i = 0
+  ret = {}
+  for name in io.popen("ls -1 /sys/class/net/"):lines() do
+    if name ~= "lo" then
+      i = i + 1
+      ret[i] = name
+    end
+  end
+
+  return ret
+end
+
+function get_interface_address(name)
+  local addressfile = io.open("/sys/class/net/"..name.."/address", "r")
+  local ret_string = addressfile:read("*a")
+  ret_string = string.gsub(ret_string, "\n", "")
+  addressfile:close()
+  return ret_string
+end
+
 
 local function generate_bat_hosts()
 -- get hostname and interface macs/names
@@ -10,14 +39,12 @@ local function generate_bat_hosts()
   local n, i
   local ifaces, ret = {}, {}
 
-  local hostname = nxo.uname().nodename
+  local hostname = get_hostname()
 
   -- skip loopback ("lo") mac (00:00:00:00:00:00)
-  for n, i in ipairs(nxo.getifaddrs()) do
-    if i.addr:match("%x%x:%x%x:%x%x:%x%x:%x%x:%x%x")
-    and not i.addr:match("00:00:00:00:00:00") then
-      ifaces[i.addr] = i.name:match("[^:]+")
-    end
+  for n, i in ipairs(get_interfaces_names()) do
+    local address = get_interface_address(i)
+    ifaces[address] = i
   end
 
   for mac, iname in pairs(ifaces) do

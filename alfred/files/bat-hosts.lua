@@ -82,7 +82,7 @@ local function write_bat_hosts(rows)
 
   -- try to make a symlink in /etc pointing to /tmp,
   -- if it exists, ln will do nothing.
-  os.execute("ln -ns /tmp/bat-hosts /etc/bat-hosts")
+  os.execute("ln -ns /tmp/bat-hosts /etc/bat-hosts 2>/dev/null")
 end
 
 local function receive_bat_hosts()

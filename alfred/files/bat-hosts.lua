@@ -14,10 +14,7 @@ function get_interfaces_names()
   local ret = {}
 
   for name in io.popen("ls -1 /sys/class/net/"):lines() do
-    -- skip loopback ("lo") mac (00:00:00:00:00:00)
-    if name ~= "lo" then
-      table.insert(ret, name)
-    end
+    table.insert(ret, name)
   end
 
   return ret
@@ -46,7 +43,9 @@ local function generate_bat_hosts()
   end
 
   for mac, iname in pairs(ifaces) do
-    table.insert(ret, mac.." "..hostname.."_"..iname.."\n")
+    if mac:match("^%x%x:%x%x:%x%x:%x%x:%x%x:%x%x$") and not mac:match("00:00:00:00:00:00") then
+      table.insert(ret, mac.." "..hostname.."_"..iname.."\n")
+    end
   end
 
   return ret

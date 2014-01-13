@@ -10,11 +10,11 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batman-adv
 
-PKG_VERSION:=2013.1.0
-BATCTL_VERSION:=2013.1.0
-PKG_RELEASE:=3
-PKG_MD5SUM:=fe1fd32eddde1f91575d7a7ec21d5782
-BATCTL_MD5SUM:=767bf36c77c517e1d321169bf9a7fae5
+PKG_VERSION:=2013.4.0
+BATCTL_VERSION:=2013.4.0
+PKG_RELEASE:=1
+PKG_MD5SUM:=6590caa324709289e3cb142273a5ff57
+BATCTL_MD5SUM:=42e269cc710bbc9a8fd17628201d4258
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
@@ -57,18 +57,32 @@ MAKE_BATMAN_ADV_ARGS += \
 	CONFIG_BATMAN_ADV_DEBUG=$(if $(CONFIG_KMOD_BATMAN_ADV_DEBUG_LOG),y,n) \
 	CONFIG_BATMAN_ADV_BLA=$(if $(CONFIG_KMOD_BATMAN_ADV_BLA),y,n) \
 	CONFIG_BATMAN_ADV_DAT=$(if $(CONFIG_KMOD_BATMAN_ADV_DAT),y,n) \
+	CONFIG_BATMAN_ADV_NC=$(if $(CONFIG_KMOD_BATMAN_ADV_NC),y,n) \
 	REVISION="" all
 
-MAKE_BATCTL_ARGS += \
+# The linker can identify unused sections of a binary when each symbol is stored
+# in a separate section. This mostly removes unused linker sections and reduces 
+# the size by ~3% on mipsel.
+
+TARGET_CFLAGS  += -ffunction-sections -fdata-sections
+TARGET_LDFLAGS += -Wl,--gc-sections
+
+# Link-time optimization allows to move parts of the optimization from the single
+# source file to the global source view. This is done by emitting the GIMPLE
+# representation in each object file and analyzing it again during the link step.
+
+TARGET_CFLAGS  += -flto
+TARGET_LDFLAGS += -fuse-linker-plugin
+
+MAKE_BATCTL_ENV += \
+	CPPFLAGS="$(TARGET_CPPFLAGS)" \
 	CFLAGS="$(TARGET_CFLAGS)" \
-	CCFLAGS="$(TARGET_CFLAGS)" \
-	OFLAGS="$(TARGET_CFLAGS)" \
+	LDFLAGS="$(TARGET_LDFLAGS)"
+
+MAKE_BATCTL_ARGS += \
 	REVISION="" \
 	CC="$(TARGET_CC)" \
-	NODEBUG=1 \
-	UNAME="Linux" \
 	DESTDIR="$(PKG_INSTALL_DIR)" \
-	STRIP="/bin/true" \
 	batctl install
 
 ifneq ($(DEVELOPER)$(CONFIG_KMOD_BATMAN_ADV_BATCTL),)
@@ -81,7 +95,7 @@ $(eval $(call Download,batctl))
 
 BATCTL_EXTRACT = tar xzf "$(DL_DIR)/batctl-$(BATCTL_VERSION).tar.gz" -C "$(BUILD_DIR)/$(PKG_NAME)"
 BATCTL_PATCH = $(call Build/DoPatch,"$(PKG_BATCTL_BUILD_DIR)","$(PATCH_DIR)","*batctl*")
-BATCTL_BUILD = $(MAKE) -C $(PKG_BATCTL_BUILD_DIR) $(MAKE_BATCTL_ARGS)
+BATCTL_BUILD = $(MAKE_BATCTL_ENV) $(MAKE) -C $(PKG_BATCTL_BUILD_DIR) $(MAKE_BATCTL_ARGS)
 BATCTL_INSTALL = $(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/local/sbin/batctl $(1)/usr/sbin/
 endif
 
@@ -99,6 +113,13 @@ define Build/Patch
 	$(BATCTL_EXTRACT)
 	$(BATCTL_PATCH)
 endef
+
+define Build/Prepare
+	$(call Build/Prepare/Default)
+	$(SED) '/#define _NET_BATMAN_ADV_MAIN_H_/a\#undef CONFIG_MODULE_STRIPPED' \
+		$(PKG_BUILD_DIR)/main.h
+endef
+
 
 define Build/Compile
 	$(MAKE) -C "$(PKG_BUILD_DIR)" $(MAKE_BATMAN_ADV_ARGS)

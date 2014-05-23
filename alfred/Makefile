@@ -11,9 +11,9 @@ include $(TOPDIR)/rules.mk
 # The latest alfred git hash in PKG_REV can be obtained from http://git.open-mesh.org/alfred.git
 #
 PKG_NAME:=alfred
-PKG_VERSION:=2014.1.0
+PKG_VERSION:=2014.2.0
 PKG_RELEASE:=0
-PKG_MD5SUM:=aaee0fbbc3aa011ba9c0a1d3f3b2801e
+PKG_MD5SUM:=d9afaa2fb1f518938fef9ca8145a762c
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
@@ -73,7 +73,7 @@ define Package/alfred/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	cp -fpR  $(PKG_BUILD_DIR)/alfred $(1)/usr/sbin/
 	[ "x$(CONFIG_PACKAGE_ALFRED_VIS)" == "xy" ] && cp -fpR  $(PKG_BUILD_DIR)/vis/batadv-vis $(1)/usr/sbin/ ; true
-	[ "x$(CONFIG_PACKAGE_ALFRED_GPSD)" == "xy" ] && cp -fpR  $(PKG_BUILD_DIR)/vis/alfred-gpsd $(1)/usr/sbin/ ; true
+	[ "x$(CONFIG_PACKAGE_ALFRED_GPSD)" == "xy" ] && cp -fpR  $(PKG_BUILD_DIR)/gpsd/alfred-gpsd $(1)/usr/sbin/ ; true
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/alfred.init $(1)/etc/init.d/alfred
 	$(INSTALL_DIR) $(1)/etc/config

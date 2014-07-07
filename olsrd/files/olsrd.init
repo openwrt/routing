@@ -833,11 +833,17 @@ start() {
 			error "there is already an instance of $UCI_CONF_NAME running (pid: '$(cat $PID)'), not starting."
 			return 1
 		else
+			if [ "$UCI_CONF_NAME" == "olsrd6" ]; then
+				sysctl -w net.ipv6.bindv6only=1 > /dev/null
+			fi
 			service_start /usr/sbin/olsrd -f "$OLSRD_CONFIG_FILE" -nofork
 			sleep 1
 			service_check /usr/sbin/olsrd || {
 				log "startup-error: check via: '/usr/sbin/olsrd -f \"$OLSRD_CONFIG_FILE\" -nofork'"
 			}
+			if [ "$UCI_CONF_NAME" == "olsrd6" ]; then
+				sysctl -w net.ipv6.bindv6only="$bindv6only" > /dev/null
+			fi
 		fi
 	fi
 

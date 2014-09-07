@@ -54,6 +54,9 @@ define Package/babeld/install
 	$(INSTALL_CONF) ./files/babeld.config $(1)/etc/config/babeld
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/babeld.init $(1)/etc/init.d/babeld
+	$(INSTALL_DIR) $(1)/etc/hotplug.d
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/net
+	$(INSTALL_BIN) ./files/babeld.hotplug $(1)/etc/hotplug.d/net/30-babeld
 endef
 
 $(eval $(call BuildPackage,babeld))

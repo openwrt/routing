@@ -1,0 +1,7 @@
+#!/bin/sh
+
+[ "$ACTION" = add ] || exit 0
+
+logger -t babeld "Reloading babeld due to $ACTION of interface $INTERFACE"
+
+/etc/init.d/babeld enabled && /etc/init.d/babeld reload

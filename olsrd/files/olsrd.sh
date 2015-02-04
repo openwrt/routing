@@ -405,16 +405,7 @@ olsrd_write_olsrd() {
 
 	config_get ipversion "$cfg" IpVersion
 	if [ "$UCI_CONF_NAME" == "olsrd6" ]; then
-	        OLSRD_OLSRD_SCHEMA="$OLSRD_OLSRD_SCHEMA IpVersion=6"
-	        if [ "$ipversion" = "6and4" ]; then
-		        error "IpVersion 6and4 not supported in olsrd6"
-			return 1
-		fi
-	else
-	        if [ "$ipversion" = "6and4" ]; then
-		        OLSRD_IPVERSION_6AND4=1
-			config_set "$cfg" IpVersion '6'
-		fi
+		OLSRD_OLSRD_SCHEMA="$OLSRD_OLSRD_SCHEMA IpVersion=6"
 	fi
 	config_get smartgateway "$cfg" SmartGateway
 	config_get smartgatewayuplink "$cfg" SmartGatewayUplink
@@ -639,7 +630,6 @@ olsrd_update_schema() {
 }
 
 olsrd_write_config() {
-	OLSRD_IPVERSION_6AND4=0
 	OLSRD_COUNT=0
 	config_foreach olsrd_write_olsrd olsrd
 	IPCCONNECT_COUNT=0

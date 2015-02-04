@@ -57,6 +57,25 @@ system_config() {
 	fi
 }
 
+olsrd_list_configured_interfaces()
+{
+	local i=0
+	local interface
+
+	while interface="$( uci -q get $OLSRD.@Interface[$i].interface )"; do {
+		case "$( uci -q get $OLSRD.@Interface[$i].ignore )" in
+			1|on|true|enabled|yes)
+				# is disabled
+			;;
+			*)
+				echo "$interface"	# e.g. 'lan'
+			;;
+		esac
+
+		i=$(( $i + 1 ))
+	} done
+}
+
 olsrd_find_config_file() {
 	local cfg="$1"
 	validate_varname "$cfg" || return 0

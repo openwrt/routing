@@ -1,10 +1,5 @@
 #!/bin/sh /etc/rc.common
-# Copyright (C) 2008-2013 OpenWrt.org
-
-START=65
-
-SERVICE_DAEMONIZE=1
-SERVICE_WRITE_PID=1
+# Copyright (C) 2008-2015 OpenWrt.org
 
 OLSRD_OLSRD_SCHEMA='ignore:internal config_file:internal DebugLevel=0 AllowNoInt=yes'
 OLSRD_IPCCONNECT_SCHEMA='ignore:internal Host:list Net:list2'
@@ -752,7 +747,7 @@ olsrd_setup_smartgw_rules() {
 	fi
 }
 
-start() {
+olsrd_generate_config() {
 	SYSTEM_HOSTNAME=
 	SYSTEM_LAT=
 	SYSTEM_LON=
@@ -784,23 +779,4 @@ start() {
 	fi
 
 	[ -z "$OLSRD_CONFIG_FILE" ] && return 1
-
-	SERVICE_PID_FILE="$PID"
-	if service_check /usr/sbin/olsrd; then
-		error "there is already an instance of $UCI_CONF_NAME running (pid: '$(cat $PID)'), not starting."
-		return 1
-	else
-		service_start /usr/sbin/olsrd -f "$OLSRD_CONFIG_FILE" -nofork
-		sleep 1
-		service_check /usr/sbin/olsrd || {
-			log "startup-error: check via: '/usr/sbin/olsrd -f \"$OLSRD_CONFIG_FILE\" -nofork'"
-		}
-	fi
-
-	olsrd_setup_smartgw_rules
-}
-
-stop() {
-	SERVICE_PID_FILE="$PID"
-	service_stop /usr/sbin/olsrd
 }

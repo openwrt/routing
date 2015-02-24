@@ -30,7 +30,6 @@ start_service() {
 
 service_triggers() {
 	# restart on ifup interface events
-	procd_add_reload_trigger $OLSRD
 	for n in $(olsrd_list_configured_interfaces $OLSRD); do
 		procd_add_reload_interface_trigger $n /etc/init.d/$OLSRD reload
 	done

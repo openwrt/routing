@@ -757,6 +757,7 @@ olsrd_setup_smartgw_rules() {
 }
 
 olsrd_generate_config() {
+	UCI_CONF_NAME="$1"
 	SYSTEM_HOSTNAME=
 	SYSTEM_LAT=
 	SYSTEM_LON=

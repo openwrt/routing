@@ -1,0 +1,148 @@
+Index: olsrd-0.6.8/lib/bmf/src/Address.c
+===================================================================
+--- olsrd-0.6.8.orig/lib/bmf/src/Address.c
++++ olsrd-0.6.8/lib/bmf/src/Address.c
+@@ -142,7 +142,11 @@ int IsOlsrOrBmfPacket(unsigned char* ipP
+ 
+   /* Go into the UDP header and check port number */
+   udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((ipPacket + ipHeaderLen));
++#ifdef __UCLIBC__
+   destPort = ntohs(udpHeader->dest);
++#else
++  destPort = ntohs(udpHeader->uh_dport);
++#endif
+ 
+   if (destPort == olsr_cnf->olsrport || destPort == BMF_ENCAP_PORT || destPort == 51698)
+       /* TODO: #define for 51698 */
+Index: olsrd-0.6.8/lib/bmf/src/Bmf.c
+===================================================================
+--- olsrd-0.6.8.orig/lib/bmf/src/Bmf.c
++++ olsrd-0.6.8/lib/bmf/src/Bmf.c
+@@ -1028,7 +1028,11 @@ BMF_handle_listeningFd(int skfd, void *d
+   }
+ 
+   udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((rxBuffer + headerLength));
++#ifdef __UCLIBC__
+   destPort = ntohs(udpHeader->dest);
++#else
++  destPort = ntohs(udpHeader->uh_dport);
++#endif
+   if (destPort != BMF_ENCAP_PORT)
+   {
+     /* Not BMF */
+Index: olsrd-0.6.8/lib/bmf/src/NetworkInterfaces.c
+===================================================================
+--- olsrd-0.6.8.orig/lib/bmf/src/NetworkInterfaces.c
++++ olsrd-0.6.8/lib/bmf/src/NetworkInterfaces.c
+@@ -50,6 +50,7 @@
+ #include <assert.h> /* assert() */
+ #include <net/if.h> /* socket(), ifreq, if_indextoname(), if_nametoindex() */
+ #include <netinet/in.h> /* htons() */
++#include <netinet/udp.h> /* struct udphdr */
+ #include <linux/if_ether.h> /* ETH_P_IP */
+ #include <linux/if_packet.h> /* packet_mreq, PACKET_MR_PROMISC, PACKET_ADD_MEMBERSHIP */
+ #include <linux/if_tun.h> /* IFF_TAP */
+@@ -1893,7 +1894,11 @@ void CheckAndUpdateLocalBroadcast(unsign
+ 
+       /* RFC 1624, Eq. 3: HC' = ~(~HC - m + m') */
+ 
++#ifdef __UCLIBC__
+       check = ntohs(udph->check);
++#else
++      check = ntohs(udph->uh_sum);
++#endif
+ 
+       check = ~ (~ check - ((origDaddr >> 16) & 0xFFFF) + ((newDaddr >> 16) & 0xFFFF));
+       check = ~ (~ check - (origDaddr & 0xFFFF) + (newDaddr & 0xFFFF));
+@@ -1901,7 +1906,11 @@ void CheckAndUpdateLocalBroadcast(unsign
+       /* Add carry */
+       check = check + (check >> 16);
+ 
++#ifdef __UCLIBC__
+       udph->check = htons(check);
++#else
++      udph->uh_sum = htons(check);
++#endif
+      } /* if */
+   } /* if */
+ } /* CheckAndUpdateLocalBroadcast */
+Index: olsrd-0.6.8/lib/mdns/src/mdns.c
+===================================================================
+--- olsrd-0.6.8.orig/lib/mdns/src/mdns.c
++++ olsrd-0.6.8/lib/mdns/src/mdns.c
+@@ -462,7 +462,11 @@ BmfPacketCaptured(
+       return;                   /* for */
+     }
+     udpHeader = (struct udphdr *)ARM_NOWARN_ALIGN(encapsulationUdpData + GetIpHeaderLength(encapsulationUdpData));
++#ifdef __UCLIBC__
+     destPort = ntohs(udpHeader->dest);
++#else
++    destPort = ntohs(udpHeader->uh_dport);
++#endif
+     if (destPort != 5353) {
+       return;
+     }
+@@ -498,7 +502,11 @@ BmfPacketCaptured(
+       return;                   /* for */
+     }
+     udpHeader = (struct udphdr *)ARM_NOWARN_ALIGN(encapsulationUdpData + 40);
++#ifdef __UCLIBC__
+     destPort = ntohs(udpHeader->dest);
++#else
++    destPort = ntohs(udpHeader->uh_dport);
++#endif
+     if (destPort != 5353) {
+       return;
+     }
+Index: olsrd-0.6.8/lib/p2pd/src/p2pd.c
+===================================================================
+--- olsrd-0.6.8.orig/lib/p2pd/src/p2pd.c
++++ olsrd-0.6.8/lib/p2pd/src/p2pd.c
+@@ -204,7 +204,11 @@ PacketReceivedFromOLSR(unsigned char *en
+           udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData +
+                                        GetIpHeaderLength(encapsulationUdpData)));
+           destAddr.v4.s_addr = ipHeader->ip_dst.s_addr;
++#ifdef __UCLIBC__
+           destPort = htons(udpHeader->dest);
++#else
++          destPort = htons(udpHeader->uh_dport);
++#endif
+           isInList = InUdpDestPortList(AF_INET, &destAddr, destPort);
+ #ifdef INCLUDE_DEBUG_OUTPUT
+           if (!isInList) {
+@@ -223,7 +227,11 @@ PacketReceivedFromOLSR(unsigned char *en
+         if (ip6Header->ip6_nxt == SOL_UDP && !IsIpv6Fragment(ip6Header)) {
+           udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
+           memcpy(&destAddr.v6, &ip6Header->ip6_dst, sizeof(struct in6_addr));
++#ifdef __UCLIBC__
+           destPort = htons(udpHeader->dest);
++#else
++          destPort = htons(udpHeader->uh_dport);
++#endif
+           isInList = InUdpDestPortList(AF_INET6, &destAddr, destPort);
+ #ifdef INCLUDE_DEBUG_OUTPUT
+           if (!isInList) {
+@@ -695,7 +703,11 @@ P2pdPacketCaptured(unsigned char *encaps
+ 
+     udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData +
+                                   GetIpHeaderLength(encapsulationUdpData)));
++#ifdef __UCLIBC__
+     destPort = ntohs(udpHeader->dest);
++#else
++    destPort = ntohs(udpHeader->uh_dport);
++#endif
+ 
+     if (!InUdpDestPortList(AF_INET, &dst, destPort)) {
+ #ifdef INCLUDE_DEBUG_OUTPUT
+@@ -739,7 +751,11 @@ P2pdPacketCaptured(unsigned char *encaps
+       return;
+ 
+     udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
++#ifdef __UCLIBC__
+     destPort = ntohs(udpHeader->dest);
++#else
++    destPort = ntohs(udpHeader->uh_dport);
++#endif
+ 
+     if (!InUdpDestPortList(AF_INET6, &dst, destPort)) {
+ #ifdef INCLUDE_DEBUG_OUTPUT

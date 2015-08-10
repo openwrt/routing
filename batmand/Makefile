@@ -72,7 +72,7 @@ Kernel gateway module for B.A.T.M.A.N. for better tunnel performance
 endef
 
 MAKE_BATMAND_ARGS += \
-	EXTRA_CFLAGS='$(TARGET_CFLAGS) $(PKG_EXTRA_CFLAGS)' \
+	EXTRA_CFLAGS='$(TARGET_CFLAGS) $(PKG_EXTRA_CFLAGS) -D_GNU_SOURCE' \
 	CCFLAGS="$(TARGET_CFLAGS)" \
 	OFLAGS="$(TARGET_CFLAGS)" \
 	REVISION="$(PKG_REV)" \

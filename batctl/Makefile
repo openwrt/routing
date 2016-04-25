@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batctl
 
-PKG_VERSION:=2014.4.0
+PKG_VERSION:=2016.1
 PKG_RELEASE:=1
-PKG_MD5SUM:=f3a14565699313258ee6ba3de783eb0a
+PKG_MD5SUM:=b98a6e3b45927315cd6d4efba4c1a1ff
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
+PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
 PKG_LICENSE:=GPL-2.0
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(PKG_NAME)-$(PKG_VERSION)
@@ -22,7 +22,7 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(PKG_NAME)-$(PKG_VERSION)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/batctl
-  URL:=http://www.open-mesh.org/
+  URL:=https://www.open-mesh.org/
   SECTION:=net
   CATEGORY:=Network
   DEPENDS:=+kmod-batman-adv +libnl-tiny +libc

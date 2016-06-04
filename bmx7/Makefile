@@ -28,12 +28,12 @@ PKG_NAME:=bmx7
 
 PKG_SOURCE_PROTO:=git
 
-PKG_SOURCE_URL:=git://bmx6.net/bmx6.git
-#PKG_SOURCE_URL:=git://github.com/axn/bmx6.git
+#PKG_SOURCE_URL:=git://bmx6.net/bmx6.git
+PKG_SOURCE_URL:=git://github.com/axn/bmx6.git
 #PKG_SOURCE_URL:=file:///usr/src/bmx6/bmx6.git
 
-PKG_REV:=22e7d56f44c703c49c2fd9b537456b458b772e20
-PKG_VERSION:=r2016050602
+PKG_REV:=41aabcb58f0bdb0c2e2794558de0cd7db9ff72b9
+PKG_VERSION:=r2016060405
 PKG_RELEASE:=4
 PKG_LICENSE:=GPL-2.0
 
@@ -82,7 +82,7 @@ endef
 define Package/bmx7-iwinfo
   $(call Package/bmx7/Default)
   DEPENDS:=bmx7 +libiwinfo
-  TITLE:=link characteristics plugin based on libiwinfo
+  TITLE:=link characteristics plugin based on libiwinfo (recommended!)
 endef
 
 define Package/bmx7-topology

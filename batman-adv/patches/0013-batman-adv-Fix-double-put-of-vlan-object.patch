@@ -1,0 +1,32 @@
+From: Ben Hutchings <ben@decadent.org.uk>
+Date: Fri, 3 Jun 2016 00:00:44 +0100
+Subject: [PATCH] batman-adv: Fix double-put of vlan object
+
+Commit a33d970d0b54 "batman-adv: Fix reference counting of vlan object
+for tt_local_entry") makes each batadv_tt_local_entry hold a single
+reference to a batadv_softif_vlan.  In case a new entry cannot be
+added to the hash table, the error path puts the reference, but the
+reference will also now be dropped by batadv_tt_local_entry_release().
+
+Fixes: a33d970d0b54 ("batman-adv: Fix reference counting of vlan object ...")
+Cc: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Acked-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/22bb8b894900064d3fb09032a47577e89fc30d7c
+---
+ net/batman-adv/translation-table.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c
+index 48adb91..5ed782b 100644
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -693,7 +693,6 @@ bool batadv_tt_local_add(struct net_device *soft_iface, const u8 *addr,
+ 	if (unlikely(hash_added != 0)) {
+ 		/* remove the reference for the hash */
+ 		batadv_tt_local_entry_put(tt_local);
+-		batadv_softif_vlan_put(vlan);
+ 		goto out;
+ 	}
+ 

@@ -1,0 +1,28 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 7 May 2016 09:50:44 +0200
+Subject: [PATCH] batman-adv: Add missing include for batadv_v_neigh_is_sob
+
+batadv_v_neigh_is_sob started to use false which is defined in
+linux/stddef.h.
+
+Fixes: 036aa7b7181e ("batman-adv: Avoid nullptr derefence in batadv_v_neigh_is_sob")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Marek Lindner <mareklindner@neomailbox.ch>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/9685688ae7dd85804aec2f6ce760611551fe9635
+---
+ net/batman-adv/bat_v.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/batman-adv/bat_v.c b/net/batman-adv/bat_v.c
+index 0caca2f..1f960c9 100644
+--- a/net/batman-adv/bat_v.c
++++ b/net/batman-adv/bat_v.c
+@@ -27,6 +27,7 @@
+ #include <linux/rculist.h>
+ #include <linux/rcupdate.h>
+ #include <linux/seq_file.h>
++#include <linux/stddef.h>
+ #include <linux/types.h>
+ #include <linux/workqueue.h>
+ 

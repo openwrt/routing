@@ -1,0 +1,58 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 28 May 2016 10:32:48 +0200
+Subject: [PATCH] batman-adv: Fix build against recent Debian Stretch kernels
+
+The kernels for Debian stretch require some special CFLAGS settings which
+are only correctly defined when NOSTDINC_FLAGS is defined inside the
+execution of the Makefile via kbuild. But batman-adv sets it currently
+outside to insert compatibility include headers and compat-sources.
+
+This can be avoided by making the top Makefile kbuild compatible and
+redefining the NOSTDINC_FLAGS when kbuild include this Makefile. The actual
+build of the batman-adv module is then done by adding the subdirectory to
+obj-y.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Tested-by: Martin Weinelt <martin@darmstadt.freifunk.net>
+
+Origin: https://git.open-mesh.org/batman-adv.git/commit/f8fd441e1e30f3a274c9bf44cc33372d4065cbb6
+---
+ Makefile | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 5d2c058..2568fb2 100644
+--- a/Makefile
++++ b/Makefile
+@@ -43,7 +43,7 @@ RM ?= rm -f
+ REVISION= $(shell	if [ -d "$(PWD)/.git" ]; then \
+ 				echo $$(git --git-dir="$(PWD)/.git" describe --always --dirty --match "v*" |sed 's/^v//' 2> /dev/null || echo "[unknown]"); \
+ 			fi)
+-export NOSTDINC_FLAGS := \
++NOSTDINC_FLAGS += \
+ 	-I$(PWD)/compat-include/ \
+ 	-include $(PWD)/compat.h \
+ 	$(CFLAGS)
+@@ -52,8 +52,12 @@ ifneq ($(REVISION),)
+ NOSTDINC_FLAGS += -DBATADV_SOURCE_VERSION=\"$(REVISION)\"
+ endif
+ 
++obj-y += net/batman-adv/
++
+ BUILD_FLAGS := \
+-	M=$(PWD)/net/batman-adv \
++	M=$(PWD) \
++	PWD=$(PWD) \
++	REVISION=$(REVISION) \
+ 	CONFIG_BATMAN_ADV=m \
+ 	CONFIG_BATMAN_ADV_DEBUG=$(CONFIG_BATMAN_ADV_DEBUG) \
+ 	CONFIG_BATMAN_ADV_BLA=$(CONFIG_BATMAN_ADV_BLA) \
+@@ -61,7 +65,7 @@ BUILD_FLAGS := \
+ 	CONFIG_BATMAN_ADV_NC=$(CONFIG_BATMAN_ADV_NC) \
+ 	CONFIG_BATMAN_ADV_MCAST=$(CONFIG_BATMAN_ADV_MCAST) \
+ 	CONFIG_BATMAN_ADV_BATMAN_V=$(CONFIG_BATMAN_ADV_BATMAN_V) \
+-	INSTALL_MOD_DIR=updates/net/batman-adv/
++	INSTALL_MOD_DIR=updates/
+ 
+ all: config
+ 	$(MAKE) -C $(KERNELPATH) $(BUILD_FLAGS)	modules

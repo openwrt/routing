@@ -1,0 +1,46 @@
+From: Florian Westphal <fw@strlen.de>
+Date: Tue, 10 May 2016 23:17:59 +0200
+Subject: [PATCH] batman-adv: fix skb deref after free
+
+batadv_send_skb_to_orig() calls dev_queue_xmit() so we can't use skb->len.
+
+Fixes: d28785996ad8 ("batman-adv: network coding - buffer unicast packets before forward")
+
+Signed-off-by: Florian Westphal <fw@strlen.de>
+Reviewed-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Marek Lindner <mareklindner@neomailbox.ch>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/6863d3b59fd1f1bef3c4b86707a0b1c5d21e0a07
+---
+ net/batman-adv/routing.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/net/batman-adv/routing.c b/net/batman-adv/routing.c
+index b781bf7..0c0c30e 100644
+--- a/net/batman-adv/routing.c
++++ b/net/batman-adv/routing.c
+@@ -601,6 +601,7 @@ static int batadv_route_unicast_packet(struct sk_buff *skb,
+ 	struct batadv_unicast_packet *unicast_packet;
+ 	struct ethhdr *ethhdr = eth_hdr(skb);
+ 	int res, hdr_len, ret = NET_RX_DROP;
++	unsigned int len;
+ 
+ 	unicast_packet = (struct batadv_unicast_packet *)skb->data;
+ 
+@@ -641,6 +642,7 @@ static int batadv_route_unicast_packet(struct sk_buff *skb,
+ 	if (hdr_len > 0)
+ 		batadv_skb_set_priority(skb, hdr_len);
+ 
++	len = skb->len;
+ 	res = batadv_send_skb_to_orig(skb, orig_node, recv_if);
+ 
+ 	/* translate transmit result into receive result */
+@@ -648,7 +650,7 @@ static int batadv_route_unicast_packet(struct sk_buff *skb,
+ 		/* skb was transmitted and consumed */
+ 		batadv_inc_counter(bat_priv, BATADV_CNT_FORWARD);
+ 		batadv_add_counter(bat_priv, BATADV_CNT_FORWARD_BYTES,
+-				   skb->len + ETH_HLEN);
++				   len + ETH_HLEN);
+ 
+ 		ret = NET_RX_SUCCESS;
+ 	} else if (res == NET_XMIT_POLICED) {

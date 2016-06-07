@@ -1,0 +1,45 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 28 May 2016 14:38:26 +0200
+Subject: [PATCH] batman-adv: Clean up untagged vlan when destroying via rtnl-link
+
+The untagged vlan object is only destroyed when the interface is removed
+via the legacy sysfs interface. But it also has to be destroyed when the
+standard rtnl-link interface is used.
+
+Fixes: 952cebb57518 ("batman-adv: add per VLAN interface attribute framework")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Cc: Antonio Quartulli <a@unstable.cc>
+
+Origin: https://git.open-mesh.org/batman-adv.git/commit/e721749d57ff57d6df4017d62797626eab9902f1
+---
+ net/batman-adv/soft-interface.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interface.c
+index 8a136b6..3710620 100644
+--- a/net/batman-adv/soft-interface.c
++++ b/net/batman-adv/soft-interface.c
+@@ -1017,7 +1017,9 @@ void batadv_softif_destroy_sysfs(struct net_device *soft_iface)
+ static void batadv_softif_destroy_netlink(struct net_device *soft_iface,
+ 					  struct list_head *head)
+ {
++	struct batadv_priv *bat_priv = netdev_priv(soft_iface);
+ 	struct batadv_hard_iface *hard_iface;
++	struct batadv_softif_vlan *vlan;
+ 
+ 	list_for_each_entry(hard_iface, &batadv_hardif_list, list) {
+ 		if (hard_iface->soft_iface == soft_iface)
+@@ -1025,6 +1027,13 @@ static void batadv_softif_destroy_netlink(struct net_device *soft_iface,
+ 							BATADV_IF_CLEANUP_KEEP);
+ 	}
+ 
++	/* destroy the "untagged" VLAN */
++	vlan = batadv_softif_vlan_get(bat_priv, BATADV_NO_FLAGS);
++	if (vlan) {
++		batadv_softif_destroy_vlan(bat_priv, vlan);
++		batadv_softif_vlan_put(vlan);
++	}
++
+ 	batadv_sysfs_del_meshif(soft_iface);
+ 	unregister_netdevice_queue(soft_iface, head);
+ }

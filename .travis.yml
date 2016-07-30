@@ -1,0 +1,13 @@
+language: bash
+
+install:
+  - ./tests/test_ar71xx_15.05.sh
+
+script:
+  - make -C tests/OpenWrt-SDK-15.05.1-ar71xx-generic_gcc-4.8-linaro_uClibc-0.9.33.2.Linux-x86_64 world V=99 -j1
+
+branches:
+  only:
+    - for-15.05
+
+

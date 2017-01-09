@@ -61,7 +61,7 @@ define Package/bmx7/Default
   TITLE:=BMX7 layer 3 routing daemon
   URL:=http://bmx6.net/
   MAINTAINER:=Axel Neumann <neumann@cgws.de>
-  DEPENDS:=+zlib +libpolarssl +libiwinfo
+  DEPENDS:=+zlib +libpolarssl +libiwinfo @BROKEN
 endef
 
 define Package/bmx7/description

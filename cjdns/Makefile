@@ -20,7 +20,7 @@ PKG_NAME:=cjdns
 PKG_VERSION:=0.17
 PKG_RELEASE:=3
 
-PKG_SOURCE_URL:=https://github.com/hyperboria/cjdns.git
+PKG_SOURCE_URL:=git://github.com/hyperboria/cjdns.git
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=40e87d9419c19063e772e39c7c59a8a8771c5ee8
 PKG_LICENSE:=GPL-3.0

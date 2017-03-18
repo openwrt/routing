@@ -31,9 +31,10 @@ PKG_SOURCE_PROTO:=git
 #PKG_SOURCE_URL:=git://bmx6.net/bmx6.git
 PKG_SOURCE_URL:=git://github.com/axn/bmx6.git
 
-PKG_REV:=8b0585e84ca8a0110bd4587e19192beda1ba3238
-PKG_VERSION:=r2014052301
+PKG_REV:=d9b985d8838ad6fe6d5c79f858a588b96abcf306
+PKG_VERSION:=r2017021601
 PKG_RELEASE:=4
+PKG_LICENSE:=GPL-2.0
 
 PKG_SOURCE_VERSION:=$(PKG_REV)
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
@@ -48,7 +49,7 @@ TARGET_CFLAGS += $(FPIC)
 MAKE_ARGS += \
 	EXTRA_CFLAGS="$(TARGET_CFLAGS) -I. -I$(STAGING_DIR)/usr/include -DNO_DEBUG_ALL -DNO_DEBUG_DUMP" \
 	EXTRA_LDFLAGS="-L$(STAGING_DIR)/usr/lib " \
-	REVISION_VERSION="$(PKG_REV)" \
+	GIT_REV="$(PKG_REV)" \
 	CC="$(TARGET_CC)" \
 	INSTALL_DIR="$(PKG_INSTALL_DIR)" \
 	STRIP="/bin/false" \
@@ -81,8 +82,8 @@ endef
 
 define Package/bmx6-json
   $(call Package/bmx6/Default)
-  DEPENDS:=bmx6 +libjson
-  TITLE:=json plugin based on jsonc
+  DEPENDS:=bmx6 +libjson-c
+  TITLE:=json plugin based on json-c
 endef
 
 define Package/bmx6-sms

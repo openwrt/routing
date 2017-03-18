@@ -7,13 +7,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ohybridproxy
-PKG_SOURCE_VERSION:=3a9489615c488afa85a823a40aea89b39bbac391
-PKG_VERSION:=2014-06-19-$(PKG_SOURCE_VERSION)
+PKG_SOURCE_VERSION:=8a28ae92c97099e771c9ede5641e3782ae809c27
+PKG_VERSION:=2016-06-28-$(PKG_SOURCE_VERSION)
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git://github.com/sbyx/ohybridproxy.git
 PKG_MAINTAINER:=Steven Barth <cyrus@openwrt.org>
+PKG_LICENSE:=GPL-2.0
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
@@ -50,3 +51,24 @@ define Package/ohybridproxy/install
 endef
 
 $(eval $(call BuildPackage,ohybridproxy))
+
+define Package/zonestitcher
+  SECTION:=net
+  CATEGORY:=Network
+  SUBMENU:=IP Addresses and Names
+  TITLE:=dynamically combine multiple DNS zones into one
+  URL:=https://github.com/sbyx/ohybridproxy
+  DEPENDS+=+libubox
+endef
+
+define Package/zonestitcher/description
+ This package provides a statically configured daemon for translating DNS
+ requests to Multicast DNS and back again.
+endef
+
+define Package/zonestitcher/install
+	$(INSTALL_DIR) $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/zonestitcher $(1)/usr/sbin/
+endef
+
+$(eval $(call BuildPackage,zonestitcher))

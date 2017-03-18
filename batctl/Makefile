@@ -9,24 +9,26 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batctl
 
-PKG_VERSION:=2014.2.0
-PKG_RELEASE:=1
-PKG_MD5SUM:=c196cf95b7324d9123b701a56b06b31d
+PKG_VERSION:=2017.0
+PKG_RELEASE:=0
+PKG_MD5SUM:=17c0ac0746f1994ddacc88ebf48e5aec
+PKG_HASH:=c0bb1127d6070b46abeb8d6a63d1150d71fa85f87f9a846873b649a21934c686
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
+PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
+PKG_LICENSE:=GPL-2.0
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/batctl
-  URL:=http://www.open-mesh.org/
+  URL:=https://www.open-mesh.org/
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+kmod-batman-adv +libnl-tiny +libc
+  DEPENDS:=+kmod-batman-adv +libnl-tiny +libc +librt
   TITLE:=B.A.T.M.A.N. Advanced user space configuration tool batctl
-  MAINTAINER:=Marek Lindner <mareklindner@neomailbox.ch>
+  MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
 endef
 
 define Package/batctl/description
@@ -54,7 +56,8 @@ MAKE_BATCTL_ENV += \
         CPPFLAGS="$(TARGET_CPPFLAGS)" \
         CFLAGS="$(TARGET_CFLAGS)" \
         LDFLAGS="$(TARGET_LDFLAGS)" \
-        LIBNL_NAME="libnl-tiny"
+        LIBNL_NAME="libnl-tiny" \
+        LIBNL_GENL_NAME="libnl-tiny"
 
 MAKE_BATCTL_ARGS += \
         REVISION="$(PKG_BATCTL_SHORTREV)" \

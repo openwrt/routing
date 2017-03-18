@@ -8,24 +8,32 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=miniupnpd
-PKG_VERSION:=1.8.20140523
-PKG_RELEASE:=4
+PKG_VERSION:=2.0.20161216
+PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=http://miniupnp.free.fr/files
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_MD5SUM:=fcac89e11da091b1cc61f43d83c9e4f5
+PKG_MD5SUM:=9e73d50ac830b5e08b6eb1df4e4c917833a5ab54351809f615d15d0f30cdeef3
 
 PKG_MAINTAINER:=Markus Stenberg <fingon@iki.fi>
+PKG_LICENSE:=BSD-3-Clause
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/miniupnpd
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+iptables +libip4tc +IPV6:libip6tc +IPV6:ip6tables +libnfnetlink
+  DEPENDS:=+iptables +libip4tc +IPV6:libip6tc +IPV6:ip6tables +libuuid
   TITLE:=Lightweight UPnP IGD, NAT-PMP & PCP daemon
   SUBMENU:=Firewall
   URL:=http://miniupnp.free.fr/
+endef
+
+define Package/miniupnpd/config
+config MINIUPNPD_IGDv2
+	bool
+	default y
+	prompt "Enable IGDv2"
 endef
 
 define Package/miniupnpd/conffiles
@@ -45,16 +53,20 @@ endef
 
 define Build/Prepare
 	$(call Build/Prepare/Default)
-	echo "OpenWrt/$(OPENWRTVERSION)" | tr \(\)\  _ >$(PKG_BUILD_DIR)/os.openwrt
+	echo "OpenWrt" | tr \(\)\  _ >$(PKG_BUILD_DIR)/os.openwrt
 endef
 
 MAKE_FLAGS += \
-	TEST=0 \
+	TARGET_OPENWRT=1 TEST=0 \
 	LIBS="" \
-	CC="$(TARGET_CC) -DIPTABLES_143 -lnfnetlink -lip4tc $(if $(CONFIG_IPV6),-lip6tc)" \
-	CONFIG_OPTIONS="$(if $(CONFIG_IPV6),--ipv6) --leasefile" \
+	CC="$(TARGET_CC) -DIPTABLES_143 \
+		-lip4tc $(if $(CONFIG_IPV6),-lip6tc) -luuid" \
+	CONFIG_OPTIONS="--portinuse --leasefile \
+		$(if $(CONFIG_IPV6),--ipv6) \
+		$(if $(CONFIG_MINIUPNPD_IGDv2),--igd2)" \
 	-f Makefile.linux \
 	miniupnpd
+
 
 define Package/miniupnpd/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/init.d $(1)/etc/config $(1)/etc/uci-defaults $(1)/etc/hotplug.d/iface $(1)/usr/share/miniupnpd

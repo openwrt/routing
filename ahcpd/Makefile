@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2007-2011 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
@@ -14,6 +14,7 @@ PKG_RELEASE:=2
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://www.pps.univ-paris-diderot.fr/~jch/software/files/
 PKG_MD5SUM:=a1a610bf20965aa522cd766bf3d5829a
+PKG_LICENSE:=MIT
 
 
 include $(INCLUDE_DIR)/package.mk
@@ -24,7 +25,7 @@ define Package/ahcpd
   TITLE:=Ad-Hoc Configuration Protocol daemon
   URL:=http://www.pps.univ-paris-diderot.fr/~jch/software/ahcp/
   MAINTAINER:=Gabriel Kerneis <gabriel@kerneis.info>
-  DEPENDS:=+kmod-ipv6 +ip +librt
+  DEPENDS:=@IPV6 +ip +librt
 endef
 
 define Package/ahcpd/description

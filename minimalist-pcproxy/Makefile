@@ -7,13 +7,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=minimalist-pcproxy
-PKG_SOURCE_VERSION:=9e41b6b698ff719960299711707785ffa0b250ab
-PKG_VERSION:=2014-09-02-$(PKG_SOURCE_VERSION)
-PKG_RELEASE:=2
+PKG_SOURCE_VERSION:=2d6d1b0b0a3b79a9b4a9b0a7606a84600a967bcb
+PKG_VERSION:=2015-01-12-$(PKG_SOURCE_VERSION)
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git://github.com/fingon/minimalist-pcproxy.git
 PKG_MAINTAINER:=Markus Stenberg <fingon@iki.fi>
+PKG_LICENSE:=GPL-2.0
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
@@ -26,7 +27,7 @@ define Package/minimalist-pcproxy
   CATEGORY:=Network
   TITLE:=Lightweight PCP proxy
   URL:=https://github.com/fingon/minimalist-pcproxy
-  DEPENDS:=+libubox +@IPV6
+  DEPENDS:=+libubox @IPV6
 endef
 
 define Package/minimalist-pcproxy/description

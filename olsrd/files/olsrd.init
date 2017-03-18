@@ -1,5 +1,5 @@
 #!/bin/sh /etc/rc.common
-# Copyright (C) 2008-2013 OpenWrt.org
+# Copyright (C) 2008-2017 OpenWrt.org
 
 START=65
 
@@ -8,26 +8,24 @@ SERVICE_WRITE_PID=1
 
 OLSRD_OLSRD_SCHEMA='ignore:internal config_file:internal DebugLevel=0 AllowNoInt=yes'
 OLSRD_IPCCONNECT_SCHEMA='ignore:internal Host:list Net:list2'
-OLSRD_LOADPLUGIN_SCHEMA='ignore:internal library:internal Host4:list Net4:list2 Host:list Net:list2 Host6:list Net6:list2 Ping:list redistribute:list NonOlsrIf:list name:list lat lon latlon_infile HNA:list2 hosts:list2'
+OLSRD_LOADPLUGIN_SCHEMA='ignore:internal library:internal Host4:list Net4:list2 Host:list Net:list2 Host6:list Net6:list2 Ping:list redistribute:list NonOlsrIf:list name:list lat lon latlon_infile HNA:list2 hosts:list2 ipv6only:bool'
 OLSRD_INTERFACE_SCHEMA='ignore:internal interface:internal AutoDetectChanges:bool LinkQualityMult:list2'
 OLSRD_INTERFACE_DEFAULTS_SCHEMA='AutoDetectChanges:bool'
 
 T='	'
 N='
 '
-#6and4: backward compatibility - it MUST be different from /etc/init.d/olsrd6 PID variable
-PID6=/var/run/olsrd6and4.pid
 
 log() {
-	logger -t olsrd -p daemon.info -s "${initscript}: $@"
+	logger -t olsrd -p daemon.info -s "${initscript}: $*"
 }
 
 error() {
-        logger -t olsrd -p daemon.err -s "${initscript}: ERROR: $@"
+        logger -t olsrd -p daemon.err -s "${initscript}: ERROR: $*"
 }
 
 warn() {
-        logger -t olsrd -p daemon.warn -s "${initscript}: WARNING: $@"
+        logger -t olsrd -p daemon.warn -s "${initscript}: WARNING: $*"
 }
 
 validate_varname() {
@@ -38,7 +36,7 @@ validate_varname() {
 
 validate_olsrd_option() {
 	local str="$1"
-	[ -z "$str" -o "$str" != "${str%%[! 	0-9A-Za-z./|:_-]*}" ] && return 1
+	[ -z "$str" -o "$str" != "${str%%[! 	0-9A-Za-z.%/|:_-]*}" ] && return 1
 	return 0
 }
 
@@ -126,21 +124,20 @@ olsrd_write_option() {
 		fi
 	fi
 
-	echo -n "${N}$param$option $value"
-
-	return 0
+	printf '%s' "${N}$param$option $value"
 }
 
 olsrd_write_plparam() {
 	local funcname="olsrd_write_plparam"
 	local param="$1"
 	local cfg="$2"
-	validate_varname "$cfg" || return 1
 	local option="$3"
-	validate_varname "$option" || return 1
 	local value="$4"
 	local option_type="$5"
 	local _option oldIFS
+
+	validate_varname "$cfg" || return 1
+	validate_varname "$option" || return 1
 
 	if [ "$option_type" = bool ]; then
 		case "$value" in
@@ -179,24 +176,24 @@ olsrd_write_plparam() {
 		else
 			warning_invalid_value olsrd "$cfg" "NonOlsrIf"
 		fi
+
 		[ -z "$ifname" ] || value=$ifname
 	fi
 
-	echo -n "${N}${param}PlParam \"$option\" \"$value\""
-
-	return 0
+	printf '%s' "${N}${param}PlParam \"$option\" \"$value\""
 }
 
 config_update_schema() {
 	local schema_varname="$1"
-	validate_varname "$schema_varname" || return 1
 	local command="$2"
-	validate_varname "$command" || return 1
 	local option="$3"
-	validate_varname "$option" || return 1
 	local value="$4"
 	local schema
 	local cur_option
+
+	validate_varname "$schema_varname" || return 1
+	validate_varname "$command" || return 1
+	validate_varname "$option" || return 1
 
 	case "$varname" in
 		*_LENGTH) return 0;;
@@ -276,7 +273,7 @@ config_write_options() {
 	already_in_schema "speed" && {
 		get_value_for_entry "speed"
 
-		if [ 2>/dev/null $value -gt 0 -a $value -le 20 ]; then
+		if test 2>/dev/null "$value" -gt 0 -a "$value" -le 20 ; then
 			speed="$value"
 		else
 			log "$funcname() Warning: invalid speed-value: '$value' - allowed integers: 1...20, fallback to 6"
@@ -292,30 +289,30 @@ config_write_options() {
 		if [ -n "$speed" ]; then		# like sven-ola freifunk firmware fff-1.7.4
 			case "$schema_entry" in
 				HelloInterval)
-					value="$(( $speed / 2 + 1 )).0"
+					value="$(( speed / 2 + 1 )).0"
 				;;
 				HelloValidityTime)
-					value="$(( $speed * 25 )).0"
+					value="$(( speed * 25 )).0"
 				;;
-				TcInterval)	# todo: not fisheye? -> $(( $speed * 2 ))
-					value=$(( $speed / 2 ))
+				TcInterval)	# todo: not fisheye? -> $(( speed * 2 ))
+					value=$(( speed / 2 ))
 					[ $value -eq 0 ] && value=1
 					value="$value.0"
 				;;
 				TcValidityTime)
-					value="$(( $speed * 100 )).0"
+					value="$(( speed * 100 )).0"
 				;;
 				MidInterval)
-					value="$(( $speed * 5 )).0"
+					value="$(( speed * 5 )).0"
 				;;
 				MidValidityTime)
-					value="$(( $speed * 100 )).0"
+					value="$(( speed * 100 )).0"
 				;;
 				HnaInterval)
-					value="$(( $speed * 2 )).0"
+					value="$(( speed * 2 )).0"
 				;;
 				HnaValidityTime)
-					value="$(( $speed * 25 )).0"
+					value="$(( speed * 25 )).0"
 				;;
 				*)
 					get_value_for_entry "$schema_entry" || continue
@@ -396,21 +393,10 @@ olsrd_write_olsrd() {
 
 	[ "$OLSRD_COUNT" -gt 0 ] && return 0
 
-	config_get ipversion "$cfg" IpVersion
-	if [ "$UCI_CONF_NAME" == "olsrd6" ]; then
-	        OLSRD_OLSRD_SCHEMA="$OLSRD_OLSRD_SCHEMA IpVersion=6"
-	        if [ "$ipversion" = "6and4" ]; then
-		        error "IpVersion 6and4 not supported in olsrd6"
-			return 1
-		fi
-	else
-	        if [ "$ipversion" = "6and4" ]; then
-		        OLSRD_IPVERSION_6AND4=1
-			config_set "$cfg" IpVersion '6'
-		fi
-	fi
 	config_get smartgateway "$cfg" SmartGateway
 	config_get smartgatewayuplink "$cfg" SmartGatewayUplink
+	export smartgateway
+	export smartgatewayuplink
 
 	config_write_options "$OLSRD_OLSRD_SCHEMA" "$cfg" olsrd_write_option
 	echo
@@ -428,12 +414,10 @@ olsrd_write_ipcconnect() {
 
 	[ "$IPCCONNECT_COUNT" -gt 0 ] && return 0
 
-	echo -n "${N}IpcConnect${N}{"
+	printf '%s' "${N}IpcConnect${N}{"
 	config_write_options "$OLSRD_IPCCONNECT_SCHEMA" "$cfg" olsrd_write_option "${T}"
 	echo "${N}}"
 	IPCCONNECT_COUNT=$((IPCCONNECT_COUNT + 1))
-
-	return 0
 }
 
 olsrd_write_hna4() {
@@ -456,11 +440,9 @@ olsrd_write_hna4() {
 		return 0
 	fi
 
-	[ "$HNA4_COUNT" -le 0 ] && echo -n "${N}Hna4${N}{"
-	echo -n "${N}${T}${T}$netaddr $netmask"
+	[ "$HNA4_COUNT" -le 0 ] && printf '%s' "${N}Hna4${N}{"
+	printf '%s' "${N}${T}${T}$netaddr $netmask"
 	HNA4_COUNT=$((HNA4_COUNT + 1))
-
-	return 0
 }
 
 olsrd_write_hna6() {
@@ -483,39 +465,60 @@ olsrd_write_hna6() {
 		return 0
 	fi
 
-	[ "$HNA6_COUNT" -le 0 ] && echo -n "${N}Hna6${N}{"
-	echo -n "${N}${T}${T}$netaddr $prefix"
+	[ "$HNA6_COUNT" -le 0 ] && printf '%s' "${N}Hna6${N}{"
+	printf '%s' "${N}${T}${T}$netaddr $prefix"
 	HNA6_COUNT=$((HNA6_COUNT + 1))
-
-	return 0
 }
 
-olsrd_write_loadplugin() {
-	local funcname="olsrd_write_loadplugin"
+find_most_recent_plugin_libary()
+{
+	local library="$1"	# e.g. 'olsrd_dyn_gw' or 'olsrd_txtinfo.so.1.1'
+	local file file_fullpath unixtime
+
+	for file in "/lib/$library"* "/usr/lib/$library"* "/usr/local/lib/$library"*; do {
+		[ -f "$file" ] && {
+			file_fullpath="$file"
+			file="$( basename "$file" )"
+			# make sure that we do not select
+			# 'olsrd_dyn_gw_plain.so.0.4' if user wants
+			# 'olsrd_dyn_gw.so.0.5' -> compare part before 1st dot
+			[ "${library%%.*}" = "${file%%.*}" ] && {
+				unixtime="$( date +%s -r "$file_fullpath" )"
+				echo "$unixtime $file"
+			}
+		}
+	} done | sort -n | tail -n1 | cut -d' ' -f2
+}
+
+olsrd_write_loadplugin()
+{
+	local funcname='olsrd_write_loadplugin'
 	local cfg="$1"
+	local ignore name suffix lat lon latlon_infile
+
 	validate_varname "$cfg" || return 0
-	local ignore
-	local name
-	local suffix
-	local lat
-	local lon
-	local latlon_infile
 
 	config_get_bool ignore "$cfg" ignore 0
 	[ "$ignore" -ne 0 ] && return 0
 
+	# e.g. olsrd_txtinfo.so.1.1 or 'olsrd_txtinfo'
 	config_get library "$cfg" library
-	if ! validate_olsrd_option "$library"; then
-		warning_invalid_value olsrd "$cfg" "library"
-		return 0
-	fi
-	if ! [ -x "/lib/$library" -o -x "/usr/lib/$library" -o -x "/usr/local/lib/$library" ]; then
+
+	library="$( find_most_recent_plugin_libary "$library" )"
+	if [ -z "$library" ]; then
 		log "$funcname() Warning: Plugin library '$library' not found, skipped"
 		return 0
+	else
+		library="$( basename "$library" )"
 	fi
 
+	validate_olsrd_option "$library" || {
+		warning_invalid_value olsrd "$cfg" 'library'
+		return 0
+	}
+
 	case "$library" in
-		olsrd_nameservice.*)
+		'olsrd_nameservice.'*)
 			config_get name "$cfg" name
 			[ -z "$name" ] && config_set "$cfg" name $SYSTEM_HOSTNAME
 
@@ -542,16 +545,14 @@ olsrd_write_loadplugin() {
 
 			[ -z "$latlon_file" ] && config_set "$cfg" latlon_file '/var/run/latlon.js'
 		;;
-		olsrd_watchdog.*)
+		'olsrd_watchdog.'*)
 			config_get wd_file "$cfg" file
 		;;
 	esac
 
-	echo -n "${N}LoadPlugin \"$library\"${N}{"
+	printf '%s' "${N}LoadPlugin \"$library\"${N}{"
 	config_write_options "$OLSRD_LOADPLUGIN_SCHEMA" "$cfg" olsrd_write_plparam "${T}"
 	echo "${N}}"
-
-	return 0
 }
 
 olsrd_write_interface() {
@@ -590,19 +591,17 @@ olsrd_write_interface() {
 
 	[ -z "$ifnames" ] && return 0
 
-	echo -n "${N}Interface$ifnames${N}{"
+	printf '%s' "${N}Interface$ifnames${N}{"
 	config_write_options "$OLSRD_INTERFACE_SCHEMA" "$cfg" olsrd_write_option "${T}"
 	echo "${N}}"
 	INTERFACES_COUNT=$((INTERFACES_COUNT + 1))
-
-	return 0
 }
 
 olsrd_write_interface_defaults() {
 	local cfg="$1"
 	validate_varname "$cfg" || return 0
 
-	echo -n "${N}InterfaceDefaults$ifnames${N}{"
+	printf '%s' "${N}InterfaceDefaults$ifnames${N}{"
 	config_write_options "$OLSRD_INTERFACE_DEFAULTS_SCHEMA" "$cfg" olsrd_write_option "${T}"
 	echo "${N}}"
 
@@ -611,13 +610,13 @@ olsrd_write_interface_defaults() {
 
 olsrd_update_schema() {
 	local command="$1"
-	validate_varname "$command" || return 0
 	local varname="$2"
-	validate_varname "$varname" || return 0
 	local value="$3"
 	local cfg="$CONFIG_SECTION"
 	local cfgt
-	local cur_varname
+
+	validate_varname "$command" || return 0
+	validate_varname "$varname" || return 0
 
 	config_get cfgt "$cfg" TYPE
 	case "$cfgt" in
@@ -632,7 +631,6 @@ olsrd_update_schema() {
 }
 
 olsrd_write_config() {
-	OLSRD_IPVERSION_6AND4=0
 	OLSRD_COUNT=0
 	config_foreach olsrd_write_olsrd olsrd
 	IPCCONNECT_COUNT=0
@@ -656,7 +654,7 @@ get_wan_ifnames()
 {
 	local wanifnames word catch_next
 
-	which ip >/dev/null || return 1
+	command -v ip >/dev/null || return 1
 
 	set -- $( ip route list exact 0.0.0.0/0 table all )
 	for word in $*; do
@@ -685,8 +683,10 @@ get_wan_ifnames()
 
 olsrd_setup_smartgw_rules() {
 	local funcname="olsrd_setup_smartgw_rules"
-	# Check if ipip is installed
-	[ -e /etc/modules.d/[0-9]*-ipip ] || {
+	local file=
+
+	for file in /etc/modules.d/[0-9]*-ipip; do :; done
+	[ -e "$file" ] || {
 		log "$funcname() Warning: kmod-ipip is missing. SmartGateway will not work until you install it."
 		return 1
 	}
@@ -699,30 +699,40 @@ olsrd_setup_smartgw_rules() {
 		nowan=0
 	fi
 
-	IP4T=$(which iptables)
-	IP6T=$(which ip6tables)
+	IP4T="$( command -v iptables )"
+	IP6T="$( command -v ip6tables )"
 
 	# Delete smartgw firewall rules first
-	for IPT in $IP4T $IP6T; do
-		while $IPT -D forwarding_rule -o tnl_+ -j ACCEPT 2> /dev/null; do :;done
+	if [ "$UCI_CONF_NAME" = "olsrd6" ]; then
+		while $IP6T -D forwarding_rule -o tnl_+ -j ACCEPT 2> /dev/null; do :;done
 		for IFACE in $wanifnames; do
-			while $IPT -D forwarding_rule -i tunl0 -o $IFACE -j ACCEPT 2> /dev/null; do :; done
+			while $IP6T -D forwarding_rule -i tunl0 -o $IFACE -j ACCEPT 2> /dev/null; do :; done
 		done
 		for IFACE in $ifsglobal; do
-			while $IPT -D input_rule -i $IFACE -p 4 -j ACCEPT 2> /dev/null; do :; done
+			while $IP6T -D input_rule -i $IFACE -p 4 -j ACCEPT 2> /dev/null; do :; done
 		done
-	done
-	while $IP4T -t nat -D postrouting_rule -o tnl_+ -j MASQUERADE 2> /dev/null; do :;done
+	else
+		while $IP4T -D forwarding_rule -o tnl_+ -j ACCEPT 2> /dev/null; do :;done
+		for IFACE in $wanifnames; do
+			while $IP4T -D forwarding_rule -i tunl0 -o $IFACE -j ACCEPT 2> /dev/null; do :; done
+		done
+		for IFACE in $ifsglobal; do
+			while $IP4T -D input_rule -i $IFACE -p 4 -j ACCEPT 2> /dev/null; do :; done
+		done
+		while $IP4T -t nat -D postrouting_rule -o tnl_+ -j MASQUERADE 2> /dev/null; do :;done
+	fi
 
-	if [ "$smartgateway" == "yes" ]; then
+	# var 'smartgateway' + 'smartgatewayuplink' build in olsrd_write_olsrd()
+	if [ "$smartgateway" = "yes" ]; then
 		log "$funcname() Notice: Inserting firewall rules for SmartGateway"
-		if [ ! "$smartgatewayuplink" == "none" ]; then
-			if [ "$smartgatewayuplink" == "ipv4" ]; then
+
+		if [ ! "$smartgatewayuplink" = "none" ]; then
+			if [ "$smartgatewayuplink" = "ipv4" ]; then
 				# Allow everything to be forwarded to tnl_+ and use NAT for it
 				$IP4T -I forwarding_rule -o tnl_+ -j ACCEPT
 				$IP4T -t nat -I postrouting_rule -o tnl_+ -j MASQUERADE
 				# Allow forwarding from tunl0 to (all) wan-interfaces
-				if [ "$nowan"="0" ]; then
+				if [ "$nowan" = '0' ]; then
 					for IFACE in $wanifnames; do
 						$IP4T -A forwarding_rule -i tunl0 -o $IFACE -j ACCEPT
 					done
@@ -731,9 +741,9 @@ olsrd_setup_smartgw_rules() {
 				for IFACE in $ifsglobal; do
 					$IP4T -I input_rule -i $IFACE -p 4 -j ACCEPT
 				done
-			elif [ "$smartgatewayuplink" == "ipv6" ]; then
+			elif [ "$smartgatewayuplink" = "ipv6" ]; then
 				$IP6T -I forwarding_rule -o tnl_+ -j ACCEPT
-				if [ "$nowan"="0" ]; then
+				if [ "$nowan" = '0' ]; then
 					for IFACE in $wanifnames; do
 						$IP6T -A forwarding_rule -i tunl0 -o $IFACE -j ACCEPT
 					done
@@ -745,7 +755,7 @@ olsrd_setup_smartgw_rules() {
 				$IP4T -t nat -I postrouting_rule -o tnl_+ -j MASQUERADE
 				for IPT in $IP4T $IP6T; do
 					$IPT -I forwarding_rule -o tnl_+ -j ACCEPT
-					if [ "$nowan"="0" ]; then
+					if [ "$nowan" = '0' ]; then
 						for IFACE in $wanifnames; do
 							$IPT -A forwarding_rule -i tunl0 -o $IFACE -j ACCEPT
 						done
@@ -792,53 +802,16 @@ start() {
 
 	[ -z "$OLSRD_CONFIG_FILE" ] && return 1
 
-	#6and4: backward compatibility
-	local bindv6only='0'
-	if [ "$OLSRD_IPVERSION_6AND4" -ne 0 ]; then
-	        warn "IpVersion 6and4 is deprecated and will be removed in future!"
-		warn "You must use /etc/config/olsrd and /etc/init.d/olsrd for IPv4"
-		warn " /etc/config/olsrd6 and /etc/init.d/olsrd6 for IPv6"
-
-		bindv6only="$(sysctl -n net.ipv6.bindv6only)"
-		sysctl -w net.ipv6.bindv6only=1 > /dev/null
-		sed -e '/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}/d' < "$OLSRD_CONFIG_FILE" > /var/etc/olsrd.conf.ipv6
-		sed -e 's/^IpVersion[ ][ ]*6$/IpVersion 4/' -e 's/^\t\t[A-Fa-f0-9.:]*[:][A-Fa-f0-9.:]*[ ][0-9]*$//' < "$OLSRD_CONFIG_FILE" > /var/etc/olsrd.conf.ipv4
-		rm $OLSRD_CONFIG_FILE
-
-		# some filenames should get the suffix .ipv6
-		for file in $latlon_file $hosts_file $services_file $resolv_file $macs_file $wd_file;do
-			f=$(echo $file|sed 's/\//\\\//g')
-			sed -i "s/$f/$f.ipv6/g" /var/etc/olsrd.conf.ipv6
-		done
-
-		SERVICE_PID_FILE="$PID6"
-		if service_check /usr/sbin/olsrd; then
-			error "there is already an IPv6 instance of olsrd running (pid: '$(cat $PID6)'), not starting."
-		else
-			service_start /usr/sbin/olsrd -f /var/etc/olsrd.conf.ipv6 -nofork
-		fi
-
-		SERVICE_PID_FILE="$PID"
-		if service_check /usr/sbin/olsrd; then
-			error "there is already an IPv4 instance of olsrd running (pid: '$(cat $PID)'), not starting."
-		else
-			service_start /usr/sbin/olsrd -f /var/etc/olsrd.conf.ipv4 -nofork
-		fi
-
-		sleep 3
-		sysctl -w net.ipv6.bindv6only="$bindv6only" > /dev/null
+	SERVICE_PID_FILE="$PID"
+	if service_check /usr/sbin/olsrd; then
+		error "there is already an instance of $UCI_CONF_NAME running (pid: '$(cat $PID)'), not starting."
+		return 1
 	else
-		SERVICE_PID_FILE="$PID"
-		if service_check /usr/sbin/olsrd; then
-			error "there is already an instance of $UCI_CONF_NAME running (pid: '$(cat $PID)'), not starting."
-			return 1
-		else
-			service_start /usr/sbin/olsrd -f "$OLSRD_CONFIG_FILE" -nofork
-			sleep 1
-			service_check /usr/sbin/olsrd || {
-				log "startup-error: check via: '/usr/sbin/olsrd -f \"$OLSRD_CONFIG_FILE\" -nofork'"
-			}
-		fi
+		service_start /usr/sbin/olsrd -f "$OLSRD_CONFIG_FILE" -nofork
+		sleep 1
+		service_check /usr/sbin/olsrd || {
+			log "startup-error: check via: '/usr/sbin/olsrd -f \"$OLSRD_CONFIG_FILE\" -nofork'"
+		}
 	fi
 
 	olsrd_setup_smartgw_rules
@@ -846,9 +819,5 @@ start() {
 
 stop() {
 	SERVICE_PID_FILE="$PID"
-	service_stop /usr/sbin/olsrd
-
-	#6and4: backward compatibility
-	SERVICE_PID_FILE="$PID6"
 	service_stop /usr/sbin/olsrd
 }

@@ -9,14 +9,15 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=nat46
-PKG_VERSION:=7
+PKG_VERSION:=10
 PKG_RELEASE:=$(PKG_SOURCE_VERSION)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_MIRROR_HASH:=43b7004bfa2c830d6025386bc2128015db0012277fd015f4ee44b9ee3b772a12
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_URL:=https://github.com/ayourtch/nat46.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=8ff2ae59ec9840a7b8b45f976c51cae80abe0226
+PKG_SOURCE_VERSION:=683fbd2b765506332a1af141545652bf58f03166
 PKG_MAINTAINER:=Steven Barth <cyrus@openwrt.org>
 PKG_LICENSE:=GPL-2.0
 
@@ -32,7 +33,7 @@ endef
 define Package/464xlat
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+kmod-nat46
+  DEPENDS:=+kmod-nat46 +ip
   TITLE:=464xlat CLAT support
 endef
 

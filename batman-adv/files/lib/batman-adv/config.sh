@@ -48,6 +48,6 @@ bat_config()
 	[ -n "$multicast_mode" ] && echo $multicast_mode > /sys/class/net/$mesh/mesh/multicast_mode 2>&-
 	[ -n "$network_coding" ] && echo $network_coding > /sys/class/net/$mesh/mesh/network_coding 2>&-
 	[ -n "$log_level" ] && echo $log_level > /sys/class/net/$mesh/mesh/log_level 2>&-
-	[ -n "$orig_interval" ] && echo $orig_interval > /sys/class/net/$mesh/mesh/orig_interval
+	[ -n "$orig_interval" ] && echo $orig_interval > /sys/class/net/$mesh/mesh/orig_interval 2>&-
     [ -n "$routing_algo" ] && echo $routing_algo > /sys/class/net/$mesh/mesh/routing_algo
 }

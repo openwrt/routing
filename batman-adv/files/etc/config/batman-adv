@@ -15,6 +15,7 @@ config 'mesh' 'bat0'
 	option 'network_coding'
 	option 'hop_penalty'
 	option 'isolation_mark'
+    option 'routing_algo'
 
 # yet another batX instance
 # config 'mesh' 'bat5'

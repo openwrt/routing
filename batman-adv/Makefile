@@ -4,16 +4,15 @@
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
-# $Id: Makefile 5624 2006-11-23 00:29:07Z nbd $
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batman-adv
 
-PKG_VERSION:=2017.0
-PKG_RELEASE:=0
-PKG_MD5SUM:=1b3121f0baa8771ff6d8ad172c95904f
-PKG_HASH:=65df01222bc51ec788fb1b6dc63feaf69d393f2d0a96e347d55de83b1602c509
+PKG_VERSION:=2017.2
+PKG_RELEASE:=1
+PKG_MD5SUM:=937b5f1d0188e3522d67ad45ee0a4f5a
+PKG_HASH:=d487974e21cb53d39f139e93a2cf297807df5b7bf63ba6d810bad6d91537394f
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)

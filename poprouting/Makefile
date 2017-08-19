@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=prince
 PKG_VERSION:=v0.3.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_USE_MIPS16:=0
@@ -14,14 +14,13 @@ PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_SOURCE_VERSION)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/prince
-	SECTION :=net
-	CATEGORY :=Network
-	SUBMENU :=Routing and Redirection
-	Mantainer :=Gabriele Gemmi <gabriel@autistici.org>
-	TITLE :=PopRouting daemon
-	URL :=https://github.com/gabri94/poprouting
-	MENU :=0
-	DEPENDS := +libjson-c +libpthread
+  SECTION:=net
+  CATEGORY:=Network
+  SUBMENU:=Routing and Redirection
+  MAINTAINER:=Gabriele Gemmi <gabriel@autistici.org>
+  TITLE:=PopRouting daemon
+  URL:=https://github.com/gabri94/poprouting
+  DEPENDS:= +libjson-c +libpthread
 endef
 
 define Package/prince/description
@@ -33,6 +32,9 @@ calculating the betweenness centrality using the topology, then using these data
 the timer's value are optimized. Finally the timers are pushed back to the routing demon.
 Currently it only supports OLSRd2 (aka OONF).
 endef
+
+CFLAGS += $(TARGET_CFLAGS) $(TARGET_CPPFLAGS)
+LDFLAGS += $(TARGET_LDFLAGS)
 
 define Package/prince/install
 	$(INSTALL_DIR) $(1)/usr/lib

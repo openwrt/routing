@@ -18,9 +18,12 @@ PKG_HASH:=9677aeccadf73b4bf8bb9d832c32b5da8266b4d58eed888f3fd43d7656405643
 PKG_MAINTAINER:=Markus Stenberg <fingon@iki.fi>
 PKG_LICENSE:=BSD-3-Clause
 
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_BUILD_PARALLEL:=1
+
 include $(INCLUDE_DIR)/package.mk
 
-define Package/miniupnpd
+define Package/miniupnpd/Default
   SECTION:=net
   CATEGORY:=Network
   DEPENDS:=+iptables +libip4tc +IPV6:libip6tc +IPV6:ip6tables +libuuid
@@ -29,16 +32,27 @@ define Package/miniupnpd
   URL:=http://miniupnp.free.fr/
 endef
 
-define Package/miniupnpd/config
-config MINIUPNPD_IGDv2
-	bool
-	default n
-	prompt "Enable IGDv2"
+define Package/miniupnpd-igdv1
+$(call Package/miniupnpd/Default)
+  TITLE += IGDv1
+  VARIANT:=noigdv2
+  PROVIDES:=miniupnpd
+  DEFAULT_VARIANT:=1
+endef
+
+define Package/miniupnpd-igdv2
+$(call Package/miniupnpd/Default)
+  TITLE += IGDv2
+  VARIANT:=igdv2
+  PROVIDES:=miniupnpd
 endef
 
 define Package/miniupnpd/conffiles
 /etc/config/upnpd
 endef
+
+Package/miniupnpd-igdv1/conffiles = $(Package/miniupnpd/conffiles)
+Package/miniupnpd-igdv2/conffiles = $(Package/miniupnpd/conffiles)
 
 define Package/miniupnpd/postinst
 #!/bin/sh
@@ -56,6 +70,12 @@ define Build/Prepare
 	echo "OpenWrt" | tr \(\)\  _ >$(PKG_BUILD_DIR)/os.openwrt
 endef
 
+VARIANT_CONFIG_OPTS=
+
+ifeq ($(BUILD_VARIANT),igdv2)
+VARIANT_CONFIG_OPTS+= --igd2
+endif
+
 MAKE_FLAGS += \
 	TARGET_OPENWRT=1 TEST=0 \
 	LIBS="" \
@@ -63,7 +83,7 @@ MAKE_FLAGS += \
 		-lip4tc $(if $(CONFIG_IPV6),-lip6tc) -luuid" \
 	CONFIG_OPTIONS="--portinuse --leasefile \
 		$(if $(CONFIG_IPV6),--ipv6) \
-		$(if $(CONFIG_MINIUPNPD_IGDv2),--igd2)" \
+		$(VARIANT_CONFIG_OPTS)" \
 	-f Makefile.linux \
 	miniupnpd
 
@@ -78,4 +98,8 @@ define Package/miniupnpd/install
 	$(INSTALL_DATA) ./files/firewall.include $(1)/usr/share/miniupnpd/firewall.include
 endef
 
-$(eval $(call BuildPackage,miniupnpd))
+Package/miniupnpd-igdv1/install = $(Package/miniupnpd/install)
+Package/miniupnpd-igdv2/install = $(Package/miniupnpd/install)
+
+$(eval $(call BuildPackage,miniupnpd-igdv1))
+$(eval $(call BuildPackage,miniupnpd-igdv2))

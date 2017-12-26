@@ -1,0 +1,63 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Thu, 23 Nov 2017 15:04:38 +0100
+Subject: [PATCH] batctl: Handle nlmsg_alloc errors
+
+nlmsg_alloc may return NULL on errors. The processing has to be aborted
+when this happens.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/27e9937635ffbfe33f7f3297aff911718b8deb56
+---
+ netlink.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/netlink.c b/netlink.c
+index 5f4325b0bb6b4a41860a75bd0851e446c5af9a88..64afeedac46bf3eab14a1d89d7db4491fbef8d81 100644
+--- a/netlink.c
++++ b/netlink.c
+@@ -302,6 +302,11 @@ static char *netlink_get_info(int ifindex, uint8_t nl_cmd, const char *header)
+ 		return NULL;
+ 
+ 	msg = nlmsg_alloc();
++	if (!msg) {
++		nl_socket_free(sock);
++		return NULL;
++	}
++
+ 	genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, family, 0, 0,
+ 		    BATADV_CMD_GET_MESH_INFO, 1);
+ 
+@@ -399,6 +404,11 @@ int netlink_print_routing_algos(void)
+ 		return -EOPNOTSUPP;
+ 
+ 	msg = nlmsg_alloc();
++	if (!msg) {
++		last_err = -ENOMEM;
++		goto err_free_sock;
++	}
++
+ 	genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, family, 0, NLM_F_DUMP,
+ 		    BATADV_CMD_GET_ROUTING_ALGOS, 1);
+ 
+@@ -415,6 +425,8 @@ int netlink_print_routing_algos(void)
+ 	nl_cb_err(cb, NL_CB_CUSTOM, print_error, NULL);
+ 
+ 	nl_recvmsgs(sock, cb);
++
++err_free_sock:
+ 	nl_socket_free(sock);
+ 
+ 	if (!last_err)
+@@ -1131,6 +1143,9 @@ static int netlink_print_common(char *mesh_iface, char *orig_iface,
+ 								 header);
+ 
+ 		msg = nlmsg_alloc();
++		if (!msg)
++			continue;
++
+ 		genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, family, 0,
+ 			    NLM_F_DUMP, nl_cmd, 1);
+ 

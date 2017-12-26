@@ -1,0 +1,59 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Thu, 23 Nov 2017 15:04:41 +0100
+Subject: [PATCH] batctl: Free nl_sock on genl_ctrl_resolve error
+
+genl_ctrl_resolve may return NULL on errors. The code must then free the
+socket which was used to start the genl_ctrl_resolve and stop the function
+with an error code.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/cdac2f843c616caaa2a0d3847aeec84c200c62d6
+---
+ netlink.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/netlink.c b/netlink.c
+index 3eb66c9de30c21722bb1e348b055838ea14d18cf..ee58ce8bf16e224374940dddaff61f7b3c5aa4bb 100644
+--- a/netlink.c
++++ b/netlink.c
+@@ -301,8 +301,10 @@ static char *netlink_get_info(int ifindex, uint8_t nl_cmd, const char *header)
+ 	genl_connect(sock);
+ 
+ 	family = genl_ctrl_resolve(sock, BATADV_NL_NAME);
+-	if (family < 0)
++	if (family < 0) {
++		nl_socket_free(sock);
+ 		return NULL;
++	}
+ 
+ 	msg = nlmsg_alloc();
+ 	if (!msg) {
+@@ -410,8 +412,10 @@ int netlink_print_routing_algos(void)
+ 	genl_connect(sock);
+ 
+ 	family = genl_ctrl_resolve(sock, BATADV_NL_NAME);
+-	if (family < 0)
+-		return -EOPNOTSUPP;
++	if (family < 0) {
++		last_err = -EOPNOTSUPP;
++		goto err_free_sock;
++	}
+ 
+ 	msg = nlmsg_alloc();
+ 	if (!msg) {
+@@ -1125,8 +1129,10 @@ static int netlink_print_common(char *mesh_iface, char *orig_iface,
+ 	genl_connect(sock);
+ 
+ 	family = genl_ctrl_resolve(sock, BATADV_NL_NAME);
+-	if (family < 0)
+-		return -EOPNOTSUPP;
++	if (family < 0) {
++		last_err = -EOPNOTSUPP;
++		goto err_free_sock;
++	}
+ 
+ 	ifindex = if_nametoindex(mesh_iface);
+ 	if (!ifindex) {

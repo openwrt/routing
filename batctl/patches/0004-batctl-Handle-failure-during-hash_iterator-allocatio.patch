@@ -1,0 +1,29 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Thu, 23 Nov 2017 15:04:36 +0100
+Subject: [PATCH] batctl: Handle failure during hash_iterator allocation
+
+The iterator functions should not try to start the iteration when the
+iterator could not be allocated.
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/aa316bf6d1b2cf0ab7189ed8620c17f5018d4d37
+---
+ hash.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/hash.c b/hash.c
+index 08d47b5b8f812d718f9463c548d73fbffb49b1b3..c6f735c64b573928441b41936646d195bc0da4bb 100644
+--- a/hash.c
++++ b/hash.c
+@@ -120,6 +120,9 @@ struct hash_it_t *hash_iterate(struct hashtable_t *hash,
+ 
+ 	if (iter_in == NULL) {
+ 		iter = debugMalloc(sizeof(struct hash_it_t), 301);
++		if (!iter)
++			return NULL;
++
+ 		iter->index =  -1;
+ 		iter->bucket = NULL;
+ 		iter->prev_bucket = NULL;

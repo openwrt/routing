@@ -1,0 +1,30 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Thu, 23 Nov 2017 15:04:43 +0100
+Subject: [PATCH] batctl: tcpdump: Fix types for for TT v1
+
+The num_entry and num_vlan variables are accessed (printed) as u16
+variables and not like integers. They should therefore also be stored like
+that.
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/15a1335cadacc7c3bb4723a30617d123a961a311
+---
+ tcpdump.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tcpdump.c b/tcpdump.c
+index db9c46afecf3de94dbd4d9292df1fe0812fb8bfc..da5541ea9f5f9f9b6fd0838d2242daa22d41a28d 100644
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -157,7 +157,8 @@ static void batctl_tvlv_parse_tt_v1(void *buff, ssize_t buff_len)
+ {
+ 	struct batadv_tvlv_tt_data *tvlv = buff;
+ 	struct batadv_tvlv_tt_vlan_data *vlan;
+-	int i, num_vlan, num_entry;
++	int i;
++	unsigned short num_vlan, num_entry;
+ 	const char *type;
+ 	size_t vlan_len;
+ 

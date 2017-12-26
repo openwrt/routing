@@ -1,0 +1,56 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Thu, 23 Nov 2017 15:04:37 +0100
+Subject: [PATCH] batctl: Handle allocation error for path_buff
+
+Fixes: 5a1af99276b0 ("batctl: adapt batctl to new sysfs interface handling")
+Fixes: 306fcb4480c9 ("batctl: support for multiple mesh clouds")
+Fixes: af115c9acf44 ("batctl: support new gateway sysfs API")
+Fixes: 2c2cb260ad2e ("batctl: list supported and configured routing algorithms")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/3b52283a5f60d1c6ec11628d031e72f0a28a720f
+---
+ sys.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/sys.c b/sys.c
+index b52434072b34b949c73de8346f8c2dce615423a4..3047b5f6eebf26290f2d8c4840d52bb1bddc3e3f 100644
+--- a/sys.c
++++ b/sys.c
+@@ -153,6 +153,11 @@ int handle_loglevel(char *mesh_iface, int argc, char **argv)
+ 	}
+ 
+ 	path_buff = malloc(PATH_BUFF_LEN);
++	if (!path_buff) {
++		fprintf(stderr, "Error - could not allocate path buffer: out of memory ?\n");
++		return EXIT_FAILURE;
++	}
++
+ 	snprintf(path_buff, PATH_BUFF_LEN, SYS_BATIF_PATH_FMT, mesh_iface);
+ 
+ 	if (argc != 1) {
+@@ -253,6 +258,11 @@ int handle_sys_setting(char *mesh_iface, int setting, int argc, char **argv)
+ 
+ 	/* prepare the classic path */
+ 	path_buff = malloc(PATH_BUFF_LEN);
++	if (!path_buff) {
++		fprintf(stderr, "Error - could not allocate path buffer: out of memory ?\n");
++		return EXIT_FAILURE;
++	}
++
+ 	snprintf(path_buff, PATH_BUFF_LEN, SYS_BATIF_PATH_FMT, mesh_iface);
+ 
+ 	/* if the specified interface is a VLAN then change the path to point
+@@ -325,6 +335,11 @@ int handle_gw_setting(char *mesh_iface, int argc, char **argv)
+ 	}
+ 
+ 	path_buff = malloc(PATH_BUFF_LEN);
++	if (!path_buff) {
++		fprintf(stderr, "Error - could not allocate path buffer: out of memory ?\n");
++		return EXIT_FAILURE;
++	}
++
+ 	snprintf(path_buff, PATH_BUFF_LEN, SYS_BATIF_PATH_FMT, mesh_iface);
+ 
+ 	if (argc == 1) {

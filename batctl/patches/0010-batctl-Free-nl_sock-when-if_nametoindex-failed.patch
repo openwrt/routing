@@ -1,0 +1,40 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Thu, 23 Nov 2017 15:04:42 +0100
+Subject: [PATCH] batctl: Free nl_sock when if_nametoindex failed
+
+The if_nametoindex can return an error. The code must then free the
+previously allocated nl_sock and stop the function with an error code.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/4361841bf76ecd27dcfca6edc30c63b05854d415
+---
+ netlink.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/netlink.c b/netlink.c
+index ee58ce8bf16e224374940dddaff61f7b3c5aa4bb..88a5c95c67989a812231aec7352eecfc4e38c70d 100644
+--- a/netlink.c
++++ b/netlink.c
+@@ -1137,7 +1137,8 @@ static int netlink_print_common(char *mesh_iface, char *orig_iface,
+ 	ifindex = if_nametoindex(mesh_iface);
+ 	if (!ifindex) {
+ 		fprintf(stderr, "Interface %s is unknown\n", mesh_iface);
+-		return -ENODEV;
++		last_err = -ENODEV;
++		goto err_free_sock;
+ 	}
+ 
+ 	if (orig_iface) {
+@@ -1145,7 +1146,8 @@ static int netlink_print_common(char *mesh_iface, char *orig_iface,
+ 		if (!hardifindex) {
+ 			fprintf(stderr, "Interface %s is unknown\n",
+ 				orig_iface);
+-			return -ENODEV;
++			last_err = -ENODEV;
++			goto err_free_sock;
+ 		}
+ 	}
+ 

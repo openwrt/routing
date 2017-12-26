@@ -1,12 +1,14 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 23 Sep 2016 14:55:38 +0200
 Subject: [PATCH] Add compat fallback for batadv_getlink_net
+
+Forwarded: not-needed
 ---
  net/batman-adv/hard-interface.c | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/net/batman-adv/hard-interface.c b/net/batman-adv/hard-interface.c
-index 61a431a9..6969f580 100644
+index 61a431a9772ba96418644b399c9e787cbfd0e743..6969f580d0bfd0428f1c6985eaec8bbbf5a0d38b 100644
 --- a/net/batman-adv/hard-interface.c
 +++ b/net/batman-adv/hard-interface.c
 @@ -95,6 +95,9 @@ out:

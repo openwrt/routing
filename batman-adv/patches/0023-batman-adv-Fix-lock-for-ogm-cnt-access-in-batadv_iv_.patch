@@ -1,0 +1,42 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 3 Dec 2017 11:26:45 +0100
+Subject: [PATCH] batman-adv: Fix lock for ogm cnt access in batadv_iv_ogm_calc_tq
+
+The originator node object orig_neigh_node is used to when accessing the
+bcast_own(_sum) and real_packet_count information. The access to them has
+to be protected with the spinlock in orig_neigh_node.
+
+But the function uses the lock in orig_node instead. This is incorrect
+because they could be two different originator node objects.
+
+Fixes: f14416760b62 ("batman-adv: protect bit operations to count OGMs with spinlock")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/9a3b195410e5d2f285cdf0073fef721ff8d9474d
+---
+ net/batman-adv/bat_iv_ogm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
+index 7bfd0d7ef49df8e699f91e2b827b824aa3657c0d..56b4984d738e87098c24213d4aa277a2ef948fec 100644
+--- a/net/batman-adv/bat_iv_ogm.c
++++ b/net/batman-adv/bat_iv_ogm.c
+@@ -1214,7 +1214,7 @@ static bool batadv_iv_ogm_calc_tq(struct batadv_orig_node *orig_node,
+ 	orig_node->last_seen = jiffies;
+ 
+ 	/* find packet count of corresponding one hop neighbor */
+-	spin_lock_bh(&orig_node->bat_iv.ogm_cnt_lock);
++	spin_lock_bh(&orig_neigh_node->bat_iv.ogm_cnt_lock);
+ 	if_num = if_incoming->if_num;
+ 	orig_eq_count = orig_neigh_node->bat_iv.bcast_own_sum[if_num];
+ 	neigh_ifinfo = batadv_neigh_ifinfo_new(neigh_node, if_outgoing);
+@@ -1224,7 +1224,7 @@ static bool batadv_iv_ogm_calc_tq(struct batadv_orig_node *orig_node,
+ 	} else {
+ 		neigh_rq_count = 0;
+ 	}
+-	spin_unlock_bh(&orig_node->bat_iv.ogm_cnt_lock);
++	spin_unlock_bh(&orig_neigh_node->bat_iv.ogm_cnt_lock);
+ 
+ 	/* pay attention to not get a value bigger than 100 % */
+ 	if (orig_eq_count > neigh_rq_count)

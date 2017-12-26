@@ -1,0 +1,56 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Mon, 16 Oct 2017 09:48:03 +0200
+Subject: [PATCH] batman-adv: Avoid spurious warnings from bat_v neigh_cmp implementation
+
+The neighbor compare API implementation for B.A.T.M.A.N. V checks whether
+the neigh_ifinfo for this neighbor on a specific interface exists. A
+warning is printed when it isn't found.
+
+But it is not called inside a lock which would prevent that this
+information is lost right before batadv_neigh_ifinfo_get. It must therefore
+be expected that batadv_v_neigh_(cmp|is_sob) might not be able to get the
+requested neigh_ifinfo.
+
+A WARN_ON for such a situation seems not to be appropriate because this
+will only flood the kernel logs. The warnings must therefore be removed.
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Acked-by: Antonio Quartulli <a@unstable.cc>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/0dee8aba4702f82197ed3428ede6b3884fdff5ca
+---
+ net/batman-adv/bat_v.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/net/batman-adv/bat_v.c b/net/batman-adv/bat_v.c
+index 2e2471ca84e392faac7fd6537bf137161e27542a..80679f17d40170237ce6ad2d800da96bbef79e37 100644
+--- a/net/batman-adv/bat_v.c
++++ b/net/batman-adv/bat_v.c
+@@ -623,11 +623,11 @@ static int batadv_v_neigh_cmp(struct batadv_neigh_node *neigh1,
+ 	int ret = 0;
+ 
+ 	ifinfo1 = batadv_neigh_ifinfo_get(neigh1, if_outgoing1);
+-	if (WARN_ON(!ifinfo1))
++	if (!ifinfo1)
+ 		goto err_ifinfo1;
+ 
+ 	ifinfo2 = batadv_neigh_ifinfo_get(neigh2, if_outgoing2);
+-	if (WARN_ON(!ifinfo2))
++	if (!ifinfo2)
+ 		goto err_ifinfo2;
+ 
+ 	ret = ifinfo1->bat_v.throughput - ifinfo2->bat_v.throughput;
+@@ -649,11 +649,11 @@ static bool batadv_v_neigh_is_sob(struct batadv_neigh_node *neigh1,
+ 	bool ret = false;
+ 
+ 	ifinfo1 = batadv_neigh_ifinfo_get(neigh1, if_outgoing1);
+-	if (WARN_ON(!ifinfo1))
++	if (!ifinfo1)
+ 		goto err_ifinfo1;
+ 
+ 	ifinfo2 = batadv_neigh_ifinfo_get(neigh2, if_outgoing2);
+-	if (WARN_ON(!ifinfo2))
++	if (!ifinfo2)
+ 		goto err_ifinfo2;
+ 
+ 	threshold = ifinfo1->bat_v.throughput / 4;

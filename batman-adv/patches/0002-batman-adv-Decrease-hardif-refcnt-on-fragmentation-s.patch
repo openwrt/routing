@@ -8,12 +8,14 @@ after that has to free the skb + put the hard interface.
 Fixes: 8b4132b1447a ("batman-adv: Consume skb in batadv_frag_send_packet")
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/205dc8385dc863467f4f6ccec2e63254e6baf831
 ---
  net/batman-adv/fragmentation.c | 10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
-index 9c561e6..0854ebd 100644
+index 9c561e683f4b8b68642b626b51a0dcda30260e97..0854ebd8613e9bf9044b04099b11341325d6e194 100644
 --- a/net/batman-adv/fragmentation.c
 +++ b/net/batman-adv/fragmentation.c
 @@ -474,7 +474,7 @@ int batadv_frag_send_packet(struct sk_buff *skb,

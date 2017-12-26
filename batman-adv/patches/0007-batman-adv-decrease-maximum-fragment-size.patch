@@ -1,0 +1,52 @@
+From: Matthias Schiffer <mschiffer@universe-factory.net>
+Date: Wed, 22 Feb 2017 17:25:41 +0100
+Subject: [PATCH] batman-adv: decrease maximum fragment size
+
+With this patch the maximum fragment size is reduced from 1400 to 1280
+bytes.
+
+Fragmentation v2 correctly uses the smaller of 1400 and the interface
+MTU, thus generally supporting interfaces with an MTU < 1400 bytes, too.
+
+However, currently "Fragmentation v2" does not support re-fragmentation.
+Which means that once a packet is split into two packets of 1400 + x
+bytes for instance and the next hop provides an interface with an even
+smaller MTU of 1280 bytes, then the larger fragment is lost.
+
+A maximum fragment size of 1280 bytes is a safer option as this is the
+minimum MTU required by IPv6, making interfaces with an MTU < 1280
+rather exotic.
+
+Regarding performance, this should have no negative impact on unicast
+traffic: Having some more bytes in the smaller and some less in the
+larger does not change the sum of both fragments.
+
+Concerning TT, choosing 1280 bytes fragments might result in more TT
+messages than necessary when a large network is bridged into batman-adv.
+However, the TT overhead in general is marginal due to its reactive
+nature, therefore such a performance impact on TT should not be
+noticeable for a user.
+
+Cc: Matthias Schiffer <mschiffer@universe-factory.net>
+[linus.luessing@c0d3.blue: Added commit message]
+Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/eb60b63140af5ec01ea0916837c2816cad10d6c1
+---
+ net/batman-adv/main.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/batman-adv/main.h b/net/batman-adv/main.h
+index a6cc8040a21dd24fb507683230fd66a9edb62458..5b7855560e8ad121c7b48da97807b6895be158fc 100644
+--- a/net/batman-adv/main.h
++++ b/net/batman-adv/main.h
+@@ -168,7 +168,7 @@ enum batadv_uev_type {
+ /* Maximum number of fragments for one packet */
+ #define BATADV_FRAG_MAX_FRAGMENTS 16
+ /* Maxumim size of each fragment */
+-#define BATADV_FRAG_MAX_FRAG_SIZE 1400
++#define BATADV_FRAG_MAX_FRAG_SIZE 1280
+ /* Time to keep fragments while waiting for rest of the fragments */
+ #define BATADV_FRAG_TIMEOUT 10000
+ 

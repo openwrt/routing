@@ -1,0 +1,31 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 2 Dec 2017 08:45:59 +0100
+Subject: [PATCH] batctl: Handle allocation error in vlan_get_link_parse
+
+The malloc could fail and return NULL. In this case, the processing of the
+current interface index has to be stopped to avoid writing to NULL (which
+would cause a segfault).
+
+Fixes: d29288fe0583 ("batctl: implement vlan-to-link helper functions")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/2ea390ce9bdda39d3c15bd9470009f56f42d5ed9
+---
+ functions.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/functions.c b/functions.c
+index 1c96e6241d01b83a136ff135bee8dd780629f7aa..f91f26f4045766474d5dc109d76e20afd91a7791 100644
+--- a/functions.c
++++ b/functions.c
+@@ -812,6 +812,9 @@ static int vlan_get_link_parse(struct nl_msg *msg, void *arg)
+ 	idx = *(int *)nla_data(tb[IFLA_LINK]);
+ 	free(nl_arg->iface);
+ 	nl_arg->iface = malloc(IFNAMSIZ + 1);
++	if (!nl_arg->iface)
++		goto err;
++
+ 	if (!if_indextoname(idx, nl_arg->iface))
+ 		goto err;
+ 

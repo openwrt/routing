@@ -1,0 +1,58 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Thu, 23 Nov 2017 15:04:44 +0100
+Subject: [PATCH] batctl: Simplify concatenation of pathnames
+
+The combination of strncpy and strncat is hard to read and it is rather
+easy to introduce some kind of problems when using that. The usage of
+snprintf simplifies it slightly.
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/cfaec23c5f6f2cf649f3e0673b2e0c61bc01969f
+---
+ bat-hosts.c | 4 +---
+ functions.c | 8 ++------
+ 2 files changed, 3 insertions(+), 9 deletions(-)
+
+diff --git a/bat-hosts.c b/bat-hosts.c
+index a4add34bbaf8c34f8357ba8d1583218fdaf4df93..66e8f05bd2277e5560be77a26b97245223fa72aa 100644
+--- a/bat-hosts.c
++++ b/bat-hosts.c
+@@ -194,9 +194,7 @@ void bat_hosts_init(int read_opt)
+ 			if (!homedir)
+ 				continue;
+ 
+-			strncpy(confdir, homedir, CONF_DIR_LEN);
+-			confdir[CONF_DIR_LEN - 1] = '\0';
+-			strncat(confdir, &bat_hosts_path[i][1], CONF_DIR_LEN - strlen(confdir) - 1);
++			snprintf(confdir, CONF_DIR_LEN, "%s%s", homedir, &bat_hosts_path[i][1]);
+ 		} else {
+ 			strncpy(confdir, bat_hosts_path[i], CONF_DIR_LEN);
+ 			confdir[CONF_DIR_LEN - 1] = '\0';
+diff --git a/functions.c b/functions.c
+index 676012bb56f9f8aa757b4805e27d904181ee2d27..1c96e6241d01b83a136ff135bee8dd780629f7aa 100644
+--- a/functions.c
++++ b/functions.c
+@@ -208,9 +208,7 @@ int read_file(const char *dir, const char *fname, int read_opt,
+ 	if (read_opt & USE_BAT_HOSTS)
+ 		bat_hosts_init(read_opt);
+ 
+-	strncpy(full_path, dir, sizeof(full_path));
+-	full_path[sizeof(full_path) - 1] = '\0';
+-	strncat(full_path, fname, sizeof(full_path) - strlen(full_path) - 1);
++	snprintf(full_path, sizeof(full_path), "%s%s", dir, fname);
+ 
+ open:
+ 	line = 0;
+@@ -349,9 +347,7 @@ int write_file(const char *dir, const char *fname, const char *arg1,
+ 	char full_path[500];
+ 	ssize_t write_len;
+ 
+-	strncpy(full_path, dir, sizeof(full_path));
+-	full_path[sizeof(full_path) - 1] = '\0';
+-	strncat(full_path, fname, sizeof(full_path) - strlen(full_path) - 1);
++	snprintf(full_path, sizeof(full_path), "%s%s", dir, fname);
+ 
+ 	fd = open(full_path, O_WRONLY);
+ 

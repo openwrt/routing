@@ -1,0 +1,123 @@
+From: Gao Feng <gfree.wind@gmail.com>
+Date: Mon, 21 Nov 2016 23:00:32 +0800
+Subject: [PATCH] batman-adv: Treat NET_XMIT_CN as transmit successfully
+
+The tc could return NET_XMIT_CN as one congestion notification, but
+it does not mean the packet is lost. Other modules like ipvlan,
+macvlan, and others treat NET_XMIT_CN as success too.
+
+So batman-adv should add the NET_XMIT_CN check.
+
+Signed-off-by: Gao Feng <gfree.wind@gmail.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/1120b81c74187f489c08fc9438305071def089cc
+---
+ net/batman-adv/distributed-arp-table.c |  3 ++-
+ net/batman-adv/fragmentation.c         |  2 +-
+ net/batman-adv/routing.c               | 10 +++++-----
+ net/batman-adv/soft-interface.c        |  2 +-
+ net/batman-adv/tp_meter.c              |  2 +-
+ 5 files changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/net/batman-adv/distributed-arp-table.c b/net/batman-adv/distributed-arp-table.c
+index 49576c5a3fe306a42c28c3901d2b2c6cce7d0b8e..3641765d55df049a5dbac35d322ebc537a0f0322 100644
+--- a/net/batman-adv/distributed-arp-table.c
++++ b/net/batman-adv/distributed-arp-table.c
+@@ -659,7 +659,8 @@ static bool batadv_dat_send_data(struct batadv_priv *bat_priv,
+ 		}
+ 
+ 		send_status = batadv_send_unicast_skb(tmp_skb, neigh_node);
+-		if (send_status == NET_XMIT_SUCCESS) {
++		if (send_status == NET_XMIT_SUCCESS ||
++		    send_status == NET_XMIT_CN) {
+ 			/* count the sent packet */
+ 			switch (packet_subtype) {
+ 			case BATADV_P_DAT_DHT_GET:
+diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
+index 11149e5be4e0ef9dfe2872e1d8d1f6dbb4ccdb14..d33f16b9b8ac13ba630bf9ac8c5f4f0ca79fc878 100644
+--- a/net/batman-adv/fragmentation.c
++++ b/net/batman-adv/fragmentation.c
+@@ -517,7 +517,7 @@ int batadv_frag_send_packet(struct sk_buff *skb,
+ 		batadv_add_counter(bat_priv, BATADV_CNT_FRAG_TX_BYTES,
+ 				   skb_fragment->len + ETH_HLEN);
+ 		ret = batadv_send_unicast_skb(skb_fragment, neigh_node);
+-		if (ret != NET_XMIT_SUCCESS) {
++		if (ret != NET_XMIT_SUCCESS && ret != NET_XMIT_CN) {
+ 			ret = NET_XMIT_DROP;
+ 			goto put_primary_if;
+ 		}
+diff --git a/net/batman-adv/routing.c b/net/batman-adv/routing.c
+index 6713bdf414cdacdaf36ecd6ac516f99e079fb51e..6b08b26da4d94be9c8c5e9dc708ddc18d8282428 100644
+--- a/net/batman-adv/routing.c
++++ b/net/batman-adv/routing.c
+@@ -262,7 +262,7 @@ static int batadv_recv_my_icmp_packet(struct batadv_priv *bat_priv,
+ 		icmph->ttl = BATADV_TTL;
+ 
+ 		res = batadv_send_skb_to_orig(skb, orig_node, NULL);
+-		if (res == NET_XMIT_SUCCESS)
++		if (res == NET_XMIT_SUCCESS || res == NET_XMIT_CN)
+ 			ret = NET_RX_SUCCESS;
+ 
+ 		/* skb was consumed */
+@@ -330,7 +330,7 @@ static int batadv_recv_icmp_ttl_exceeded(struct batadv_priv *bat_priv,
+ 	icmp_packet->ttl = BATADV_TTL;
+ 
+ 	res = batadv_send_skb_to_orig(skb, orig_node, NULL);
+-	if (res == NET_RX_SUCCESS)
++	if (res == NET_RX_SUCCESS || res == NET_XMIT_CN)
+ 		ret = NET_XMIT_SUCCESS;
+ 
+ 	/* skb was consumed */
+@@ -424,7 +424,7 @@ int batadv_recv_icmp_packet(struct sk_buff *skb,
+ 
+ 	/* route it */
+ 	res = batadv_send_skb_to_orig(skb, orig_node, recv_if);
+-	if (res == NET_XMIT_SUCCESS)
++	if (res == NET_XMIT_SUCCESS || res == NET_XMIT_CN)
+ 		ret = NET_RX_SUCCESS;
+ 
+ 	/* skb was consumed */
+@@ -719,14 +719,14 @@ static int batadv_route_unicast_packet(struct sk_buff *skb,
+ 
+ 	len = skb->len;
+ 	res = batadv_send_skb_to_orig(skb, orig_node, recv_if);
+-	if (res == NET_XMIT_SUCCESS)
++	if (res == NET_XMIT_SUCCESS || res == NET_XMIT_CN)
+ 		ret = NET_RX_SUCCESS;
+ 
+ 	/* skb was consumed */
+ 	skb = NULL;
+ 
+ 	/* translate transmit result into receive result */
+-	if (res == NET_XMIT_SUCCESS) {
++	if (res == NET_XMIT_SUCCESS || res == NET_XMIT_CN) {
+ 		/* skb was transmitted and consumed */
+ 		batadv_inc_counter(bat_priv, BATADV_CNT_FORWARD);
+ 		batadv_add_counter(bat_priv, BATADV_CNT_FORWARD_BYTES,
+diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interface.c
+index 7b3494ae6ad93fd0d32391e5c88f5d636f43acd5..60516bbb7e8391f3063ba1e48c81288ffc7bef49 100644
+--- a/net/batman-adv/soft-interface.c
++++ b/net/batman-adv/soft-interface.c
+@@ -386,7 +386,7 @@ send:
+ 			ret = batadv_send_skb_via_tt(bat_priv, skb, dst_hint,
+ 						     vid);
+ 		}
+-		if (ret != NET_XMIT_SUCCESS)
++		if (ret != NET_XMIT_SUCCESS && ret != NET_XMIT_CN)
+ 			goto dropped_freed;
+ 	}
+ 
+diff --git a/net/batman-adv/tp_meter.c b/net/batman-adv/tp_meter.c
+index 981e8c5b07e9398c68df711d1d7b54e6e9333ead..c367c8316a822c70ee397bbe1266cd38f24a279b 100644
+--- a/net/batman-adv/tp_meter.c
++++ b/net/batman-adv/tp_meter.c
+@@ -615,7 +615,7 @@ static int batadv_tp_send_msg(struct batadv_tp_vars *tp_vars, const u8 *src,
+ 	batadv_tp_fill_prerandom(tp_vars, data, data_len);
+ 
+ 	r = batadv_send_skb_to_orig(skb, orig_node, NULL);
+-	if (r == NET_XMIT_SUCCESS)
++	if (r == NET_XMIT_SUCCESS || r == NET_XMIT_CN)
+ 		return 0;
+ 
+ 	return BATADV_TP_REASON_CANT_SEND;

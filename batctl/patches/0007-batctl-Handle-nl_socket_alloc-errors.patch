@@ -1,0 +1,50 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Thu, 23 Nov 2017 15:04:39 +0100
+Subject: [PATCH] batctl: Handle nl_socket_alloc errors
+
+nl_socket_alloc may return NULL on errors. The processing has to be aborted
+when this happens.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/bc6cd37e0d3ce08e3b89e3123ffa87dc55f24c09
+---
+ netlink.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/netlink.c b/netlink.c
+index 64afeedac46bf3eab14a1d89d7db4491fbef8d81..107ca52a4866e25b7b04428d770a885ca4e826d2 100644
+--- a/netlink.c
++++ b/netlink.c
+@@ -295,6 +295,9 @@ static char *netlink_get_info(int ifindex, uint8_t nl_cmd, const char *header)
+ 	};
+ 
+ 	sock = nl_socket_alloc();
++	if (!sock)
++		return NULL;
++
+ 	genl_connect(sock);
+ 
+ 	family = genl_ctrl_resolve(sock, BATADV_NL_NAME);
+@@ -397,6 +400,9 @@ int netlink_print_routing_algos(void)
+ 	};
+ 
+ 	sock = nl_socket_alloc();
++	if (!sock)
++		return -ENOMEM;
++
+ 	genl_connect(sock);
+ 
+ 	family = genl_ctrl_resolve(sock, BATADV_NL_NAME);
+@@ -1104,6 +1110,9 @@ static int netlink_print_common(char *mesh_iface, char *orig_iface,
+ 	int family;
+ 
+ 	sock = nl_socket_alloc();
++	if (!sock)
++		return -ENOMEM;
++
+ 	genl_connect(sock);
+ 
+ 	family = genl_ctrl_resolve(sock, BATADV_NL_NAME);

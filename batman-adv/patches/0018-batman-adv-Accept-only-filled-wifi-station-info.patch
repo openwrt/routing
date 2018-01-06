@@ -1,0 +1,98 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 9 Jun 2017 17:06:51 +0200
+Subject: [PATCH] batman-adv: Accept only filled wifi station info
+
+The wifi driver can decide to not provide parts of the station info. For
+example, the expected throughput of the station can be omitted when the
+used rate control doesn't provide this kind of information.
+
+The B.A.T.M.A.N. V implementation must therefore check the filled bitfield
+before it tries to access the expected_throughput of the returned
+station_info.
+
+Reported-by: Alvaro Antelo <alvaro.antelo@gmail.com>
+Fixes: 5c3245172c01 ("batman-adv: ELP - compute the metric based on the estimated throughput")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Reviewed-by: Marek Lindner <mareklindner@neomailbox.ch>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/1e26904b364ceffe9ca7d6da7412e70fb2a04178
+---
+ compat-include/linux/nl80211.h      | 14 ++++++++++++++
+ compat-include/uapi/linux/nl80211.h | 16 ++++++++++++++++
+ net/batman-adv/bat_v_elp.c          |  4 ++++
+ 3 files changed, 34 insertions(+)
+ create mode 100644 compat-include/linux/nl80211.h
+ create mode 100644 compat-include/uapi/linux/nl80211.h
+
+diff --git a/compat-include/linux/nl80211.h b/compat-include/linux/nl80211.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..e6654df8cd67caa52a16a1f709141d7415b9f523
+--- /dev/null
++++ b/compat-include/linux/nl80211.h
+@@ -0,0 +1,14 @@
++#ifndef _NET_BATMAN_ADV_COMPAT_LINUX_NL80211_H_
++#define _NET_BATMAN_ADV_COMPAT_LINUX_NL80211_H_
++
++#include <linux/version.h>
++#include_next <linux/nl80211.h>
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 16, 0)
++
++/* Linux 3.15 misses the uapi include.... */
++#include <uapi/linux/nl80211.h>
++
++#endif /* < KERNEL_VERSION(3, 16, 0) */
++
++#endif	/* _NET_BATMAN_ADV_COMPAT_LINUX_NL80211_H_ */
+diff --git a/compat-include/uapi/linux/nl80211.h b/compat-include/uapi/linux/nl80211.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..06f5625af21360be5718a1a6f7e8949f6739c927
+--- /dev/null
++++ b/compat-include/uapi/linux/nl80211.h
+@@ -0,0 +1,16 @@
++#ifndef _NET_BATMAN_ADV_COMPAT_UAPI_LINUX_NL80211_H_
++#define _NET_BATMAN_ADV_COMPAT_UAPI_LINUX_NL80211_H_
++
++#include <linux/version.h>
++#include_next <uapi/linux/nl80211.h>
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
++
++/* for batadv_v_elp_get_throughput which would have used
++ * STATION_INFO_EXPECTED_THROUGHPUT in Linux 4.0.0
++ */
++#define NL80211_STA_INFO_EXPECTED_THROUGHPUT    28
++
++#endif /* < KERNEL_VERSION(4, 0, 0) */
++
++#endif	/* _NET_BATMAN_ADV_COMPAT_UAPI_LINUX_NL80211_H_ */
+diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
+index 7c54a9291c9eaed75dfdfdfbd200f84c51576cb3..06b2924f4cb7dde54bab97ad2d28aecd9b1a4ceb 100644
+--- a/net/batman-adv/bat_v_elp.c
++++ b/net/batman-adv/bat_v_elp.c
+@@ -19,6 +19,7 @@
+ #include "main.h"
+ 
+ #include <linux/atomic.h>
++#include <linux/bitops.h>
+ #include <linux/byteorder/generic.h>
+ #include <linux/errno.h>
+ #include <linux/etherdevice.h>
+@@ -29,6 +30,7 @@
+ #include <linux/kernel.h>
+ #include <linux/kref.h>
+ #include <linux/netdevice.h>
++#include <linux/nl80211.h>
+ #include <linux/random.h>
+ #include <linux/rculist.h>
+ #include <linux/rcupdate.h>
+@@ -111,6 +113,8 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
+ 		}
+ 		if (ret)
+ 			goto default_throughput;
++		if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
++			goto default_throughput;
+ 
+ 		return sinfo.expected_throughput / 100;
+ 	}

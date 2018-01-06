@@ -1,0 +1,47 @@
+From: Philipp Psurek <philipp.psurek@gmail.com>
+Date: Tue, 13 Jun 2017 10:25:59 +0200
+Subject: [PATCH] batctl: change PATH_BUFF_LEN to maximal possible value
+
+The output of
+
+snprintf(path_buff, PATH_BUFF_LEN, SYS_ROUTING_ALGO_FMT, iface_dir->d_name)
+
+in sys.c can be between 34 and 289 bytes and should not write into a
+destination of size 200.
+
+Signed-off-by: Philipp Psurek <philipp.psurek@gmail.com>
+[sw: use higher limits to be future-proof]
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/620226bf8cff30e6dd966c8fe922b2d4cddf843b
+---
+ functions.c | 2 +-
+ functions.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/functions.c b/functions.c
+index abd588209337dcfa04be9aadbf4ba39bb46771bb..676012bb56f9f8aa757b4805e27d904181ee2d27 100644
+--- a/functions.c
++++ b/functions.c
+@@ -59,7 +59,7 @@
+ #include "debugfs.h"
+ #include "netlink.h"
+ 
+-#define PATH_BUFF_LEN 200
++#define PATH_BUFF_LEN 400
+ 
+ static struct timespec start_time;
+ static char *host_name;
+diff --git a/functions.h b/functions.h
+index 95cd6cf32b0c97cc36f7a81a7d8b126a0bbc389b..99e9085b4f392452d0e0b711dac334559408c1fb 100644
+--- a/functions.h
++++ b/functions.h
+@@ -31,7 +31,7 @@
+ #define ETH_STR_LEN 17
+ #define BATMAN_ADV_TAG "batman-adv:"
+ 
+-#define PATH_BUFF_LEN 200
++#define PATH_BUFF_LEN 400
+ 
+ /* return time delta from start to end in milliseconds */
+ void start_timer(void);

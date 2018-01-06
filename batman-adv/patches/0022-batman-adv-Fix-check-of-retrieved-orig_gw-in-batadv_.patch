@@ -1,0 +1,31 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Wed, 29 Nov 2017 10:50:42 +0100
+Subject: [PATCH] batman-adv: Fix check of retrieved orig_gw in batadv_v_gw_is_eligible
+
+The batadv_v_gw_is_eligible function already assumes that orig_node is not
+NULL. But batadv_gw_node_get may have failed to find the originator. It
+must therefore be checked whether the batadv_gw_node_get failed and not
+whether orig_node is NULL to detect this error.
+
+Fixes: 80b2d47be2c7 ("batman-adv: B.A.T.M.A.N. V - implement GW selection logic")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Acked-by: Antonio Quartulli <a@unstable.cc>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/c7380677d6167f3798d3ea7a4f1a93663f3c7915
+---
+ net/batman-adv/bat_v.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/batman-adv/bat_v.c b/net/batman-adv/bat_v.c
+index 80679f17d40170237ce6ad2d800da96bbef79e37..2f77e112d4cb4db7b1086715a597ef995054fdc1 100644
+--- a/net/batman-adv/bat_v.c
++++ b/net/batman-adv/bat_v.c
+@@ -815,7 +815,7 @@ static bool batadv_v_gw_is_eligible(struct batadv_priv *bat_priv,
+ 	}
+ 
+ 	orig_gw = batadv_gw_node_get(bat_priv, orig_node);
+-	if (!orig_node)
++	if (!orig_gw)
+ 		goto out;
+ 
+ 	if (batadv_v_gw_throughput_get(orig_gw, &orig_throughput) < 0)

@@ -1,0 +1,35 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 9 Jun 2017 17:06:50 +0200
+Subject: [PATCH] batman-adv: Use default throughput value on cfg80211 error
+
+A wifi interface should never be handled like an ethernet devices. The
+parser of the cfg80211 output must therefore skip the ethtool code when
+cfg80211_get_station returned an error.
+
+Fixes: 01b1fe819ee0 ("batman-adv: refactor wifi interface detection")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Reviewed-by: Marek Lindner <mareklindner@neomailbox.ch>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/76ef29071b0050f972a626747d034a494a7195d7
+---
+ net/batman-adv/bat_v_elp.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
+index f2fb2f05b6bf280d2b5fae26ed10288f73345f16..7c54a9291c9eaed75dfdfdfbd200f84c51576cb3 100644
+--- a/net/batman-adv/bat_v_elp.c
++++ b/net/batman-adv/bat_v_elp.c
+@@ -109,8 +109,10 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
+ 			 */
+ 			return 0;
+ 		}
+-		if (!ret)
+-			return sinfo.expected_throughput / 100;
++		if (ret)
++			goto default_throughput;
++
++		return sinfo.expected_throughput / 100;
+ 	}
+ 
+ 	/* if not a wifi interface, check if this device provides data via

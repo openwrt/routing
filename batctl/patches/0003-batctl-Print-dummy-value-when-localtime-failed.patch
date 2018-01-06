@@ -1,0 +1,33 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Thu, 23 Nov 2017 15:04:35 +0100
+Subject: [PATCH] batctl: Print dummy value when localtime failed
+
+localtime can return NULL when the local time could not be calculated.
+Accessing this NULL pointer is not allowed.
+
+Fixes: 05f27bfcd302 ("add arp packets , change output")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/09dd2dc0b4945c83bd07ad4bce64062239d901fb
+---
+ tcpdump.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/tcpdump.c b/tcpdump.c
+index 2125b66d0871c4a127425bfad0135a9f565cfb78..db9c46afecf3de94dbd4d9292df1fe0812fb8bfc 100644
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -103,7 +103,11 @@ static int print_time(void)
+ 	gettimeofday(&tv, NULL);
+ 	tm = localtime(&tv.tv_sec);
+ 
+-	printf("%02d:%02d:%02d.%06ld ", tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec);
++	if (tm)
++		printf("%02d:%02d:%02d.%06ld ", tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec);
++	else
++		printf("00:00:00.000000 ");
++
+ 	return 1;
+ }
+ 

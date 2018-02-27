@@ -1,0 +1,43 @@
+From: Matthias Schiffer <mschiffer@universe-factory.net>
+Date: Tue, 23 Jan 2018 10:59:49 +0100
+Subject: [PATCH] batman-adv: fix packet checksum in receive path
+
+eth_type_trans() internally calls skb_pull(), which does not adjust the
+skb checksum; skb_postpull_rcsum() is necessary to avoid log spam of the
+form "bat0: hw csum failure" when packets with CHECKSUM_COMPLETE are
+received.
+
+Note that in usual setups, packets don't reach batman-adv with
+CHECKSUM_COMPLETE (I assume NICs bail out of checksumming when they see
+batadv's ethtype?), which is why the log messages do not occur on every
+system using batman-adv. I could reproduce this issue by stacking
+batman-adv on top of a VXLAN interface.
+
+Fixes: fe28a94c01e1 ("batman-adv: receive packets directly using skbs")
+Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/798174b15153afd88268f2f87811602f68b3f2c6
+---
+ net/batman-adv/soft-interface.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interface.c
+index 08432b14386a53c771c54b9eb38893d94c6f9b53..5da1a1c0f1efb5d95f31bc852b899f61e462feb1 100644
+--- a/net/batman-adv/soft-interface.c
++++ b/net/batman-adv/soft-interface.c
+@@ -470,13 +470,7 @@ void batadv_interface_rx(struct net_device *soft_iface,
+ 
+ 	/* skb->dev & skb->pkt_type are set here */
+ 	skb->protocol = eth_type_trans(skb, soft_iface);
+-
+-	/* should not be necessary anymore as we use skb_pull_rcsum()
+-	 * TODO: please verify this and remove this TODO
+-	 * -- Dec 21st 2009, Simon Wunderlich
+-	 */
+-
+-	/* skb->ip_summed = CHECKSUM_UNNECESSARY; */
++	skb_postpull_rcsum(skb, eth_hdr(skb), ETH_HLEN);
+ 
+ 	batadv_inc_counter(bat_priv, BATADV_CNT_RX);
+ 	batadv_add_counter(bat_priv, BATADV_CNT_RX_BYTES,

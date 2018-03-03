@@ -1,0 +1,33 @@
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Date: Mon, 19 Feb 2018 14:08:53 +0100
+Subject: [PATCH] batman-adv: Ignore invalid batadv_v_gw during netlink send
+
+The function batadv_v_gw_dump stops the processing loop when
+batadv_v_gw_dump_entry returns a non-0 return code. This should only
+happen when the buffer is full. Otherwise, an empty message may be
+returned by batadv_gw_dump. This empty message will then stop the netlink
+dumping of gateway entries. At worst, not a single entry is returned to
+userspace even when plenty of possible gateways exist.
+
+Fixes: 15315a94ad98 ("batman-adv: add B.A.T.M.A.N. V bat_gw_dump implementations")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/12f1d3a6bf4d157928fec509aab981e5243ee438
+---
+ net/batman-adv/bat_v.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/batman-adv/bat_v.c b/net/batman-adv/bat_v.c
+index 2f77e112d4cb4db7b1086715a597ef995054fdc1..0488063ff6ac5985e27c3a0df41ab3566b48abb8 100644
+--- a/net/batman-adv/bat_v.c
++++ b/net/batman-adv/bat_v.c
+@@ -930,7 +930,7 @@ static int batadv_v_gw_dump_entry(struct sk_buff *msg, u32 portid, u32 seq,
+ 	struct batadv_neigh_ifinfo *router_ifinfo = NULL;
+ 	struct batadv_neigh_node *router;
+ 	struct batadv_gw_node *curr_gw;
+-	int ret = -EINVAL;
++	int ret = 0;
+ 	void *hdr;
+ 
+ 	router = batadv_orig_router_get(gw_node->orig_node, BATADV_IF_DEFAULT);

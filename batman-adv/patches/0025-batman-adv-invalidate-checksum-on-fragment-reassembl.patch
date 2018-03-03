@@ -1,0 +1,39 @@
+From: Matthias Schiffer <mschiffer@universe-factory.net>
+Date: Tue, 23 Jan 2018 10:59:50 +0100
+Subject: [PATCH] batman-adv: invalidate checksum on fragment reassembly
+
+A more sophisticated implementation could try to combine fragment checksums
+when all fragments have CHECKSUM_COMPLETE and are split at even offsets.
+For now, we just set ip_summed to CHECKSUM_NONE to avoid "hw csum failure"
+warnings in the kernel log when fragmented frames are received. In
+consequence, skb_pull_rcsum() can be replaced with skb_pull().
+
+Note that in usual setups, packets don't reach batman-adv with
+CHECKSUM_COMPLETE (I assume NICs bail out of checksumming when they see
+batadv's ethtype?), which is why the log messages do not occur on every
+system using batman-adv. I could reproduce this issue by stacking
+batman-adv on top of a VXLAN interface.
+
+Fixes: 9b3eab61754d ("batman-adv: Receive fragmented packets and merge")
+Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/2c1bce065baa688bc1eca4116f83ca3b790432a5
+---
+ net/batman-adv/fragmentation.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
+index 28f54887c975905d03372ab8ba5274fd82117651..5969d3705ec08a96438ecce06577d35291600753 100644
+--- a/net/batman-adv/fragmentation.c
++++ b/net/batman-adv/fragmentation.c
+@@ -287,7 +287,8 @@ batadv_frag_merge_packets(struct hlist_head *chain)
+ 	/* Move the existing MAC header to just before the payload. (Override
+ 	 * the fragment header.)
+ 	 */
+-	skb_pull_rcsum(skb_out, hdr_size);
++	skb_pull(skb_out, hdr_size);
++	skb_out->ip_summed = CHECKSUM_NONE;
+ 	memmove(skb_out->data - ETH_HLEN, skb_mac_header(skb_out), ETH_HLEN);
+ 	skb_set_mac_header(skb_out, -ETH_HLEN);
+ 	skb_reset_network_header(skb_out);

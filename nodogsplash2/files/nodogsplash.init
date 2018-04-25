@@ -248,8 +248,22 @@ create_instance() {
   procd_close_instance
 }
 
+depends() {
+  if [ "$1" = "iptables" ] ; then
+  if $WD_DIR/ndsctl status > /dev/null; then
+  echo " * Restarting NodogSplash" 
+  /etc/init.d/nodogsplash restart
+  fi
+  fi
+}
+
 start_service() {
   include /lib/functions
+
+  if [ "$(grep -c "if \[ \-f \'/etc/init.d/nodogsplash\' \] ; " /etc/firewall.user)" = "0" ] ; then
+  echo "Installing NDS hook for iptables" 2>&1 | logger
+  printf "\n  if [ -f '/etc/init.d/nodogsplash' ] ; then /etc/init.d/nodogsplash depends iptables ; fi\n" >> /etc/firewall.user
+  fi
 
   mkdir -p /tmp/etc/
   config_load nodogsplash

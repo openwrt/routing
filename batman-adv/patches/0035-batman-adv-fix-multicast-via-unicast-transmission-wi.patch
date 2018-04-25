@@ -1,0 +1,42 @@
+From: Linus Lüssing <linus.luessing@c0d3.blue>
+Date: Tue, 20 Mar 2018 03:13:27 +0100
+Subject: [PATCH] batman-adv: fix multicast-via-unicast transmission with AP isolation
+
+For multicast frames AP isolation is only supposed to be checked on
+the receiving nodes and never on the originating one.
+
+Furthermore, the isolation or wifi flag bits should only be intepreted
+as such for unicast and never multicast TT entries.
+
+By injecting flags to the multicast TT entry claimed by a single
+target node it was verified in tests that this multicast address
+becomes unreachable, leading to packet loss.
+
+Omitting the "src" parameter to the batadv_transtable_search() call
+successfully skipped the AP isolation check and made the target
+reachable again.
+
+Fixes: 405cc1e5a81e ("batman-adv: Modified forwarding behaviour for multicast packets")
+Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/67a50c93bceb534937d6a188eded79272ff6d55d
+---
+ net/batman-adv/multicast.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/batman-adv/multicast.c b/net/batman-adv/multicast.c
+index 1fb4f87be11e984f3a839c0b2dea939cd692b04d..20680e1dafc46cd60766a6dcd4f401f097ad4786 100644
+--- a/net/batman-adv/multicast.c
++++ b/net/batman-adv/multicast.c
+@@ -811,8 +811,8 @@ static struct batadv_orig_node *
+ batadv_mcast_forw_tt_node_get(struct batadv_priv *bat_priv,
+ 			      struct ethhdr *ethhdr)
+ {
+-	return batadv_transtable_search(bat_priv, ethhdr->h_source,
+-					ethhdr->h_dest, BATADV_NO_FLAGS);
++	return batadv_transtable_search(bat_priv, NULL, ethhdr->h_dest,
++					BATADV_NO_FLAGS);
+ }
+ 
+ /**

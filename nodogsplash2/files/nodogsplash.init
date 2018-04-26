@@ -251,6 +251,26 @@ create_instance() {
 start_service() {
   include /lib/functions
 
+  if ! uci get firewall.nodogsplash2.path &> /dev/null ; then
+      if [ -f '/etc/nodogsplash/ndshook.sh' ] ; then
+        rm /etc/nodogsplash/ndshook.sh
+      fi
+    uci delete firewall.nodogsplash2 2> /dev/null
+    uci set firewall.nodogsplash2=include
+    uci set firewall.nodogsplash2.type=script
+    uci set firewall.nodogsplash2.path='/etc/nodogsplash/ndshook.sh'
+    uci commit firewall
+    /etc/init.d/firewall restart  2>&1 | logger
+  fi
+
+  if [ ! -f '/etc/nodogsplash/ndshook.sh' ] ; then
+    printf "#NDS Restart Hook Created by Nodogsplash. Do not modify.\n" > /etc/nodogsplash/ndshook.sh
+    printf "  if /usr/bin/ndsctl status > /dev/null; then\n" >> /etc/nodogsplash/ndshook.sh
+    printf "    echo \" * Restarting NodogSplash \"\n" >> /etc/nodogsplash/ndshook.sh
+    printf "    /etc/init.d/nodogsplash restart\n  fi\n" >> /etc/nodogsplash/ndshook.sh
+    chmod +x /etc/nodogsplash/ndshook.sh
+  fi
+
   mkdir -p /tmp/etc/
   config_load nodogsplash
 

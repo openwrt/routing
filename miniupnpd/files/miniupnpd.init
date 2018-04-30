@@ -141,6 +141,7 @@ start() {
 		upnpd_write_bool secure_mode 1
 		upnpd_write_bool pcp_allow_thirdparty 0
 		upnpd_write_bool system_uptime 1
+		upnpd_write_bool force_igd_desc_v1 0
 
 		[ -n "$upnp_lease_file" ] && \
 			echo "lease_file=$upnp_lease_file" >>$tmpconf

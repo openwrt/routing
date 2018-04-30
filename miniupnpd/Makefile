@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=miniupnpd
-PKG_VERSION:=2.0.20170421
-PKG_RELEASE:=2
+PKG_VERSION:=2.0.20180422
+PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=http://miniupnp.free.fr/files
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_HASH:=9677aeccadf73b4bf8bb9d832c32b5da8266b4d58eed888f3fd43d7656405643
+PKG_HASH:=fe73dd48cbd2eeb30b1ae4f2b6ff46922f214019a50b9a8dd447849b42c9e90d
 
 PKG_LICENSE:=BSD-3-Clause
 
@@ -26,13 +26,6 @@ define Package/miniupnpd
   TITLE:=Lightweight UPnP IGD, NAT-PMP & PCP daemon
   SUBMENU:=Firewall
   URL:=http://miniupnp.free.fr/
-endef
-
-define Package/miniupnpd/config
-config MINIUPNPD_IGDv2
-	bool
-	default n
-	prompt "Enable IGDv2"
 endef
 
 define Package/miniupnpd/conffiles
@@ -60,9 +53,8 @@ MAKE_FLAGS += \
 	LIBS="" \
 	CC="$(TARGET_CC) -DIPTABLES_143 \
 		-lip4tc $(if $(CONFIG_IPV6),-lip6tc) -luuid" \
-	CONFIG_OPTIONS="--portinuse --leasefile \
-		$(if $(CONFIG_IPV6),--ipv6) \
-		$(if $(CONFIG_MINIUPNPD_IGDv2),--igd2)" \
+	CONFIG_OPTIONS="--portinuse --leasefile --igd2 \
+		$(if $(CONFIG_IPV6),--ipv6)" \
 	-f Makefile.linux \
 	miniupnpd
 

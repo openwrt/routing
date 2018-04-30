@@ -4,7 +4,7 @@ hardcode it.
 
 --- a/genconfig.sh
 +++ b/genconfig.sh
-@@ -367,12 +367,7 @@ case $FW in
+@@ -379,12 +379,7 @@ case $FW in
  esac
  
  # UUID API

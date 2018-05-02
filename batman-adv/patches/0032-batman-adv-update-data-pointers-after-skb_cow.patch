@@ -1,0 +1,61 @@
+From: Matthias Schiffer <mschiffer@universe-factory.net>
+Date: Fri, 16 Mar 2018 11:29:09 +0100
+Subject: [PATCH] batman-adv: update data pointers after skb_cow()
+
+batadv_check_unicast_ttvn() calls skb_cow(), so pointers into the SKB data
+must be (re)set after calling it. The ethhdr variable is dropped
+altogether.
+
+Fixes: 78fc6bbe0aca ("batman-adv: add UNICAST_4ADDR packet type")
+Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/64d22c76a207ed313b2496f0709b2567719452c4
+---
+ net/batman-adv/routing.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/net/batman-adv/routing.c b/net/batman-adv/routing.c
+index 213cc01ad00392f7cbd4efd9d4796f76691d2d9e..8d927931017e53d285d9c64b4b850bb1d0388e11 100644
+--- a/net/batman-adv/routing.c
++++ b/net/batman-adv/routing.c
+@@ -946,14 +946,10 @@ int batadv_recv_unicast_packet(struct sk_buff *skb,
+ 	struct batadv_orig_node *orig_node = NULL, *orig_node_gw = NULL;
+ 	int check, hdr_size = sizeof(*unicast_packet);
+ 	enum batadv_subtype subtype;
+-	struct ethhdr *ethhdr;
+ 	int ret = NET_RX_DROP;
+ 	bool is4addr, is_gw;
+ 
+ 	unicast_packet = (struct batadv_unicast_packet *)skb->data;
+-	unicast_4addr_packet = (struct batadv_unicast_4addr_packet *)skb->data;
+-	ethhdr = eth_hdr(skb);
+-
+ 	is4addr = unicast_packet->packet_type == BATADV_UNICAST_4ADDR;
+ 	/* the caller function should have already pulled 2 bytes */
+ 	if (is4addr)
+@@ -973,12 +969,14 @@ int batadv_recv_unicast_packet(struct sk_buff *skb,
+ 	if (!batadv_check_unicast_ttvn(bat_priv, skb, hdr_size))
+ 		goto free_skb;
+ 
++	unicast_packet = (struct batadv_unicast_packet *)skb->data;
++
+ 	/* packet for me */
+ 	if (batadv_is_my_mac(bat_priv, unicast_packet->dest)) {
+ 		/* If this is a unicast packet from another backgone gw,
+ 		 * drop it.
+ 		 */
+-		orig_addr_gw = ethhdr->h_source;
++		orig_addr_gw = eth_hdr(skb)->h_source;
+ 		orig_node_gw = batadv_orig_hash_find(bat_priv, orig_addr_gw);
+ 		if (orig_node_gw) {
+ 			is_gw = batadv_bla_is_backbone_gw(skb, orig_node_gw,
+@@ -993,6 +991,8 @@ int batadv_recv_unicast_packet(struct sk_buff *skb,
+ 		}
+ 
+ 		if (is4addr) {
++			unicast_4addr_packet =
++				(struct batadv_unicast_4addr_packet *)skb->data;
+ 			subtype = unicast_4addr_packet->subtype;
+ 			batadv_dat_inc_counter(bat_priv, subtype);
+ 

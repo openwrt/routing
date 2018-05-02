@@ -1,0 +1,86 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 18 Mar 2018 13:12:01 +0100
+Subject: [PATCH] batman-adv: Fix skbuff rcsum on packet reroute
+
+batadv_check_unicast_ttvn may redirect a packet to itself or another
+originator. This involves rewriting the ttvn and the destination address in
+the batadv unicast header. These field were not yet pulled (with skb rcsum
+update) and thus any change to them also requires a change in the receive
+checksum.
+
+Reported-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Fixes: cea194d90b11 ("batman-adv: improved client announcement mechanism")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: backport, https://git.open-mesh.org/batman-adv.git/commit/fb91b0ef84738102807e5dd7ec0b3565415aff56
+---
+ net/batman-adv/routing.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/net/batman-adv/routing.c b/net/batman-adv/routing.c
+index 8d927931017e53d285d9c64b4b850bb1d0388e11..6a12612463127f501ad6a0df20632f14586075bd 100644
+--- a/net/batman-adv/routing.c
++++ b/net/batman-adv/routing.c
+@@ -744,6 +744,7 @@ free_skb:
+ /**
+  * batadv_reroute_unicast_packet - update the unicast header for re-routing
+  * @bat_priv: the bat priv with all the soft interface information
++ * @skb: unicast packet to process
+  * @unicast_packet: the unicast header to be updated
+  * @dst_addr: the payload destination
+  * @vid: VLAN identifier
+@@ -755,7 +756,7 @@ free_skb:
+  * Return: true if the packet header has been updated, false otherwise
+  */
+ static bool
+-batadv_reroute_unicast_packet(struct batadv_priv *bat_priv,
++batadv_reroute_unicast_packet(struct batadv_priv *bat_priv, struct sk_buff *skb,
+ 			      struct batadv_unicast_packet *unicast_packet,
+ 			      u8 *dst_addr, unsigned short vid)
+ {
+@@ -784,8 +785,10 @@ batadv_reroute_unicast_packet(struct batadv_priv *bat_priv,
+ 	}
+ 
+ 	/* update the packet header */
++	skb_postpull_rcsum(skb, unicast_packet, sizeof(*unicast_packet));
+ 	ether_addr_copy(unicast_packet->dest, orig_addr);
+ 	unicast_packet->ttvn = orig_ttvn;
++	skb_postpush_rcsum(skb, unicast_packet, sizeof(*unicast_packet));
+ 
+ 	ret = true;
+ out:
+@@ -826,7 +829,7 @@ static bool batadv_check_unicast_ttvn(struct batadv_priv *bat_priv,
+ 	 * the packet to
+ 	 */
+ 	if (batadv_tt_local_client_is_roaming(bat_priv, ethhdr->h_dest, vid)) {
+-		if (batadv_reroute_unicast_packet(bat_priv, unicast_packet,
++		if (batadv_reroute_unicast_packet(bat_priv, skb, unicast_packet,
+ 						  ethhdr->h_dest, vid))
+ 			batadv_dbg_ratelimited(BATADV_DBG_TT,
+ 					       bat_priv,
+@@ -872,7 +875,7 @@ static bool batadv_check_unicast_ttvn(struct batadv_priv *bat_priv,
+ 	 * destination can possibly be updated and forwarded towards the new
+ 	 * target host
+ 	 */
+-	if (batadv_reroute_unicast_packet(bat_priv, unicast_packet,
++	if (batadv_reroute_unicast_packet(bat_priv, skb, unicast_packet,
+ 					  ethhdr->h_dest, vid)) {
+ 		batadv_dbg_ratelimited(BATADV_DBG_TT, bat_priv,
+ 				       "Rerouting unicast packet to %pM (dst=%pM): TTVN mismatch old_ttvn=%u new_ttvn=%u\n",
+@@ -895,12 +898,14 @@ static bool batadv_check_unicast_ttvn(struct batadv_priv *bat_priv,
+ 	if (!primary_if)
+ 		return false;
+ 
++	/* update the packet header */
++	skb_postpull_rcsum(skb, unicast_packet, sizeof(*unicast_packet));
+ 	ether_addr_copy(unicast_packet->dest, primary_if->net_dev->dev_addr);
++	unicast_packet->ttvn = curr_ttvn;
++	skb_postpush_rcsum(skb, unicast_packet, sizeof(*unicast_packet));
+ 
+ 	batadv_hardif_put(primary_if);
+ 
+-	unicast_packet->ttvn = curr_ttvn;
+-
+ 	return true;
+ }
+ 

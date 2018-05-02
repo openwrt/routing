@@ -267,9 +267,9 @@ start_service() {
   
   if [ $(uci get nodogsplash.@nodogsplash[0].fwhook_enabled) = "1" ] ; then
     if ! uci get firewall.nodogsplash2.path &> /dev/null ; then
-        if [ -f '/tmp/etc/ndshook.include' ] ; then
-          rm /tmp/etc/ndshook.include
-        fi
+      if [ -f '/tmp/etc/ndshook.include' ] ; then
+        rm /tmp/etc/ndshook.include
+      fi
       uci delete firewall.nodogsplash2 2> /dev/null
       uci set firewall.nodogsplash2=include
       uci set firewall.nodogsplash2.type=script

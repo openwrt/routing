@@ -252,10 +252,11 @@ depends() {
   if [ "$1" = "iptables" ] ; then
     if [ $(uci get nodogsplash.@nodogsplash[0].fwhook_enabled) = "1" ] ; then
       if $WD_DIR/ndsctl status > /dev/null; then
-      echo " * Restarting NodogSplash" 
-      /etc/init.d/nodogsplash restart
+       echo " * Restarting NodogSplash" 
+       /etc/init.d/nodogsplash restart
       fi
-    else   echo " * NodogSplash fwhook is disabled" 
+    else   echo " * NodogSplash fwhook is disabled"
+    
     fi
   fi
 }

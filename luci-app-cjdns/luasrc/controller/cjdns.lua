@@ -51,7 +51,9 @@ function act_peers()
 		end
 
 		for i,peer in pairs(response.peers) do
-			peer.ipv6 = publictoip6(peer.publicKey)
+			peer.ipv6 = publictoip6(peer.addr)
+			peer.version = pstatver(peer.addr)
+			peer.label = pstatlabel(peer.addr)
 			if peer.user == nil then
 				peer.user = ''
 				uci.cursor():foreach("cjdns", "udp_peer", function(udp_peer)
@@ -97,9 +99,23 @@ function act_ping()
 	luci.http.write_json(response)
 end
 
-function publictoip6(publicKey)
-	local process = io.popen("/usr/bin/publictoip6 " .. publicKey, "r")
+function publictoip6(addrLine)
+	local t = string.sub(addrLine, string.len(addrLine) - 53)
+	local process = io.popen("/usr/bin/publictoip6 " .. t, "r")
 	local ipv6    = process:read()
 	process:close()
 	return ipv6
+end
+
+function pstatver(addrLine)
+	for str in string.gmatch(addrLine, "([^"..".".."]+)") do
+		if str then return str else return '-' end
+	end
+end
+
+function pstatlabel(addrLine)
+	local t={}; local i=0; for str in string.gmatch(addrLine, "([^"..".".."]+)") do
+		if i >= 1 and i <= 4 then t[#t+1] = str end i = i + 1
+	end
+	return table.concat(t, ".")
 end

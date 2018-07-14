@@ -36,12 +36,13 @@
 
 			var status = interface + ', ' + peer.state.toLowerCase();
 
-			if (peer.version === 0) {
+			if ((typeof peer.version === 'undefined') || (peer.version == false)) {
 				var version = '-';
 			} else {
-				var version = 'v' + peer.version;
+				var version = peer.version;
 			}
 
+			var link = peer.lladdr;
 			var rxtx = lbbytes(peer.bytesIn) + ' / ' + lbbytes(peer.bytesOut);
 
 			var row = table.insertRow(-1);
@@ -50,13 +51,14 @@
 			row.insertCell(-1).textContent = peer.ipv6;
 			row.insertCell(-1).textContent = status;
 			row.insertCell(-1).textContent = version;
+			row.insertCell(-1).textContent = link;
 			row.insertCell(-1).textContent = rxtx;
 			var latencyCell = row.insertCell(-1);
 			latencyCell.textContent = 'waiting';
 
 			var pingURI = '<%=luci.dispatcher.build_url("admin", "services", "cjdns", "ping")%>';
 			var timeout = 2000;
-			XHR.get(pingURI, { label: peer.switchLabel, timeout: timeout }, function(x, pong) {
+			XHR.get(pingURI, { label: peer.label, timeout: timeout }, function(x, pong) {
 				var pongrsp = ((pong.err == "ai:recv > timeout") || (pong == "undefined") || (pong.ms >= timeout))
 					? '> ' + timeout + ' ms'
 					: pong.ms + ' ms';
@@ -106,6 +108,7 @@ function lbbytes (bytes){
 			<th class="cbi-section-table-cell">IPv6</th>
 			<th class="cbi-section-table-cell">Status</th>
 			<th class="cbi-section-table-cell">Version</th>
+			<th class="cbi-section-table-cell">Address</th>
 			<th class="cbi-section-table-cell">Rx / Tx</th>
 			<th class="cbi-section-table-cell">Latency</th>
 		</tr>

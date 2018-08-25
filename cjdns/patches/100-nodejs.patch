@@ -1,0 +1,41 @@
+diff --git a/node_build/node.sh b/node_build/node.sh
+index f6b9291..b98ecd8 100755
+--- a/node_build/node.sh
++++ b/node_build/node.sh
+@@ -125,19 +125,23 @@ getNode() {
+     "$INSTALL_PATH" -d "$NODEDIR/nodejs"
+ 
+     cd "$NODEDIR/nodejs"
+-    node_dl="node-${DLVER}.tar.gz"
+-    if cmdExists wget; then
+-        printf '\n%s %s ' '==>' "Downloading $NODEURL with wget..."
+-        wget -q "$NODEURL" -O "$node_dl" || die "failed to download $NODEURL";
+-    elif cmdExists curl; then
+-        printf '%s %s ' '==>' "Downloading $NODEURL with curl..."
+-        curl -s "$NODEURL" > "$node_dl" || die "failed to download $NODEURL";
+-    elif cmdExists fetch; then
+-        printf '%s %s ' '==>' "Downloading $NODEURL with fetch..."
+-        fetch "$NODEURL" -o "$node_dl" || die "failed to download $NODEURL";
+-    else
+-        die 'wget, curl or fetch is required download node.js but you have none!'
+-    fi
++	DL_DIR=$(cat ../../../../../.config | grep CONFIG_DOWNLOAD_FOLDER | cut -d\" -f2)
++	[ "$DL_DIR" = "" ] && DL_DIR="../../../../../dl"
++    node_dl="${DL_DIR}/node-$DLVER-$PLATFORM-$march.tar.gz"
++	if [ ! -f "$node_dl" ]; then
++		if cmdExists wget; then
++			printf '\n%s %s ' '==>' "Downloading $NODEURL with wget..."
++			wget -q "$NODEURL" -O "$node_dl" || die "failed to download $NODEURL";
++		elif cmdExists curl; then
++			printf '%s %s ' '==>' "Downloading $NODEURL with curl..."
++			curl -s "$NODEURL" > "$node_dl" || die "failed to download $NODEURL";
++		elif cmdExists fetch; then
++			printf '%s %s ' '==>' "Downloading $NODEURL with fetch..."
++			fetch "$NODEURL" -o "$node_dl" || die "failed to download $NODEURL";
++		else
++			die 'wget, curl or fetch is required download node.js but you have none!'
++		fi
++	fi
+     [ -f "$node_dl" ] || die 'Failed to download node.js'
+     printf '%s\n' 'DONE!'
+ 

@@ -1,0 +1,45 @@
+From: Marek Lindner <mareklindner@neomailbox.ch>
+Date: Fri, 7 Sep 2018 05:45:54 +0800
+Subject: [PATCH] batman-adv: fix backbone_gw refcount on queue_work() failure
+
+The backbone_gw refcounter is to be decreased by the queued work and
+currently is never decreased if the queue_work() call fails.
+Fix by checking the queue_work() return value and decrease refcount
+if necessary.
+
+Signed-off-by: Marek Lindner <mareklindner@neomailbox.ch>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/24d83a50421c1c5d39cd9c015516a1a293ae8d0c
+---
+ net/batman-adv/bridge_loop_avoidance.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
+index a2de5a44bd41bf5c3d521d29b72e0b225a3ace05..58c093caf49e804c1e11426959d70e79f1729d41 100644
+--- a/net/batman-adv/bridge_loop_avoidance.c
++++ b/net/batman-adv/bridge_loop_avoidance.c
+@@ -1772,6 +1772,7 @@ batadv_bla_loopdetect_check(struct batadv_priv *bat_priv, struct sk_buff *skb,
+ {
+ 	struct batadv_bla_backbone_gw *backbone_gw;
+ 	struct ethhdr *ethhdr;
++	bool ret;
+ 
+ 	ethhdr = eth_hdr(skb);
+ 
+@@ -1795,8 +1796,13 @@ batadv_bla_loopdetect_check(struct batadv_priv *bat_priv, struct sk_buff *skb,
+ 	if (unlikely(!backbone_gw))
+ 		return true;
+ 
+-	queue_work(batadv_event_workqueue, &backbone_gw->report_work);
+-	/* backbone_gw is unreferenced in the report work function function */
++	ret = queue_work(batadv_event_workqueue, &backbone_gw->report_work);
++
++	/* backbone_gw is unreferenced in the report work function function
++	 * if queue_work() call was successful
++	 */
++	if (!ret)
++		batadv_backbone_gw_put(backbone_gw);
+ 
+ 	return true;
+ }

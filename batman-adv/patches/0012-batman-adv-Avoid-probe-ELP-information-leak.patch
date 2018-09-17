@@ -1,0 +1,35 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 31 Aug 2018 15:08:44 +0200
+Subject: [PATCH] batman-adv: Avoid probe ELP information leak
+
+The probe ELPs for WiFi interfaces are expanded to contain at least
+BATADV_ELP_MIN_PROBE_SIZE bytes. This is usually a lot more than the
+number of bytes which the template ELP packet requires.
+
+These extra padding bytes were not initialized and thus could contain data
+which were previously stored at the same location. It is therefore required
+to set it to some predefined or random values to avoid leaking private
+information from the system transmitting these kind of packets.
+
+Fixes: bedcadfaa92b ("batman-adv: ELP - send unicast ELP packets for throughput sampling")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Acked-by: Antonio Quartulli <a@unstable.cc>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/6c876e572f592c31132a55b5fb8427e168e5fb3c
+---
+ net/batman-adv/bat_v_elp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
+index 28687493599f5ba10b8813c18d803582210bc292..371028f82a0669e86155fee39ba955cbbde48e60 100644
+--- a/net/batman-adv/bat_v_elp.c
++++ b/net/batman-adv/bat_v_elp.c
+@@ -228,7 +228,7 @@ batadv_v_elp_wifi_neigh_probe(struct batadv_hardif_neigh_node *neigh)
+ 		 * the packet to be exactly of that size to make the link
+ 		 * throughput estimation effective.
+ 		 */
+-		skb_put(skb, probe_len - hard_iface->bat_v.elp_skb->len);
++		skb_put_zero(skb, probe_len - hard_iface->bat_v.elp_skb->len);
+ 
+ 		batadv_dbg(BATADV_DBG_BATMAN, bat_priv,
+ 			   "Sending unicast (probe) ELP packet on interface %s to %pM\n",

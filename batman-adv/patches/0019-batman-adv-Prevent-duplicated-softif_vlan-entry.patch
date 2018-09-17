@@ -1,0 +1,81 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 6 Sep 2018 14:35:26 +0200
+Subject: [PATCH] batman-adv: Prevent duplicated softif_vlan entry
+
+The function batadv_softif_vlan_get is responsible for adding new
+softif_vlan to the softif_vlan_list. It first checks whether the entry
+already is in the list or not. If it is, then the creation of a new entry
+is aborted.
+
+But the lock for the list is only held when the list is really modified.
+This could lead to duplicated entries because another context could create
+an entry with the same key between the check and the list manipulation.
+
+The check and the manipulation of the list must therefore be in the same
+locked code section.
+
+Fixes: 952cebb57518 ("batman-adv: add per VLAN interface attribute framework")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/023d3f64207e8b6a6e6d0718d98e239c5545ef0c
+---
+ net/batman-adv/soft-interface.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
+
+diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interface.c
+index edeffcb9f3a24e1b53c2b4d705fb260717ac09c4..79d6ab78359db9c6a5df14e2e204c611ab134dfc 100644
+--- a/net/batman-adv/soft-interface.c
++++ b/net/batman-adv/soft-interface.c
+@@ -574,15 +574,20 @@ int batadv_softif_create_vlan(struct batadv_priv *bat_priv, unsigned short vid)
+ 	struct batadv_softif_vlan *vlan;
+ 	int err;
+ 
++	spin_lock_bh(&bat_priv->softif_vlan_list_lock);
++
+ 	vlan = batadv_softif_vlan_get(bat_priv, vid);
+ 	if (vlan) {
+ 		batadv_softif_vlan_put(vlan);
++		spin_unlock_bh(&bat_priv->softif_vlan_list_lock);
+ 		return -EEXIST;
+ 	}
+ 
+ 	vlan = kzalloc(sizeof(*vlan), GFP_ATOMIC);
+-	if (!vlan)
++	if (!vlan) {
++		spin_unlock_bh(&bat_priv->softif_vlan_list_lock);
+ 		return -ENOMEM;
++	}
+ 
+ 	vlan->bat_priv = bat_priv;
+ 	vlan->vid = vid;
+@@ -590,17 +595,23 @@ int batadv_softif_create_vlan(struct batadv_priv *bat_priv, unsigned short vid)
+ 
+ 	atomic_set(&vlan->ap_isolation, 0);
+ 
+-	err = batadv_sysfs_add_vlan(bat_priv->soft_iface, vlan);
+-	if (err) {
+-		kfree(vlan);
+-		return err;
+-	}
+-
+-	spin_lock_bh(&bat_priv->softif_vlan_list_lock);
+ 	kref_get(&vlan->refcount);
+ 	hlist_add_head_rcu(&vlan->list, &bat_priv->softif_vlan_list);
+ 	spin_unlock_bh(&bat_priv->softif_vlan_list_lock);
+ 
++	/* batadv_sysfs_add_vlan cannot be in the spinlock section due to the
++	 * sleeping behavior of the sysfs functions and the fs_reclaim lock
++	 */
++	err = batadv_sysfs_add_vlan(bat_priv->soft_iface, vlan);
++	if (err) {
++		/* ref for the function */
++		batadv_softif_vlan_put(vlan);
++
++		/* ref for the list */
++		batadv_softif_vlan_put(vlan);
++		return err;
++	}
++
+ 	/* add a new TT local entry. This one will be marked with the NOPURGE
+ 	 * flag
+ 	 */

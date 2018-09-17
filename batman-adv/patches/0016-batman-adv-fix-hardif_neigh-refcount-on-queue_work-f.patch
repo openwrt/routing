@@ -1,0 +1,43 @@
+From: Marek Lindner <mareklindner@neomailbox.ch>
+Date: Fri, 7 Sep 2018 05:45:55 +0800
+Subject: [PATCH] batman-adv: fix hardif_neigh refcount on queue_work() failure
+
+The hardif_neigh refcounter is to be decreased by the queued work and
+currently is never decreased if the queue_work() call fails.
+Fix by checking the queue_work() return value and decrease refcount
+if necessary.
+
+Signed-off-by: Marek Lindner <mareklindner@neomailbox.ch>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/85100b602c127cecf1bcfd620d20eb867d685df2
+---
+ net/batman-adv/bat_v_elp.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
+index 371028f82a0669e86155fee39ba955cbbde48e60..83b46654449df72ceda6ca3177f72e7faf0603ab 100644
+--- a/net/batman-adv/bat_v_elp.c
++++ b/net/batman-adv/bat_v_elp.c
+@@ -255,6 +255,7 @@ static void batadv_v_elp_periodic_work(struct work_struct *work)
+ 	struct batadv_priv *bat_priv;
+ 	struct sk_buff *skb;
+ 	u32 elp_interval;
++	bool ret;
+ 
+ 	bat_v = container_of(work, struct batadv_hard_iface_bat_v, elp_wq.work);
+ 	hard_iface = container_of(bat_v, struct batadv_hard_iface, bat_v);
+@@ -316,8 +317,11 @@ static void batadv_v_elp_periodic_work(struct work_struct *work)
+ 		 * may sleep and that is not allowed in an rcu protected
+ 		 * context. Therefore schedule a task for that.
+ 		 */
+-		queue_work(batadv_event_workqueue,
+-			   &hardif_neigh->bat_v.metric_work);
++		ret = queue_work(batadv_event_workqueue,
++				 &hardif_neigh->bat_v.metric_work);
++
++		if (!ret)
++			batadv_hardif_neigh_put(hardif_neigh);
+ 	}
+ 	rcu_read_unlock();
+ 

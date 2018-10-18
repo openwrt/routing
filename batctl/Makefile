@@ -10,14 +10,12 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=batctl
 
 PKG_VERSION:=2018.1
-PKG_RELEASE:=0
+PKG_RELEASE:=1
 PKG_HASH:=27877d0da6916f88a6cecbbb3f3d23cc4558ef7c7294324bf4fd050ed606b553
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
 PKG_LICENSE:=GPL-2.0
-
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -62,7 +60,8 @@ MAKE_BATCTL_ARGS += \
         REVISION="$(PKG_BATCTL_SHORTREV)" \
         CC="$(TARGET_CC)" \
         DESTDIR="$(PKG_INSTALL_DIR)" \
-        batctl install
+        batctl install \
+        REVISION="openwrt-$(PKG_VERSION)-$(PKG_RELEASE)"
 
 
 define Build/Compile

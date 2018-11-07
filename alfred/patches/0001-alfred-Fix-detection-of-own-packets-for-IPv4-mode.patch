@@ -1,0 +1,37 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Mon, 29 Oct 2018 18:05:42 +0100
+Subject: [PATCH] alfred: Fix detection of own packets for IPv4 mode
+
+The incoming packet address is checked for a match against the local
+interface addresses to avoid processing its own packets. The IPv4
+implementation used the same code but only initialized 4 of the 16 bytes of
+the address in the recv function. The interface initialization code in
+netsock_set_interfaces set all unused bytes to zero but recv_alfred_packet
+was modified to use 12 random bytes from the stack.
+
+Both functions must work the same way and first set the address bytes to
+zero and overwrite the actual used bytes with the address bytes. Otherwise,
+the result of netsock_set_interfaces for own packets is random in the IPv4
+implementation.
+
+Fixes: c7da798113a2 ("alfred: IPv4 multicast distribution support.")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Tested-by: Jonathan Haws <jhaws@sdl.usu.edu>
+
+Origin: upstream, https://git.open-mesh.org/alfred.git/commit/db842ed210d00345619e0ebc45a4d0d840e0b7e5
+---
+ recv.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/recv.c b/recv.c
+index 59d759cfba816d3dd7ed4a56fd3269730093bcfd..5ff4bb5df2354d7f2310e2105ee385b9365b0c4b 100644
+--- a/recv.c
++++ b/recv.c
+@@ -416,6 +416,7 @@ int recv_alfred_packet(struct globals *globals, struct interface *interface,
+ 
+ 	packet = (struct alfred_tlv *)buf;
+ 
++	memset(&alfred_source, 0, sizeof(alfred_source));
+ 	if (globals->ipv4mode) {
+ 		memcpy(&alfred_source, &source4.sin_addr, sizeof(source4.sin_addr));
+ 	} else {

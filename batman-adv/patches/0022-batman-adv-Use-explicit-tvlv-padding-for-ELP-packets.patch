@@ -1,0 +1,55 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Tue, 30 Oct 2018 12:17:10 +0100
+Subject: [PATCH] batman-adv: Use explicit tvlv padding for ELP packets
+
+The announcement messages of batman-adv COMPAT_VERSION 15 have the
+possibility to announce additional information via a dynamic TVLV part.
+This part is optional for the ELP packets and currently not parsed by the
+Linux implementation. Still out-of-tree versions are using it to transport
+things like neighbor hashes to optimize the rebroadcast behavior.
+
+Since the ELP broadcast packets are smaller than the minimal ethernet
+packet, it often has to be padded. This is often done (as specified in
+RFC894) with octets of zero and thus work perfectly fine with the TVLV
+part (making it a zero length and thus empty). But not all ethernet
+compatible hardware seems to follow this advice. To avoid ambiguous
+situations when parsing the TVLV header, just force the 4 bytes (TVLV
+length + padding) after the required ELP header to zero.
+
+Fixes: a4b88af77e28 ("batman-adv: ELP - adding basic infrastructure")
+Reported-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/974337ee9773c4bd0a2d5c322306cf2bea445e11
+---
+ net/batman-adv/bat_v_elp.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
+index 83b46654449df72ceda6ca3177f72e7faf0603ab..9aa3c7b2e9bad6c50b2939b6dbf5a9a2e713b93b 100644
+--- a/net/batman-adv/bat_v_elp.c
++++ b/net/batman-adv/bat_v_elp.c
+@@ -339,19 +339,21 @@ static void batadv_v_elp_periodic_work(struct work_struct *work)
+  */
+ int batadv_v_elp_iface_enable(struct batadv_hard_iface *hard_iface)
+ {
++	static const size_t tvlv_padding = sizeof(__be32);
+ 	struct batadv_elp_packet *elp_packet;
+ 	unsigned char *elp_buff;
+ 	u32 random_seqno;
+ 	size_t size;
+ 	int res = -ENOMEM;
+ 
+-	size = ETH_HLEN + NET_IP_ALIGN + BATADV_ELP_HLEN;
++	size = ETH_HLEN + NET_IP_ALIGN + BATADV_ELP_HLEN + tvlv_padding;
+ 	hard_iface->bat_v.elp_skb = dev_alloc_skb(size);
+ 	if (!hard_iface->bat_v.elp_skb)
+ 		goto out;
+ 
+ 	skb_reserve(hard_iface->bat_v.elp_skb, ETH_HLEN + NET_IP_ALIGN);
+-	elp_buff = skb_put_zero(hard_iface->bat_v.elp_skb, BATADV_ELP_HLEN);
++	elp_buff = skb_put_zero(hard_iface->bat_v.elp_skb,
++				BATADV_ELP_HLEN + tvlv_padding);
+ 	elp_packet = (struct batadv_elp_packet *)elp_buff;
+ 
+ 	elp_packet->packet_type = BATADV_ELP;

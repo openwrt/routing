@@ -1,0 +1,44 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 7 Nov 2018 23:09:12 +0100
+Subject: [PATCH] batman-adv: Expand merged fragment buffer for full packet
+
+The complete size ("total_size") of the fragmented packet is stored in the
+fragment header and in the size of the fragment chain. When the fragments
+are ready for merge, the skbuff's tail of the first fragment is expanded to
+have enough room after the data pointer for at least total_size. This means
+that it gets expanded by total_size - first_skb->len.
+
+But this is ignoring the fact that after expanding the buffer, the fragment
+header is pulled by from this buffer. Assuming that the tailroom of the
+buffer was already 0, the buffer after the data pointer of the skbuff is
+now only total_size - len(fragment_header) large. When the merge function
+is then processing the remaining fragments, the code to copy the data over
+to the merged skbuff will cause an skb_over_panic when it tries to actually
+put enough data to fill the total_size bytes of the packet.
+
+The size of the skb_pull must therefore also be taken into account when the
+buffer's tailroom is expanded.
+
+Fixes: 9b3eab61754d ("batman-adv: Receive fragmented packets and merge")
+Reported-by: Martin Weinelt <martin@darmstadt.freifunk.net>
+Co-authored-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: other, https://patchwork.open-mesh.org/patch/17616/
+---
+ net/batman-adv/fragmentation.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
+index 0fddc17106bd8a0e3f064fee9adba7c226f34682..5b71a289d04fc80de6c20e7a24d621727c77825a 100644
+--- a/net/batman-adv/fragmentation.c
++++ b/net/batman-adv/fragmentation.c
+@@ -275,7 +275,7 @@ batadv_frag_merge_packets(struct hlist_head *chain)
+ 	kfree(entry);
+ 
+ 	packet = (struct batadv_frag_packet *)skb_out->data;
+-	size = ntohs(packet->total_size);
++	size = ntohs(packet->total_size) + hdr_size;
+ 
+ 	/* Make room for the rest of the fragments. */
+ 	if (pskb_expand_head(skb_out, 0, size - skb_out->len, GFP_ATOMIC) < 0) {

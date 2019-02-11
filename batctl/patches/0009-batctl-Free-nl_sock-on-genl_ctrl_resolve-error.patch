@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Date: Thu, 23 Nov 2017 15:04:41 +0100
-Subject: [PATCH] batctl: Free nl_sock on genl_ctrl_resolve error
+Subject: batctl: Free nl_sock on genl_ctrl_resolve error
 
 genl_ctrl_resolve may return NULL on errors. The code must then free the
 socket which was used to start the genl_ctrl_resolve and stop the function
@@ -11,9 +11,6 @@ Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batctl.git/commit/cdac2f843c616caaa2a0d3847aeec84c200c62d6
----
- netlink.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
 
 diff --git a/netlink.c b/netlink.c
 index 3eb66c9de30c21722bb1e348b055838ea14d18cf..ee58ce8bf16e224374940dddaff61f7b3c5aa4bb 100644

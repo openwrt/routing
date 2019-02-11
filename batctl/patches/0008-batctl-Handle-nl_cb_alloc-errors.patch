@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Date: Thu, 23 Nov 2017 15:04:40 +0100
-Subject: [PATCH] batctl: Handle nl_cb_alloc errors
+Subject: batctl: Handle nl_cb_alloc errors
 
 nl_cb_alloc may return NULL on errors. The processing has to be aborted
 when this happens.
@@ -10,9 +10,6 @@ Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batctl.git/commit/0a14f8800dac67d706827e9be7745e2319f5412c
----
- netlink.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
 
 diff --git a/netlink.c b/netlink.c
 index 107ca52a4866e25b7b04428d770a885ca4e826d2..3eb66c9de30c21722bb1e348b055838ea14d18cf 100644

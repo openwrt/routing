@@ -1,6 +1,6 @@
 From: Linus Lüssing <linus.luessing@c0d3.blue>
 Date: Mon, 13 Feb 2017 20:44:31 +0100
-Subject: [PATCH] batman-adv: Fix transmission of final, 16th fragment
+Subject: batman-adv: Fix transmission of final, 16th fragment
 
 Trying to split and transmit a unicast packet in 16 parts will fail for
 the final fragment: After having sent the 15th one with a frag_packet.no
@@ -18,9 +18,6 @@ Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/464eff3b1768ff190466a453a57ac140ea5cb756
----
- net/batman-adv/fragmentation.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
 index 31e97e9aee0d543b68be091936888e1f6c9dd7eb..11149e5be4e0ef9dfe2872e1d8d1f6dbb4ccdb14 100644

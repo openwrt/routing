@@ -1,6 +1,6 @@
 From: Gao Feng <gfree.wind@gmail.com>
 Date: Mon, 21 Nov 2016 23:00:32 +0800
-Subject: [PATCH] batman-adv: Treat NET_XMIT_CN as transmit successfully
+Subject: batman-adv: Treat NET_XMIT_CN as transmit successfully
 
 The tc could return NET_XMIT_CN as one congestion notification, but
 it does not mean the packet is lost. Other modules like ipvlan,
@@ -12,13 +12,6 @@ Signed-off-by: Gao Feng <gfree.wind@gmail.com>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/1120b81c74187f489c08fc9438305071def089cc
----
- net/batman-adv/distributed-arp-table.c |  3 ++-
- net/batman-adv/fragmentation.c         |  2 +-
- net/batman-adv/routing.c               | 10 +++++-----
- net/batman-adv/soft-interface.c        |  2 +-
- net/batman-adv/tp_meter.c              |  2 +-
- 5 files changed, 10 insertions(+), 9 deletions(-)
 
 diff --git a/net/batman-adv/distributed-arp-table.c b/net/batman-adv/distributed-arp-table.c
 index 49576c5a3fe306a42c28c3901d2b2c6cce7d0b8e..3641765d55df049a5dbac35d322ebc537a0f0322 100644

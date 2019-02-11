@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 31 Aug 2018 16:46:47 +0200
-Subject: [PATCH] batman-adv: Fix segfault when writing to throughput_override
+Subject: batman-adv: Fix segfault when writing to throughput_override
 
 The per hardif sysfs file "batman_adv/throughput_override" prints the
 resulting change as info text when the users writes to this file. It uses
@@ -23,9 +23,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Marek Lindner <mareklindner@neomailbox.ch>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/ddf99b78e255530cbadc0f67656a549e19520280
----
- net/batman-adv/sysfs.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/net/batman-adv/sysfs.c b/net/batman-adv/sysfs.c
 index 17c844196eb26c9faf9fd543b88cd86cc1c2c029..ae22db3d6637dde2fcc238826a624ef2d6dbd8f5 100644

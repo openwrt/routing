@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sun, 18 Mar 2018 13:12:01 +0100
-Subject: [PATCH] batman-adv: Fix skbuff rcsum on packet reroute
+Subject: batman-adv: Fix skbuff rcsum on packet reroute
 
 batadv_check_unicast_ttvn may redirect a packet to itself or another
 originator. This involves rewriting the ttvn and the destination address in
@@ -13,9 +13,6 @@ Fixes: cea194d90b11 ("batman-adv: improved client announcement mechanism")
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: backport, https://git.open-mesh.org/batman-adv.git/commit/fb91b0ef84738102807e5dd7ec0b3565415aff56
----
- net/batman-adv/routing.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/net/batman-adv/routing.c b/net/batman-adv/routing.c
 index 8d927931017e53d285d9c64b4b850bb1d0388e11..6a12612463127f501ad6a0df20632f14586075bd 100644

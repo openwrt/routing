@@ -1,6 +1,6 @@
 From: Andreas Pape <APape@phoenixcontact.com>
 Date: Mon, 5 Sep 2016 13:20:29 +0200
-Subject: [PATCH] batman-adv: handle race condition for claims between gateways
+Subject: batman-adv: handle race condition for claims between gateways
 
 Consider the following situation which has been found in a test setup:
 Gateway B has claimed client C and gateway A has the same backbone
@@ -30,9 +30,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/cbb2ccc101e220b339989d5a51c0ca226ceda792
----
- net/batman-adv/bridge_loop_avoidance.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
 
 diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
 index 41ab4a67a07b264bccdc5bccf73920909ff35c40..1e6e5d4468ad50c221ea5a0d436678d16c5e154f 100644

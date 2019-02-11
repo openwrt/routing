@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sat, 2 Jun 2018 17:26:35 +0200
-Subject: [PATCH] batman-adv: Fix bat_v best gw refcnt after netlink dump
+Subject: batman-adv: Fix bat_v best gw refcnt after netlink dump
 
 A reference for the best gateway is taken when the list of gateways in the
 mesh is sent via netlink. This is necessary to check whether the currently
@@ -17,9 +17,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Marek Lindner <mareklindner@neomailbox.ch>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/2b422b5808183d1084b450b89d9a085a13dd6d2c
----
- net/batman-adv/bat_v.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/net/batman-adv/bat_v.c b/net/batman-adv/bat_v.c
 index 0488063ff6ac5985e27c3a0df41ab3566b48abb8..87f06e92270b4c51376bc4e9717b0aed8c9f3441 100644

@@ -1,6 +1,6 @@
 From: Andreas Pape <apape@phoenixcontact.com>
 Date: Fri, 19 May 2017 10:01:42 +0200
-Subject: [PATCH] batman-adv: fix memory leak when dropping packet from other gateway
+Subject: batman-adv: fix memory leak when dropping packet from other gateway
 
 The skb must be released in the receive handler since b91a2543b4c1
 ("batman-adv: Consume skb in receive handlers"). Just returning NET_RX_DROP
@@ -14,9 +14,6 @@ Signed-off-by: Andreas Pape <apape@phoenixcontact.com>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/a58feb79ed1447e3e83f3b0b1a23779886869f39
----
- net/batman-adv/routing.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/net/batman-adv/routing.c b/net/batman-adv/routing.c
 index 5190683424b89d1fa7c86895000bc6656e6a65dd..213cc01ad00392f7cbd4efd9d4796f76691d2d9e 100644

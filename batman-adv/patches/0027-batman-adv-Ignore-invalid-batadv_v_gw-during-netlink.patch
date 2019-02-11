@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Date: Mon, 19 Feb 2018 14:08:53 +0100
-Subject: [PATCH] batman-adv: Ignore invalid batadv_v_gw during netlink send
+Subject: batman-adv: Ignore invalid batadv_v_gw during netlink send
 
 The function batadv_v_gw_dump stops the processing loop when
 batadv_v_gw_dump_entry returns a non-0 return code. This should only
@@ -14,9 +14,6 @@ Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/12f1d3a6bf4d157928fec509aab981e5243ee438
----
- net/batman-adv/bat_v.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/net/batman-adv/bat_v.c b/net/batman-adv/bat_v.c
 index 2f77e112d4cb4db7b1086715a597ef995054fdc1..0488063ff6ac5985e27c3a0df41ab3566b48abb8 100644

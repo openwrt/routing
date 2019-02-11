@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 1 Jun 2018 19:24:24 +0200
-Subject: [PATCH] batman-adv: Fix debugfs path for renamed softif
+Subject: batman-adv: Fix debugfs path for renamed softif
 
 batman-adv is creating special debugfs directories in the init
 net_namespace for each created soft-interface (batadv net_device). But it
@@ -25,11 +25,6 @@ Fixes: 230202d4b530 ("batman-adv: Move device for icmp injection to debugfs")
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: backport, https://git.open-mesh.org/batman-adv.git/commit/3f2237bb191cd17654a4d5a5badfd6e7379c4b37
----
- net/batman-adv/debugfs.c        | 20 +++++++++++++++++++
- net/batman-adv/debugfs.h        |  5 +++++
- net/batman-adv/hard-interface.c | 34 +++++++++++++++++++++++++++------
- 3 files changed, 53 insertions(+), 6 deletions(-)
 
 diff --git a/net/batman-adv/debugfs.c b/net/batman-adv/debugfs.c
 index a229d2d9acfd1f3d6fea071aa0df3bf06a0e2ecf..fa396394edd02e74f49323216027f4ef9739dfa0 100644

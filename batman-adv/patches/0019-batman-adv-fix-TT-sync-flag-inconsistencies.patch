@@ -1,6 +1,6 @@
 From: Linus Lüssing <linus.luessing@c0d3.blue>
 Date: Thu, 6 Jul 2017 07:02:25 +0200
-Subject: [PATCH] batman-adv: fix TT sync flag inconsistencies
+Subject: batman-adv: fix TT sync flag inconsistencies
 
 This patch fixes an issue in the translation table code potentially
 leading to a TT Request + Response storm. The issue may occur for nodes
@@ -34,10 +34,6 @@ Acked-by: Antonio Quartulli <a@unstable.cc>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/382d020fe3fa528b1f65f8107df8fc023eb8cacb
----
- net/batman-adv/translation-table.c | 60 ++++++++++++++++++++++++++++++++------
- net/batman-adv/types.h             |  2 ++
- 2 files changed, 53 insertions(+), 9 deletions(-)
 
 diff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c
 index 199da2abe6ab92161ab66faa01fa3d06aeb68c89..a64003b824e0d0b05f0a9e44ccc32ba0cb3018fc 100644

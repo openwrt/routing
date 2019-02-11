@@ -1,6 +1,6 @@
 From: Andreas Pape <APape@phoenixcontact.com>
 Date: Mon, 5 Sep 2016 13:20:27 +0200
-Subject: [PATCH] batman-adv: drop unicast packets from other backbone gw
+Subject: batman-adv: drop unicast packets from other backbone gw
 
 Additional dropping of unicast packets received from another backbone gw if
 the same backbone network before being forwarded to the same backbone again
@@ -14,9 +14,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/bfe2a1971f43ef540ef0440d319542fa7d41d81f
----
- net/batman-adv/routing.c | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
 
 diff --git a/net/batman-adv/routing.c b/net/batman-adv/routing.c
 index 6b08b26da4d94be9c8c5e9dc708ddc18d8282428..5190683424b89d1fa7c86895000bc6656e6a65dd 100644

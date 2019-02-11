@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Wed, 9 May 2018 21:07:40 +0200
-Subject: [PATCH] batman-adv: Avoid race in TT TVLV allocator helper
+Subject: batman-adv: Avoid race in TT TVLV allocator helper
 
 The functions batadv_tt_prepare_tvlv_local_data and
 batadv_tt_prepare_tvlv_global_data are responsible for preparing a buffer
@@ -29,9 +29,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Antonio Quartulli <a@unstable.cc>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/286be89a33497ba9000aa5c2960f1f4114953522
----
- net/batman-adv/translation-table.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c
 index a64003b824e0d0b05f0a9e44ccc32ba0cb3018fc..933ac64b5707846ddee9f828b538ade86b968986 100644

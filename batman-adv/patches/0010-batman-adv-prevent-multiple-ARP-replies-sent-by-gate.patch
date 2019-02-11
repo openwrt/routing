@@ -1,6 +1,6 @@
 From: Andreas Pape <APape@phoenixcontact.com>
 Date: Mon, 5 Sep 2016 13:20:25 +0200
-Subject: [PATCH] batman-adv: prevent multiple ARP replies sent by gateways if dat enabled
+Subject: batman-adv: prevent multiple ARP replies sent by gateways if dat enabled
 
 If dat is enabled it must be made sure that only the backbone gw which has
 claimed the remote destination for the ARP request answers the ARP request
@@ -15,11 +15,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/0c794961bc0d32386cffdc6d41c5ee21d9638e5b
----
- net/batman-adv/bridge_loop_avoidance.c | 49 ++++++++++++++++++++++++++++++++++
- net/batman-adv/bridge_loop_avoidance.h | 11 ++++++++
- net/batman-adv/distributed-arp-table.c | 15 +++++++++++
- 3 files changed, 75 insertions(+)
 
 diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
 index e7f690b571ea9be8ace25843d6e187a907486b99..41ab4a67a07b264bccdc5bccf73920909ff35c40 100644

@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 1 Jun 2018 19:24:23 +0200
-Subject: [PATCH] batman-adv: Fix debugfs path for renamed hardif
+Subject: batman-adv: Fix debugfs path for renamed hardif
 
 batman-adv is creating special debugfs directories in the init
 net_namespace for each valid hard-interface (net_device). But it is
@@ -27,11 +27,6 @@ Reported-by: John Soros <sorosj@gmail.com>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/127086f503f6495518b95455efebee33d328f335
----
- net/batman-adv/debugfs.c        | 20 ++++++++++++++++++++
- net/batman-adv/debugfs.h        |  6 ++++++
- net/batman-adv/hard-interface.c |  3 +++
- 3 files changed, 29 insertions(+)
 
 diff --git a/net/batman-adv/debugfs.c b/net/batman-adv/debugfs.c
 index 4229b01ac7b54008e023df0ed6546a6d541498ba..7e5de7b9f6d53b846cebfa95bf694a20c640b2d6 100644

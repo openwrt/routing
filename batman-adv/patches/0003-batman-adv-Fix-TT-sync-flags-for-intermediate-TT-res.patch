@@ -1,6 +1,6 @@
 From: Linus Lüssing <linus.luessing@c0d3.blue>
 Date: Thu, 10 May 2018 19:44:28 +0200
-Subject: [PATCH] batman-adv: Fix TT sync flags for intermediate TT responses
+Subject: batman-adv: Fix TT sync flags for intermediate TT responses
 
 The previous TT sync fix so far only fixed TT responses issued by the
 target node directly. So far, TT responses issued by intermediate nodes
@@ -19,12 +19,9 @@ Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/d65daee8617b29c1ddcc949ce3a5ec24f7a1e1af
----
- net/batman-adv/translation-table.c | 61 +++++++++++++++++++++++++-----
- 1 file changed, 51 insertions(+), 10 deletions(-)
 
 diff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c
-index 7fa3a0a0524a1da63e92d081b443c302900bf0c3..23f9c212ab1e27be429645a85f7b5d6a02585de9 100644
+index 2511adb79936782c96ed397265418421b69f617d..09bc1ed9fb59c1f76a4227f158d3ac8b73cbd32b 100644
 --- a/net/batman-adv/translation-table.c
 +++ b/net/batman-adv/translation-table.c
 @@ -1538,6 +1538,8 @@ batadv_tt_global_orig_entry_find(const struct batadv_tt_global_entry *entry,

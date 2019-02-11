@@ -1,6 +1,6 @@
 From: Marek Lindner <mareklindner@neomailbox.ch>
 Date: Sat, 12 May 2018 00:23:07 +0800
-Subject: [PATCH] batman-adv: prevent TT request storms by not sending inconsistent TT TLVLs
+Subject: batman-adv: prevent TT request storms by not sending inconsistent TT TLVLs
 
 A translation table TVLV changset sent with an OGM consists
 of a number of headers (one per VLAN) plus the changeset
@@ -23,12 +23,9 @@ Signed-off-by: Marek Lindner <mareklindner@neomailbox.ch>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/e4687b4be274da6180fc15b327419851fb681ec9
----
- net/batman-adv/translation-table.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c
-index 23f9c212ab1e27be429645a85f7b5d6a02585de9..3986551397caa5ffb6ba7338eeb4769c8b8f99fb 100644
+index 09bc1ed9fb59c1f76a4227f158d3ac8b73cbd32b..dfd484d73f8e569bc60e153ea6ca244ea5757d5c 100644
 --- a/net/batman-adv/translation-table.c
 +++ b/net/batman-adv/translation-table.c
 @@ -931,15 +931,20 @@ batadv_tt_prepare_tvlv_local_data(struct batadv_priv *bat_priv,

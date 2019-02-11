@@ -1,6 +1,6 @@
 From: Marek Lindner <mareklindner@neomailbox.ch>
 Date: Fri, 7 Sep 2018 05:45:54 +0800
-Subject: [PATCH] batman-adv: fix backbone_gw refcount on queue_work() failure
+Subject: batman-adv: fix backbone_gw refcount on queue_work() failure
 
 The backbone_gw refcounter is to be decreased by the queued work and
 currently is never decreased if the queue_work() call fails.
@@ -11,9 +11,6 @@ Signed-off-by: Marek Lindner <mareklindner@neomailbox.ch>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/24d83a50421c1c5d39cd9c015516a1a293ae8d0c
----
- net/batman-adv/bridge_loop_avoidance.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
 index a2de5a44bd41bf5c3d521d29b72e0b225a3ace05..58c093caf49e804c1e11426959d70e79f1729d41 100644

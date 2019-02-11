@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Thu, 6 Sep 2018 14:35:26 +0200
-Subject: [PATCH] batman-adv: Prevent duplicated softif_vlan entry
+Subject: batman-adv: Prevent duplicated softif_vlan entry
 
 The function batadv_softif_vlan_get is responsible for adding new
 softif_vlan to the softif_vlan_list. It first checks whether the entry
@@ -18,9 +18,6 @@ Fixes: 952cebb57518 ("batman-adv: add per VLAN interface attribute framework")
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/023d3f64207e8b6a6e6d0718d98e239c5545ef0c
----
- net/batman-adv/soft-interface.c | 27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
 
 diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interface.c
 index edeffcb9f3a24e1b53c2b4d705fb260717ac09c4..79d6ab78359db9c6a5df14e2e204c611ab134dfc 100644

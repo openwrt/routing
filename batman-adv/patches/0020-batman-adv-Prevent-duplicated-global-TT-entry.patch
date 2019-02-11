@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Thu, 6 Sep 2018 14:35:27 +0200
-Subject: [PATCH] batman-adv: Prevent duplicated global TT entry
+Subject: batman-adv: Prevent duplicated global TT entry
 
 The function batadv_tt_global_orig_entry_add is responsible for adding new
 tt_orig_list_entry to the orig_list. It first checks whether the entry
@@ -19,12 +19,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Marek Lindner <mareklindner@neomailbox.ch>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/79097255a1a3e1bd1949be309af941181fbc7b36
----
- net/batman-adv/translation-table.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c
-index 12a2b7d21376721d15c6a31f3e794e4270d74b5c..d21624c446655d57786a1bcfa45aaf57c5ce9701 100644
+index 9efbdd6348c4d69c525b3e0574d2b24db838c086..7502cb54c152d06d78c88d9f8fb841cada9f3b5d 100644
 --- a/net/batman-adv/translation-table.c
 +++ b/net/batman-adv/translation-table.c
 @@ -1613,6 +1613,8 @@ batadv_tt_global_orig_entry_add(struct batadv_tt_global_entry *tt_global,

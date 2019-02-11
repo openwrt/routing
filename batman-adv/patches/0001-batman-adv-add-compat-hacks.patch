@@ -1,3 +1,9 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 9 May 2018 21:07:40 +0200
+Subject: batman-adv: add compat hacks
+
+diff --git a/net/batman-adv/main.c b/net/batman-adv/main.c
+index 69c0d85bceb3e0a1915e37d278110ee2655c4571..53b329d24461819b4cf0d4118cfa5b0eb8d7261b 100644
 --- a/net/batman-adv/main.c
 +++ b/net/batman-adv/main.c
 @@ -19,7 +19,7 @@
@@ -9,6 +15,8 @@
  #include <linux/byteorder/generic.h>
  #include <linux/crc32c.h>
  #include <linux/errno.h>
+diff --git a/net/batman-adv/tp_meter.c b/net/batman-adv/tp_meter.c
+index 11520de96ccb1a87183e9666066e21731538ccd9..9af0a44dce74e7ead7f2c29ec4d49156bf4c9dd7 100644
 --- a/net/batman-adv/tp_meter.c
 +++ b/net/batman-adv/tp_meter.c
 @@ -20,7 +20,7 @@
@@ -20,6 +28,8 @@
  #include <linux/byteorder/generic.h>
  #include <linux/cache.h>
  #include <linux/compiler.h>
+diff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c
+index 0225616d5771d0986127322142fc591780fc25b0..91b9a0aaaa2e6fe59b5e4ea2e57b7be375618059 100644
 --- a/net/batman-adv/translation-table.c
 +++ b/net/batman-adv/translation-table.c
 @@ -21,7 +21,7 @@

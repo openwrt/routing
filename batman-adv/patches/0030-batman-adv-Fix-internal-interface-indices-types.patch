@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Tue, 26 Dec 2017 15:14:01 +0100
-Subject: [PATCH] batman-adv: Fix internal interface indices types
+Subject: batman-adv: Fix internal interface indices types
 
 batman-adv uses internal indices for each enabled and active interface.
 It is currently used by the B.A.T.M.A.N. IV algorithm to identifify the
@@ -31,13 +31,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: backport, https://git.open-mesh.org/batman-adv.git/commit/d5db560de1352d3ec6933bca25b3aaad7ddd15e1
----
- net/batman-adv/bat_iv_ogm.c     | 24 ++++++++++++++----------
- net/batman-adv/hard-interface.c |  9 +++++++--
- net/batman-adv/originator.c     |  4 ++--
- net/batman-adv/originator.h     |  4 ++--
- net/batman-adv/types.h          | 11 ++++++-----
- 5 files changed, 31 insertions(+), 21 deletions(-)
 
 diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
 index 1847898906d495980a71eb6a0e5a7b510e55d003..bf389adbb2694746d6397a0a38353cdcd8008899 100644

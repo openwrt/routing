@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Thu, 6 Sep 2018 14:35:24 +0200
-Subject: [PATCH] batman-adv: Prevent duplicated gateway_node entry
+Subject: batman-adv: Prevent duplicated gateway_node entry
 
 The function batadv_gw_node_add is responsible for adding new gw_node to
 the gateway_list. It is expecting that the caller already checked that
@@ -18,9 +18,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Marek Lindner <mareklindner@neomailbox.ch>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/69b3ca714eba608fe79a51ccd89ce7050ee0b770
----
- net/batman-adv/gateway_client.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/net/batman-adv/gateway_client.c b/net/batman-adv/gateway_client.c
 index f1fdf4e7f5c3ce7f20339dcee3b6e43290ea3b4e..a6f5a3969529745d6efa1d43a89440745e1926ad 100644

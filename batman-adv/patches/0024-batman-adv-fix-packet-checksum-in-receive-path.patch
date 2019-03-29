@@ -1,6 +1,6 @@
 From: Matthias Schiffer <mschiffer@universe-factory.net>
 Date: Tue, 23 Jan 2018 10:59:49 +0100
-Subject: [PATCH] batman-adv: fix packet checksum in receive path
+Subject: batman-adv: fix packet checksum in receive path
 
 eth_type_trans() internally calls skb_pull(), which does not adjust the
 skb checksum; skb_postpull_rcsum() is necessary to avoid log spam of the
@@ -18,9 +18,6 @@ Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/798174b15153afd88268f2f87811602f68b3f2c6
----
- net/batman-adv/soft-interface.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
 
 diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interface.c
 index 08432b14386a53c771c54b9eb38893d94c6f9b53..5da1a1c0f1efb5d95f31bc852b899f61e462feb1 100644

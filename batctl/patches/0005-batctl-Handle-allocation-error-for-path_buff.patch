@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Date: Thu, 23 Nov 2017 15:04:37 +0100
-Subject: [PATCH] batctl: Handle allocation error for path_buff
+Subject: batctl: Handle allocation error for path_buff
 
 Fixes: 5a1af99276b0 ("batctl: adapt batctl to new sysfs interface handling")
 Fixes: 306fcb4480c9 ("batctl: support for multiple mesh clouds")
@@ -10,9 +10,6 @@ Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batctl.git/commit/3b52283a5f60d1c6ec11628d031e72f0a28a720f
----
- sys.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
 
 diff --git a/sys.c b/sys.c
 index b52434072b34b949c73de8346f8c2dce615423a4..3047b5f6eebf26290f2d8c4840d52bb1bddc3e3f 100644

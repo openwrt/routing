@@ -1,6 +1,6 @@
 From: Philipp Psurek <philipp.psurek@gmail.com>
 Date: Tue, 13 Jun 2017 10:25:59 +0200
-Subject: [PATCH] batctl: change PATH_BUFF_LEN to maximal possible value
+Subject: batctl: change PATH_BUFF_LEN to maximal possible value
 
 The output of
 
@@ -14,10 +14,6 @@ Signed-off-by: Philipp Psurek <philipp.psurek@gmail.com>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batctl.git/commit/620226bf8cff30e6dd966c8fe922b2d4cddf843b
----
- functions.c | 2 +-
- functions.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/functions.c b/functions.c
 index abd588209337dcfa04be9aadbf4ba39bb46771bb..676012bb56f9f8aa757b4805e27d904181ee2d27 100644

@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Wed, 22 Feb 2017 17:25:42 +0100
-Subject: [PATCH] batman-adv: Keep fragments equally sized
+Subject: batman-adv: Keep fragments equally sized
 
 The batman-adv fragmentation packets have the design problem that they
 cannot be refragmented. This often leads to problems when networks are
@@ -20,9 +20,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Linus Lüssing <linus.luessing@c0d3.blue>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/3caa5d14206ce8d4bd48bc931f213dec47ea1566
----
- net/batman-adv/fragmentation.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
 
 diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
 index d33f16b9b8ac13ba630bf9ac8c5f4f0ca79fc878..70e512111528b0345889cea4ffd0ad5d984a4e6a 100644

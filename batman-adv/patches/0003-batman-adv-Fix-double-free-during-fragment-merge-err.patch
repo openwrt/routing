@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sun, 12 Feb 2017 11:26:33 +0100
-Subject: [PATCH] batman-adv: Fix double free during fragment merge error
+Subject: batman-adv: Fix double free during fragment merge error
 
 The function batadv_frag_skb_buffer was supposed not to consume the skbuff
 on errors. This was followed in the helper function
@@ -19,9 +19,6 @@ Fixes: 9b3eab61754d ("batman-adv: Receive fragmented packets and merge")
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/e3bab02816097f860545d9ce9ae0808c69d7c92f
----
- net/batman-adv/fragmentation.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
 index 0854ebd8613e9bf9044b04099b11341325d6e194..31e97e9aee0d543b68be091936888e1f6c9dd7eb 100644

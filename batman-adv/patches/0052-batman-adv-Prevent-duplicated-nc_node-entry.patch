@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Thu, 6 Sep 2018 14:35:25 +0200
-Subject: [PATCH] batman-adv: Prevent duplicated nc_node entry
+Subject: batman-adv: Prevent duplicated nc_node entry
 
 The function batadv_nc_get_nc_node is responsible for adding new nc_nodes
 to the in_coding_list and out_coding_list. It first checks whether the
@@ -19,9 +19,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Marek Lindner <mareklindner@neomailbox.ch>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/bab8447ad1850b25188f9652c0c52f8e58acd656
----
- net/batman-adv/network-coding.c | 41 ++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 19 deletions(-)
 
 diff --git a/net/batman-adv/network-coding.c b/net/batman-adv/network-coding.c
 index ab5a3bf0765f36f2fe14ff4a91d43d905e08a1f3..3279f7f3b97fd56535071b857cebebd68a5b3484 100644

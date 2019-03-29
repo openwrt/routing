@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Tue, 30 Oct 2018 12:17:10 +0100
-Subject: [PATCH] batman-adv: Use explicit tvlv padding for ELP packets
+Subject: batman-adv: Use explicit tvlv padding for ELP packets
 
 The announcement messages of batman-adv COMPAT_VERSION 15 have the
 possibility to announce additional information via a dynamic TVLV part.
@@ -21,9 +21,6 @@ Reported-by: Linus Lüssing <linus.luessing@c0d3.blue>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: backport, https://git.open-mesh.org/batman-adv.git/commit/974337ee9773c4bd0a2d5c322306cf2bea445e11
----
- net/batman-adv/bat_v_elp.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
 index 2ec0ecab0493ff88fdc01e55c8557de5b772e8bf..08c0809fca7de1fe51727652a2e870ddfa74dc13 100644

@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Date: Mon, 16 Oct 2017 09:48:03 +0200
-Subject: [PATCH] batman-adv: Avoid spurious warnings from bat_v neigh_cmp implementation
+Subject: batman-adv: Avoid spurious warnings from bat_v neigh_cmp implementation
 
 The neighbor compare API implementation for B.A.T.M.A.N. V checks whether
 the neigh_ifinfo for this neighbor on a specific interface exists. A
@@ -18,9 +18,6 @@ Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Acked-by: Antonio Quartulli <a@unstable.cc>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/0dee8aba4702f82197ed3428ede6b3884fdff5ca
----
- net/batman-adv/bat_v.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/net/batman-adv/bat_v.c b/net/batman-adv/bat_v.c
 index 2e2471ca84e392faac7fd6537bf137161e27542a..80679f17d40170237ce6ad2d800da96bbef79e37 100644

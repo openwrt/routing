@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sat, 4 Mar 2017 16:33:31 +0100
-Subject: [PATCH] batman-adv: Initialize gw sel_class via batadv_algo
+Subject: batman-adv: Initialize gw sel_class via batadv_algo
 
 The gateway selection class variable is shared between different algorithm
 versions. But the interpretation of the content is algorithm specific. The
@@ -18,13 +18,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/ef565a1434966750644affda86fd11b0b69edbfe
----
- net/batman-adv/bat_iv_ogm.c     | 11 +++++++++++
- net/batman-adv/bat_v.c          | 14 +++++++++++---
- net/batman-adv/gateway_common.c |  5 +++++
- net/batman-adv/soft-interface.c |  1 -
- net/batman-adv/types.h          |  2 ++
- 5 files changed, 29 insertions(+), 4 deletions(-)
 
 diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
 index f00f666e2ccd4714bb7a5210c48e39edb40e0c17..7bfd0d7ef49df8e699f91e2b827b824aa3657c0d 100644

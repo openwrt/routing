@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sat, 24 Feb 2018 12:03:37 +0100
-Subject: [PATCH] batman-adv: Fix netlink dumping of BLA backbones
+Subject: batman-adv: Fix netlink dumping of BLA backbones
 
 The function batadv_bla_backbone_dump_bucket must be able to handle
 non-complete dumps of a single bucket. It tries to do that by saving the
@@ -22,9 +22,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/29e4759e49f06014b84791397ebe1b22546edd2d
----
- net/batman-adv/bridge_loop_avoidance.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
 index 4784469cadd4364b6239ce9ff0d1c7cc254de439..aecf34503e95d9aa723449ddbf0bb3035336b878 100644

@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 31 Aug 2018 16:56:29 +0200
-Subject: [PATCH] batman-adv: Fix segfault when writing to sysfs elp_interval
+Subject: batman-adv: Fix segfault when writing to sysfs elp_interval
 
 The per hardif sysfs file "batman_adv/elp_interval" is using the generic
 functions to store/show uint values. The helper __batadv_store_uint_attr
@@ -24,9 +24,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Marek Lindner <mareklindner@neomailbox.ch>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/848be9859b0109a6e428f92f21f2e660153b1c75
----
- net/batman-adv/sysfs.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
 
 diff --git a/net/batman-adv/sysfs.c b/net/batman-adv/sysfs.c
 index ae22db3d6637dde2fcc238826a624ef2d6dbd8f5..a4e6f158de26dea0e8e3fefd5b9aeec3dcd64457 100644

@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Date: Thu, 23 Nov 2017 15:04:44 +0100
-Subject: [PATCH] batctl: Simplify concatenation of pathnames
+Subject: batctl: Simplify concatenation of pathnames
 
 The combination of strncpy and strncat is hard to read and it is rather
 easy to introduce some kind of problems when using that. The usage of
@@ -10,10 +10,6 @@ Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batctl.git/commit/cfaec23c5f6f2cf649f3e0673b2e0c61bc01969f
----
- bat-hosts.c | 4 +---
- functions.c | 8 ++------
- 2 files changed, 3 insertions(+), 9 deletions(-)
 
 diff --git a/bat-hosts.c b/bat-hosts.c
 index a4add34bbaf8c34f8357ba8d1583218fdaf4df93..66e8f05bd2277e5560be77a26b97245223fa72aa 100644

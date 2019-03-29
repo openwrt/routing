@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven.eckelmann@open-mesh.com>
 Date: Wed, 29 Nov 2017 10:25:02 +0100
-Subject: [PATCH] batman-adv: Always initialize fragment header priority
+Subject: batman-adv: Always initialize fragment header priority
 
 The batman-adv unuicast fragment header contains 3 bits for the priority of
 the packet. These bits will be initialized when the skb->priority contains
@@ -11,9 +11,6 @@ Fixes: 4f241fcea704 ("batman-adv: Include frame priority in fragment header")
 Signed-off-by: Sven Eckelmann <sven.eckelmann@open-mesh.com>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/e45a75c82feae23a20d2744ccfde03780ccdafc7
----
- net/batman-adv/fragmentation.c | 2 ++
- 1 file changed, 2 insertions(+)
 
 diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
 index 70e512111528b0345889cea4ffd0ad5d984a4e6a..28f54887c975905d03372ab8ba5274fd82117651 100644

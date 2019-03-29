@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Date: Thu, 23 Nov 2017 15:04:38 +0100
-Subject: [PATCH] batctl: Handle nlmsg_alloc errors
+Subject: batctl: Handle nlmsg_alloc errors
 
 nlmsg_alloc may return NULL on errors. The processing has to be aborted
 when this happens.
@@ -10,9 +10,6 @@ Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batctl.git/commit/27e9937635ffbfe33f7f3297aff911718b8deb56
----
- netlink.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
 
 diff --git a/netlink.c b/netlink.c
 index 5f4325b0bb6b4a41860a75bd0851e446c5af9a88..64afeedac46bf3eab14a1d89d7db4491fbef8d81 100644

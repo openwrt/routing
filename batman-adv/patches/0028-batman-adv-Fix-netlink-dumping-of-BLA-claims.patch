@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sat, 24 Feb 2018 12:03:36 +0100
-Subject: [PATCH] batman-adv: Fix netlink dumping of BLA claims
+Subject: batman-adv: Fix netlink dumping of BLA claims
 
 The function batadv_bla_claim_dump_bucket must be able to handle
 non-complete dumps of a single bucket. It tries to do that by saving the
@@ -22,9 +22,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/49197c00f82cfcfeef963ef9367841d38a6ff207
----
- net/batman-adv/bridge_loop_avoidance.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
 index 1e6e5d4468ad50c221ea5a0d436678d16c5e154f..4784469cadd4364b6239ce9ff0d1c7cc254de439 100644

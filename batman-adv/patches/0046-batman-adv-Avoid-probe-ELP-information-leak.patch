@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 31 Aug 2018 15:08:44 +0200
-Subject: [PATCH] batman-adv: Avoid probe ELP information leak
+Subject: batman-adv: Avoid probe ELP information leak
 
 The probe ELPs for WiFi interfaces are expanded to contain at least
 BATADV_ELP_MIN_PROBE_SIZE bytes. This is usually a lot more than the
@@ -16,9 +16,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Antonio Quartulli <a@unstable.cc>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/6c876e572f592c31132a55b5fb8427e168e5fb3c
----
- net/batman-adv/bat_v_elp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
 index 06b2924f4cb7dde54bab97ad2d28aecd9b1a4ceb..e988a14f3eb01de1f52fe6dcaa91af898060140e 100644

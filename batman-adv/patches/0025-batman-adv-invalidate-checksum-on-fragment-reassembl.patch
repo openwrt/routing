@@ -1,6 +1,6 @@
 From: Matthias Schiffer <mschiffer@universe-factory.net>
 Date: Tue, 23 Jan 2018 10:59:50 +0100
-Subject: [PATCH] batman-adv: invalidate checksum on fragment reassembly
+Subject: batman-adv: invalidate checksum on fragment reassembly
 
 A more sophisticated implementation could try to combine fragment checksums
 when all fragments have CHECKSUM_COMPLETE and are split at even offsets.
@@ -19,9 +19,6 @@ Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/2c1bce065baa688bc1eca4116f83ca3b790432a5
----
- net/batman-adv/fragmentation.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
 index 28f54887c975905d03372ab8ba5274fd82117651..5969d3705ec08a96438ecce06577d35291600753 100644

@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 9 Jun 2017 17:06:51 +0200
-Subject: [PATCH] batman-adv: Accept only filled wifi station info
+Subject: batman-adv: Accept only filled wifi station info
 
 The wifi driver can decide to not provide parts of the station info. For
 example, the expected throughput of the station can be omitted when the
@@ -17,13 +17,6 @@ Reviewed-by: Marek Lindner <mareklindner@neomailbox.ch>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/1e26904b364ceffe9ca7d6da7412e70fb2a04178
----
- compat-include/linux/nl80211.h      | 14 ++++++++++++++
- compat-include/uapi/linux/nl80211.h | 16 ++++++++++++++++
- net/batman-adv/bat_v_elp.c          |  4 ++++
- 3 files changed, 34 insertions(+)
- create mode 100644 compat-include/linux/nl80211.h
- create mode 100644 compat-include/uapi/linux/nl80211.h
 
 diff --git a/compat-include/linux/nl80211.h b/compat-include/linux/nl80211.h
 new file mode 100644

@@ -1,6 +1,6 @@
 From: Philipp Psurek <philipp.psurek@gmail.com>
 Date: Tue, 13 Jun 2017 13:08:24 +0200
-Subject: [PATCH] batctl: suppress implicit-fallthrough compiler warning
+Subject: batctl: suppress implicit-fallthrough compiler warning
 
 GCC 7.1.0 complains about an intended fallthrough.
 “__attribute__ ((fallthrough))” in this part of code would suppress this
@@ -22,9 +22,6 @@ Signed-off-by: Philipp Psurek <philipp.psurek@gmail.com>
 Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batctl.git/commit/50ee3c45feeda6d8c04ee127097badf99f78a26e
----
- tp_meter.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/tp_meter.c b/tp_meter.c
 index f95b8391ff3426200697034f1087274ca9e5a9dd..ec0dc4802c638471ff3c38bd344e31c208b634a5 100644

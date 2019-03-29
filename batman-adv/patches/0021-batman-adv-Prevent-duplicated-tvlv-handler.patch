@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Thu, 6 Sep 2018 14:35:28 +0200
-Subject: [PATCH] batman-adv: Prevent duplicated tvlv handler
+Subject: batman-adv: Prevent duplicated tvlv handler
 
 The function batadv_tvlv_handler_register is responsible for adding new
 tvlv_handler to the handler_list. It first checks whether the entry
@@ -19,9 +19,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Acked-by: Marek Lindner <mareklindner@neomailbox.ch>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/acabad79e01740525cf4ff8ce6e9a210b683d420
----
- net/batman-adv/tvlv.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/net/batman-adv/tvlv.c b/net/batman-adv/tvlv.c
 index a637458205d16bf838f796383d8cc15ac861801b..40e69c9346d22c09481544b8b4dec56cad88b64a 100644

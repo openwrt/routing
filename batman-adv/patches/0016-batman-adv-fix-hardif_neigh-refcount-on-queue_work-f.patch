@@ -1,6 +1,6 @@
 From: Marek Lindner <mareklindner@neomailbox.ch>
 Date: Fri, 7 Sep 2018 05:45:55 +0800
-Subject: [PATCH] batman-adv: fix hardif_neigh refcount on queue_work() failure
+Subject: batman-adv: fix hardif_neigh refcount on queue_work() failure
 
 The hardif_neigh refcounter is to be decreased by the queued work and
 currently is never decreased if the queue_work() call fails.
@@ -11,9 +11,6 @@ Signed-off-by: Marek Lindner <mareklindner@neomailbox.ch>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/85100b602c127cecf1bcfd620d20eb867d685df2
----
- net/batman-adv/bat_v_elp.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
 index 371028f82a0669e86155fee39ba955cbbde48e60..83b46654449df72ceda6ca3177f72e7faf0603ab 100644

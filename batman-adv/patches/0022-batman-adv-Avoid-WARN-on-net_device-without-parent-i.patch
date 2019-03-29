@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sun, 30 Dec 2018 12:46:01 +0100
-Subject: [PATCH] batman-adv: Avoid WARN on net_device without parent in netns
+Subject: batman-adv: Avoid WARN on net_device without parent in netns
 
 It is not allowed to use WARN* helpers on potential incorrect input from
 the user or transient problems because systems configured as panic_on_warn
@@ -18,9 +18,6 @@ Reported-by: Dmitry Vyukov <dvyukov@google.com>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/59ad04405be86f648fd83d81d2fd0a78f215a43b
----
- net/batman-adv/hard-interface.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/net/batman-adv/hard-interface.c b/net/batman-adv/hard-interface.c
 index 2f0d42f2f913e74cf10c0c6ce89320434994cac5..08690d06b7be2b25ca3f009394763c7083c70644 100644

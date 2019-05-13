@@ -1,0 +1,30 @@
+From: Fabian Bläse <fabian@blaese.de>
+Date: Wed, 26 Dec 2018 00:44:29 +0100
+Subject: kernel_netlink: Convert src_plen to v4mapped encoding on import
+
+src_plen for IPv4 routes imported from kernel has not been adjusted
+to v4mapped encoding. Therefore IPv4 xroutes used an inconsistent encoding
+which lead to failed comparisons when sending updates.
+
+Routes received from neighbors with the same prefix as xroutes therefore
+have been announced to neighbours instead.
+
+This issue is fixed by converting src_plen on import.
+
+Signed-off-by: Fabian Bläse <fabian@blaese.de>
+
+diff --git a/kernel_netlink.c b/kernel_netlink.c
+index 76e6350..8065ed6 100644
+--- a/kernel_netlink.c
++++ b/kernel_netlink.c
+@@ -1102,6 +1102,7 @@ parse_kernel_route_rta(struct rtmsg *rtm, int len, struct kernel_route *route)
+         v4tov6(route->prefix, zeroes);
+         v4tov6(route->src_prefix, zeroes);
+         route->plen = 96;
++        route->src_plen = 96;
+     }
+     route->proto = rtm->rtm_protocol;
+ 
+-- 
+2.11.0
+

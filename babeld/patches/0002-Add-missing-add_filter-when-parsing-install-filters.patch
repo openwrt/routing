@@ -1,0 +1,21 @@
+From: Killian Lufau <killian.lufau@nexedi.com>
+Date: Tue, 12 Mar 2019 15:10:59 +0100
+Subject: Add missing add_filter when parsing install filters.
+
+It was removed by accident in commit ce457a7929dfcd94f007e2948150527e2410d247.
+
+diff --git a/configuration.c b/configuration.c
+index 2b18638..d1f3d9c 100644
+--- a/configuration.c
++++ b/configuration.c
+@@ -1026,6 +1026,7 @@ parse_config_line(int c, gnc_t gnc, void *closure,
+         c = parse_filter(c, gnc, closure, &filter);
+         if(c < -1)
+             goto fail;
++        add_filter(filter, &install_filters);
+     } else if(strcmp(token, "interface") == 0) {
+         struct interface_conf *if_conf;
+         c = parse_ifconf(c, gnc, closure, &if_conf);
+-- 
+2.11.0
+

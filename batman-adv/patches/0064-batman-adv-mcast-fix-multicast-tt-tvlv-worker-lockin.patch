@@ -1,0 +1,104 @@
+From: Linus Lüssing <linus.luessing@c0d3.blue>
+Date: Wed, 24 Apr 2019 03:19:14 +0200
+Subject: batman-adv: mcast: fix multicast tt/tvlv worker locking
+
+Syzbot has reported some issues with the locking assumptions made for
+the multicast tt/tvlv worker: It was able to trigger the WARN_ON() in
+batadv_mcast_mla_tt_retract() and batadv_mcast_mla_tt_add().
+While hard/not reproduceable for us so far it seems that the
+delayed_work_pending() we use might not be quite safe from reordering.
+
+Therefore this patch adds an explicit, new spinlock to protect the
+update of the mla_list and flags in bat_priv and then removes the
+WARN_ON(delayed_work_pending()).
+
+Reported-by: syzbot+83f2d54ec6b7e417e13f@syzkaller.appspotmail.com
+Reported-by: syzbot+050927a651272b145a5d@syzkaller.appspotmail.com
+Reported-by: syzbot+979ffc89b87309b1b94b@syzkaller.appspotmail.com
+Reported-by: syzbot+f9f3f388440283da2965@syzkaller.appspotmail.com
+Fixes: 40b384052672 ("batman-adv: Use own timer for multicast TT and TVLV updates")
+Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: backport, https://git.open-mesh.org/batman-adv.git/commit/b736cf8119cfbc9d95fef90c8832fdec6e8f29c7
+
+diff --git a/net/batman-adv/main.c b/net/batman-adv/main.c
+index d46415edd3be98d9538def8d55674b5336eca6a1..aa22e941dcb3a9a77bac5ccaebfb2335c104924a 100644
+--- a/net/batman-adv/main.c
++++ b/net/batman-adv/main.c
+@@ -153,6 +153,7 @@ int batadv_mesh_init(struct net_device *soft_iface)
+ 	spin_lock_init(&bat_priv->tt.commit_lock);
+ 	spin_lock_init(&bat_priv->gw.list_lock);
+ #ifdef CONFIG_BATMAN_ADV_MCAST
++	spin_lock_init(&bat_priv->mcast.mla_lock);
+ 	spin_lock_init(&bat_priv->mcast.want_lists_lock);
+ #endif
+ 	spin_lock_init(&bat_priv->tvlv.container_list_lock);
+diff --git a/net/batman-adv/multicast.c b/net/batman-adv/multicast.c
+index 20680e1dafc46cd60766a6dcd4f401f097ad4786..3d8508cbbb344abdc029d83763e2ac76bb3a1b4c 100644
+--- a/net/batman-adv/multicast.c
++++ b/net/batman-adv/multicast.c
+@@ -269,8 +269,6 @@ static void batadv_mcast_mla_list_free(struct hlist_head *mcast_list)
+  * translation table except the ones listed in the given mcast_list.
+  *
+  * If mcast_list is NULL then all are retracted.
+- *
+- * Do not call outside of the mcast worker! (or cancel mcast worker first)
+  */
+ static void batadv_mcast_mla_tt_retract(struct batadv_priv *bat_priv,
+ 					struct hlist_head *mcast_list)
+@@ -278,8 +276,6 @@ static void batadv_mcast_mla_tt_retract(struct batadv_priv *bat_priv,
+ 	struct batadv_hw_addr *mcast_entry;
+ 	struct hlist_node *tmp;
+ 
+-	WARN_ON(delayed_work_pending(&bat_priv->mcast.work));
+-
+ 	hlist_for_each_entry_safe(mcast_entry, tmp, &bat_priv->mcast.mla_list,
+ 				  list) {
+ 		if (mcast_list &&
+@@ -303,8 +299,6 @@ static void batadv_mcast_mla_tt_retract(struct batadv_priv *bat_priv,
+  *
+  * Adds multicast listener announcements from the given mcast_list to the
+  * translation table if they have not been added yet.
+- *
+- * Do not call outside of the mcast worker! (or cancel mcast worker first)
+  */
+ static void batadv_mcast_mla_tt_add(struct batadv_priv *bat_priv,
+ 				    struct hlist_head *mcast_list)
+@@ -312,8 +306,6 @@ static void batadv_mcast_mla_tt_add(struct batadv_priv *bat_priv,
+ 	struct batadv_hw_addr *mcast_entry;
+ 	struct hlist_node *tmp;
+ 
+-	WARN_ON(delayed_work_pending(&bat_priv->mcast.work));
+-
+ 	if (!mcast_list)
+ 		return;
+ 
+@@ -601,7 +593,10 @@ static void batadv_mcast_mla_update(struct work_struct *work)
+ 	priv_mcast = container_of(delayed_work, struct batadv_priv_mcast, work);
+ 	bat_priv = container_of(priv_mcast, struct batadv_priv, mcast);
+ 
++	spin_lock(&bat_priv->mcast.mla_lock);
+ 	__batadv_mcast_mla_update(bat_priv);
++	spin_unlock(&bat_priv->mcast.mla_lock);
++
+ 	batadv_mcast_start_timer(bat_priv);
+ }
+ 
+diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
+index bf1d3f0258ffb2fb8ee483337012798b20462cd6..1d8ee2bdbe01067ae4dbb9441cebeaa20735cdf9 100644
+--- a/net/batman-adv/types.h
++++ b/net/batman-adv/types.h
+@@ -817,6 +817,12 @@ struct batadv_priv_mcast {
+ 	bool enabled;
+ 	bool bridged;
+ 	atomic_t num_disabled;
++
++	/**
++	 * @mla_lock: a lock protecting mla_list and mla_flags
++	 */
++	spinlock_t mla_lock;
++
+ 	atomic_t num_want_all_unsnoopables;
+ 	atomic_t num_want_all_ipv4;
+ 	atomic_t num_want_all_ipv6;

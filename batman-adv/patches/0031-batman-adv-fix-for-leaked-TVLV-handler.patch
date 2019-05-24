@@ -1,0 +1,28 @@
+From: Jeremy Sowden <jeremy@azazel.net>
+Date: Tue, 21 May 2019 20:58:57 +0100
+Subject: batman-adv: fix for leaked TVLV handler.
+
+A handler for BATADV_TVLV_ROAM was being registered when the
+translation-table was initialized, but not unregistered when the
+translation-table was freed.  Unregister it.
+
+Fixes: 3de4e64df0f1 ("batman-adv: tvlv - convert roaming adv packet to use tvlv unicast packets")
+Reported-by: syzbot+d454a826e670502484b8@syzkaller.appspotmail.com
+Signed-off-by: Jeremy Sowden <jeremy@azazel.net>
+Signed-off-by: Sven Eckelmann <sven@narfation.org
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/87445d81c360a5f9833546114e98ffd2c1fd3a4d
+
+diff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c
+index 554fd886e652c7c206ff43a5627d342ccbcc2123..c29aadc5bd8b2020ba67779c517cc1e4ea9f6569 100644
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -3821,6 +3821,8 @@ static void batadv_tt_purge(struct work_struct *work)
+  */
+ void batadv_tt_free(struct batadv_priv *bat_priv)
+ {
++	batadv_tvlv_handler_unregister(bat_priv, BATADV_TVLV_ROAM, 1);
++
+ 	batadv_tvlv_container_unregister(bat_priv, BATADV_TVLV_TT, 1);
+ 	batadv_tvlv_handler_unregister(bat_priv, BATADV_TVLV_TT, 1);
+ 

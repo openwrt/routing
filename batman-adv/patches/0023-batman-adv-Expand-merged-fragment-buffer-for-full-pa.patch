@@ -1,6 +1,6 @@
 From: Sven Eckelmann <sven@narfation.org>
 Date: Wed, 7 Nov 2018 23:09:12 +0100
-Subject: [PATCH] batman-adv: Expand merged fragment buffer for full packet
+Subject: batman-adv: Expand merged fragment buffer for full packet
 
 The complete size ("total_size") of the fragmented packet is stored in the
 fragment header and in the size of the fragment chain. When the fragments
@@ -25,9 +25,6 @@ Co-authored-by: Linus Lüssing <linus.luessing@c0d3.blue>
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: other, https://patchwork.open-mesh.org/patch/17616/
----
- net/batman-adv/fragmentation.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
 index 0fddc17106bd8a0e3f064fee9adba7c226f34682..5b71a289d04fc80de6c20e7a24d621727c77825a 100644

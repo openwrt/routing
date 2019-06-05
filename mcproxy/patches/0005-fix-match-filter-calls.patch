@@ -1,0 +1,46 @@
+--- a/mcproxy/src/proxy/simple_mc_proxy_routing.cpp
++++ b/mcproxy/src/proxy/simple_mc_proxy_routing.cpp
+@@ -118,13 +118,13 @@ void interface_memberships::process_upst
+             for (auto source_it = cs.first.m_source_list.begin(); source_it != cs.first.m_source_list.end();) {
+ 
+                 //downstream out
+-                if (!cs.second->match_output_filter(interfaces::get_if_name(upstr_e.m_if_index), gaddr, source_it->saddr)) {
++                if (!cs.second->match_output_filter(interfaces::get_if_name(upstr_e.m_if_index), source_it->saddr, gaddr)) {
+                     source_it = cs.first.m_source_list.erase(source_it);
+                     continue;
+                 }
+ 
+                 //upstream in
+-                if (!upstr_e.m_interface->match_input_filter(interfaces::get_if_name(upstr_e.m_if_index), gaddr, source_it->saddr)) {
++                if (!upstr_e.m_interface->match_input_filter(interfaces::get_if_name(upstr_e.m_if_index), source_it->saddr, gaddr)) {
+                     tmp_sstate.m_source_list.insert(*source_it);
+                     source_it = cs.first.m_source_list.erase(source_it);
+                     continue;
+@@ -175,13 +175,13 @@ void interface_memberships::process_upst
+             for (auto source_it = cs_it->first.m_source_list.begin(); source_it != cs_it->first.m_source_list.end();) {
+ 
+                 //downstream out
+-                if (!cs_it->second->match_output_filter(interfaces::get_if_name(upstr_e.m_if_index), gaddr, source_it->saddr)) {
++                if (!cs_it->second->match_output_filter(interfaces::get_if_name(upstr_e.m_if_index), source_it->saddr, gaddr)) {
+                     ++source_it;
+                     continue;
+                 }
+ 
+                 //upstream in
+-                if (!upstr_e.m_interface->match_input_filter(interfaces::get_if_name(upstr_e.m_if_index), gaddr, source_it->saddr)) {
++                if (!upstr_e.m_interface->match_input_filter(interfaces::get_if_name(upstr_e.m_if_index), source_it->saddr, gaddr)) {
+                     ++source_it;
+                     continue;
+                 }
+@@ -619,9 +619,9 @@ bool simple_mc_proxy_routing::check_inte
+     std::string input_if_index_name = interfaces::get_if_name(input_if_index);
+     if (!input_if_index_name.empty()) {
+         if (interface_direction == ID_IN) {
+-            return interf->match_input_filter(input_if_index_name, gaddr, saddr);
++            return interf->match_input_filter(input_if_index_name, saddr, gaddr);
+         } else if (interface_direction == ID_OUT) {
+-            return interf->match_output_filter(input_if_index_name, gaddr, saddr);
++            return interf->match_output_filter(input_if_index_name, saddr, gaddr);
+         } else {
+             HC_LOG_ERROR("unkown interface direction");
+             return false;

@@ -133,7 +133,12 @@ babel_config_cb() {
 		}
 
 		interfaceFile="${OTHERCONFIGDIR}/interface_$interface.conf"
-		echo "interface $interface" > "$interfaceFile"
+
+		if [ "$interface" == "default" ]; then
+			echo "default" > "$interfaceFile"
+		else
+			echo "interface $interface" > "$interfaceFile"
+		fi
 
 		option_cb()
 		{

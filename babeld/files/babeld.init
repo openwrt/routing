@@ -116,7 +116,11 @@ babel_config_cb() {
 	{
 		local _ignored
 		config_get_bool _ignored "$section" 'ignore' 0
-		[ "$_ignored" == "1" ] && return
+		[ "$_ignored" == "1" ] &&
+		{
+			option_cb() { return; }
+			return
+		}
 
 		local _ifname
 		config_get _ifname "$section" 'ifname'

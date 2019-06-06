@@ -113,34 +113,39 @@ babel_config_cb() {
 		}
 	;;
 	"interface")
+	{
+		local _ignored
+		config_get_bool _ignored "$section" 'ignore' 0
+		[ "$_ignored" == "1" ] && return
+
 		local _ifname
 		config_get _ifname "$section" 'ifname'
+
 		# Try to resolve the logical interface name
-		unset interface
+		local interface
 		network_get_device interface "$_ifname" || interface="$_ifname"
-		option_cb() {
+
+		# Ignore section if ifname is not provided
+		[ -z "$interface" ] &&
+		{
+			logger -s -t babeld "Ignoring interface section which miss ifname"
+			return
+		}
+
+		interfaceFile="${OTHERCONFIGDIR}/interface_$interface.conf"
+		echo "interface $interface" > "$interfaceFile"
+
+		option_cb()
+		{
 			local option="$1"
 			local value="$2"
-			local _interface
+
 			# "option ifname" is a special option, don't actually
 			# generate configuration for it.
-			[ "$option" = "ifname" ] && return
-			[ -n "$interface" ] && _interface="interface $interface" || _interface="default"
-			cfg_append "$_interface ${option//_/-} $value"
+			[ "$option" == "ifname" ] && return
+			echo "$(cat $interfaceFile) ${option//_/-} $value" > "$interfaceFile"
 		}
-		# Handle ignore options.
-		local _ignored
-		# This works because we loaded the whole configuration
-		# beforehand (see config_load below).
-		config_get_bool _ignored "$section" 'ignore' 0
-		if [ "$_ignored" -eq 1 ]
-		then
-			option_cb() { return; }
-		else
-			# Also include an empty "interface $interface" statement,
-			# so that babeld operates on this interface.
-			[ -n "$interface" ] && cfg_append "interface $interface"
-		fi
+	}
 	;;
 	*)
 		# Don't use reset_cb, this would also reset config_cb

@@ -8,6 +8,7 @@ START=70
 CONFIGFILE='/var/etc/babeld.conf'
 OTHERCONFIGFILE="/etc/babeld.conf"
 OTHERCONFIGDIR="/tmp/babeld.d/"
+TMPCONFIGDIR="/tmp/babeld_init_d/"
 EXTRA_COMMANDS="status"
 EXTRA_HELP="        status Dump Babel's table to the log file."
 
@@ -136,7 +137,7 @@ babel_config_cb() {
 			return
 		}
 
-		interfaceFile="${OTHERCONFIGDIR}/interface_$interface.conf"
+		interfaceFile="${TMPCONFIGDIR}/interface_$interface.conf"
 
 		if [ "$interface" == "default" ]; then
 			echo "default" > "$interfaceFile"
@@ -178,6 +179,8 @@ start_service() {
 	mkdir -p /var/lib
 	mkdir -p /var/etc
 	mkdir -p "$OTHERCONFIGDIR"
+	rm -rf "$TMPCONFIGDIR"
+	mkdir -p "$TMPCONFIGDIR"
 
 	# Start by emptying the generated config file
 	>"$CONFIGFILE"
@@ -202,6 +205,12 @@ start_service() {
 	for f in "$OTHERCONFIGDIR"/*.conf; do
 		[ -f "$f" ] && cat "$f" >> "$CONFIGFILE"
 	done
+
+	# Import temporary config files
+	for f in "$TMPCONFIGDIR"/*.conf; do
+		[ -f "$f" ] && cat "$f" >> "$CONFIGFILE"
+	done
+	rm -rf "$TMPCONFIGDIR"
 
 	procd_open_instance
 	# Using multiple config files is supported since babeld 1.5.1

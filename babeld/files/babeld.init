@@ -9,8 +9,6 @@ CONFIGFILE='/var/etc/babeld.conf'
 OTHERCONFIGFILE="/etc/babeld.conf"
 OTHERCONFIGDIR="/tmp/babeld.d/"
 TMPCONFIGDIR="/tmp/babeld_init_d/"
-EXTRA_COMMANDS="status"
-EXTRA_HELP="        status Dump Babel's table to the log file."
 
 # Append a line to the configuration file
 cfg_append() {
@@ -229,8 +227,4 @@ start_service() {
 
 service_triggers() {
 	procd_add_reload_trigger babeld
-}
-
-status() {
-	kill -USR1 $(pgrep -P 1 babeld)
 }

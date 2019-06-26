@@ -7,12 +7,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird
-PKG_VERSION:=1.6.3
+PKG_VERSION:=1.6.6
 PKG_RELEASE:=1
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=ftp://bird.network.cz/pub/bird
-PKG_MD5SUM:=39c51cf57c3ba8b5978b2a657ffa2f647ec7f3ae643e91cf42ee5cb070cf7e7c
+PKG_HASH:=975b3b7aefbe1e0dc9c11e55517f0ca2d82cca1d544e2e926f78bc843aaf2d70
 PKG_BUILD_DEPENDS:=ncurses readline
 PKG_MAINTAINER:=Álvaro Fernández Rojas <noltari@gmail.com>
 
@@ -22,19 +22,19 @@ include $(INCLUDE_DIR)/package.mk
 
 define Package/bird/Default
   TITLE:=The BIRD Internet Routing Daemon
-  URL:=http://bird.network.cz/
+  URL:=https://bird.network.cz/
   DEPENDS:=+libpthread
 endef
 
 define Package/birdc/Default
   TITLE:=The BIRD command-line client
-  URL:=http://bird.network.cz/
+  URL:=https://bird.network.cz/
   DEPENDS:= +libreadline +libncurses
 endef
 
 define Package/birdcl/Default
   TITLE:=The BIRD lightweight command-line client
-  URL:=http://bird.network.cz/
+  URL:=https://bird.network.cz/
 endef
 
 define Package/bird/Default/description1

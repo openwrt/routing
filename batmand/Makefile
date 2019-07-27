@@ -42,15 +42,10 @@ endef
 
 MAKE_BATMAND_ARGS += \
 	EXTRA_CFLAGS='$(TARGET_CFLAGS) $(PKG_EXTRA_CFLAGS)' \
-	CCFLAGS="$(TARGET_CFLAGS)" \
-	OFLAGS="$(TARGET_CFLAGS)" \
 	REVISION="$(PKG_REV)" \
 	CC="$(TARGET_CC)" \
-	NODEBUG=1 \
 	UNAME="Linux" \
-	INSTALL_PREFIX="$(PKG_INSTALL_DIR)" \
-	STRIP="/bin/true" \
-	batmand install
+	batmand
 
 define Build/Compile
 	$(MAKE) -C $(PKG_BUILD_DIR) $(MAKE_BATMAND_ARGS)
@@ -58,7 +53,7 @@ endef
 
 define Package/batmand/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/config $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/batmand $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/batmand $(1)/usr/sbin/
 	$(INSTALL_BIN) ./files/etc/init.d/batmand $(1)/etc/init.d
 	$(INSTALL_DATA) ./files/etc/config/batmand $(1)/etc/config
 endef

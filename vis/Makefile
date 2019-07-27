@@ -42,15 +42,9 @@ endef
 
 MAKE_VIS_ARGS += \
 	EXTRA_CFLAGS='$(TARGET_CFLAGS) $(PKG_EXTRA_CFLAGS)' \
-	CCFLAGS="$(TARGET_CFLAGS)" \
-	OFLAGS="$(TARGET_CFLAGS)" \
 	REVISION="$(PKG_REV)" \
 	CC="$(TARGET_CC)" \
-	NODEBUG=1 \
-	UNAME="Linux" \
-	INSTALL_PREFIX="$(PKG_INSTALL_DIR)" \
-	STRIP="/bin/true" \
-	vis install
+	vis
 
 
 define Build/Configure
@@ -62,7 +56,7 @@ endef
 
 define Package/vis/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/config $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/vis $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/vis $(1)/usr/sbin/
 	$(INSTALL_BIN) ./files/etc/init.d/vis $(1)/etc/init.d
 	$(INSTALL_DATA) ./files/etc/config/vis $(1)/etc/config
 endef

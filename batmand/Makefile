@@ -22,8 +22,6 @@ PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
 PKG_MIRROR_HASH:=ceb8e0e399f79b1b663594fcf9642e1efc40e696a7604daf709c77da9b6ec52f
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
 
-PKG_EXTRA_CFLAGS=-DDEBUG_MALLOC -DMEMORY_USAGE -DPROFILE_DATA -DREVISION_VERSION=\"\ rv$(PKG_REV)\" -D_GNU_SOURCE
-
 include $(INCLUDE_DIR)/package.mk
 
 define Package/batmand
@@ -40,16 +38,12 @@ define Package/batmand/description
 B.A.T.M.A.N. layer 3 routing daemon
 endef
 
-MAKE_BATMAND_ARGS += \
-	EXTRA_CFLAGS='$(TARGET_CFLAGS) $(PKG_EXTRA_CFLAGS)' \
+MAKE_FLAGS += \
+	EXTRA_CFLAGS='-DDEBUG_MALLOC -DMEMORY_USAGE -DPROFILE_DATA -DREVISION_VERSION=\"\ rv$(PKG_REV)\" -D_GNU_SOURCE' \
 	REVISION="$(PKG_REV)" \
 	CC="$(TARGET_CC)" \
 	UNAME="Linux" \
 	batmand
-
-define Build/Compile
-	$(MAKE) -C $(PKG_BUILD_DIR) $(MAKE_BATMAND_ARGS)
-endef
 
 define Package/batmand/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/config $(1)/etc/init.d

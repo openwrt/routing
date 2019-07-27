@@ -1,0 +1,68 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 1 Dec 2013 14:39:00 +0100
+Subject: Allow one to disable forking to background in debug_mode 0
+
+---
+ posix/init.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/posix/init.c b/posix/init.c
+index afd409f..901c65a 100644
+--- a/posix/init.c
++++ b/posix/init.c
+@@ -44,6 +44,7 @@
+ #define IOCSETDEV 1
+ 
+ int8_t stop;
++int no_detach = 0;
+ 
+ 
+ 
+@@ -159,6 +160,7 @@ void apply_init_args( int argc, char *argv[] ) {
+ 		{"purge-timeout",     required_argument,       0, 'q'},
+ 		{"disable-aggregation",     no_argument,       0, 'x'},
+ 		{"disable-client-nat",     no_argument,       0, 'z'},
++		{"no-detach",     no_argument,       0, 'D'},
+ 		{0, 0, 0, 0}
+ 	};
+ 
+@@ -166,7 +168,7 @@ void apply_init_args( int argc, char *argv[] ) {
+ 	stop = 0;
+ 	prog_name = argv[0];
+ 
+-	while ( ( optchar = getopt_long( argc, argv, "a:A:bcd:hHio:g:p:r:s:vV", long_options, &option_index ) ) != -1 ) {
++	while ( ( optchar = getopt_long( argc, argv, "a:A:bcd:hHio:g:p:r:s:vVD", long_options, &option_index ) ) != -1 ) {
+ 
+ 		switch ( optchar ) {
+ 
+@@ -378,6 +380,11 @@ void apply_init_args( int argc, char *argv[] ) {
+ 				found_args++;
+ 				break;
+ 
++			case 'D':
++				no_detach = 1;
++				found_args++;
++				break;
++
+ 			case 'h':
+ 			default:
+ 				usage();
+@@ -536,12 +543,14 @@ void apply_init_args( int argc, char *argv[] ) {
+ 		/* daemonize */
+ 		if (debug_level == 0) {
+ 
+-			if (my_daemon() < 0) {
++			if (!no_detach) {
++				if (my_daemon() < 0) {
+ 
+-				printf("Error - can't fork to background: %s\n", strerror(errno));
+-				restore_defaults();
+-				exit(EXIT_FAILURE);
++					printf("Error - can't fork to background: %s\n", strerror(errno));
++					restore_defaults();
++					exit(EXIT_FAILURE);
+ 
++				}
+ 			}
+ 
+ 			openlog("batmand", LOG_PID, LOG_DAEMON);

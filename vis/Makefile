@@ -22,8 +22,6 @@ PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
 PKG_MIRROR_HASH:=fd4b337a56993eec9a03ad8e7918bccc7691aa8b2e5ab6dd7863350f07503285
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
 
-PKG_EXTRA_CFLAGS=-DDEBUG_MALLOC -DMEMORY_USAGE -DPROFILE_DATA -DREVISION_VERSION=\"\ rv$(PKG_REV)\" -D_GNU_SOURCE
-
 include $(INCLUDE_DIR)/package.mk
 
 define Package/vis
@@ -40,19 +38,11 @@ define Package/vis/description
 visualization server for B.A.T.M.A.N. layer 3
 endef
 
-MAKE_VIS_ARGS += \
-	EXTRA_CFLAGS='$(TARGET_CFLAGS) $(PKG_EXTRA_CFLAGS)' \
+MAKE_FLAGS += \
+	EXTRA_CFLAGS='-DDEBUG_MALLOC -DMEMORY_USAGE -DPROFILE_DATA -DREVISION_VERSION=\"\ rv$(PKG_REV)\" -D_GNU_SOURCE' \
 	REVISION="$(PKG_REV)" \
 	CC="$(TARGET_CC)" \
 	vis
-
-
-define Build/Configure
-endef
-
-define Build/Compile
-	$(MAKE) -C $(PKG_BUILD_DIR) $(MAKE_VIS_ARGS)
-endef
 
 define Package/vis/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/config $(1)/etc/init.d

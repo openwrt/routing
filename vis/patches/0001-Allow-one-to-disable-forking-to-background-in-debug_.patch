@@ -1,0 +1,56 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 1 Dec 2013 14:39:00 +0100
+Subject: Allow one to disable forking to background in debug_mode 0
+
+---
+ posix/init.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+--- a/vis.c
++++ b/vis.c
+@@ -58,6 +58,7 @@ buffer_t *fillme = NULL;
+ 
+ static int8_t stop;
+ uint8_t debug_level = 0;
++static int no_detach = 0;
+ 
+ formats selected_formats = dot_draw;
+ 
+@@ -716,6 +717,7 @@ void print_usage() {
+ 	printf( "Usage: vis <interface(s)> \n" );
+ 	printf( "\t-j output mesh topology as json on port %d\n", JSON_PORT );
+ 	printf( "\t-d debug level\n" );
++	printf( "\t-D run in foreground\n" );
+ 	printf( "\t-h help\n" );
+ 	printf( "\t-v Version\n\n" );
+ 	printf( "Olsrs3d / Meshs3d is an application to visualize a mesh network.\nIt is a part of s3d, have a look at s3d.berlios.de\n\n" );
+@@ -736,7 +738,7 @@ int main( int argc, char **argv ) {
+ 	fd_set wait_sockets, tmp_wait_sockets;
+ 
+ 
+-	while ( ( optchar = getopt ( argc, argv, "jd:hv" ) ) != -1 ) {
++	while ( ( optchar = getopt ( argc, argv, "jd:hvD" ) ) != -1 ) {
+ 
+ 		switch( optchar ) {
+ 
+@@ -771,6 +773,11 @@ int main( int argc, char **argv ) {
+ 				selected_formats |= json;
+ 				found_args++;
+ 				break;
++ 
++			case 'D':
++				no_detach = 1;
++				found_args++;
++				break;
+ 
+ 			default:
+ 				print_usage();
+@@ -889,7 +896,7 @@ int main( int argc, char **argv ) {
+ 
+ 
+ 	/* daemonize */
+-	if ( debug_level == 0 ) {
++	if ( debug_level == 0 && !no_detach) {
+ 
+ 		if ( my_daemon() < 0 )
+ 			exit_error( "Error - can't fork to background: %s\n", strerror(errno) );

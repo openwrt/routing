@@ -18,8 +18,6 @@ PKG_LICENSE:=GPL-2.0
 
 include $(INCLUDE_DIR)/package.mk
 
-init-y := alfred
-
 define Package/alfred
   URL:=https://www.open-mesh.org/
   SECTION:=net
@@ -54,7 +52,7 @@ define Package/alfred/config
 	source "$(SOURCE)/Config.in"
 endef
 
-MAKE_ALFRED_FLAGS=\
+MAKE_FLAGS += \
 	CONFIG_ALFRED_VIS=$(if $(CONFIG_PACKAGE_ALFRED_VIS),y,n) \
 	CONFIG_ALFRED_GPSD=$(if $(CONFIG_PACKAGE_ALFRED_GPSD),y,n) \
 	CONFIG_ALFRED_CAPABILITIES=n \
@@ -64,12 +62,6 @@ MAKE_ALFRED_FLAGS=\
 
 TARGET_CFLAGS  += -ffunction-sections -fdata-sections -flto
 TARGET_LDFLAGS += -Wl,--gc-sections -fuse-linker-plugin
-
-define Build/Compile
-	CFLAGS="$(TARGET_CPPFLAGS) $(TARGET_CFLAGS)" \
-	LDFLAGS="$(TARGET_LDFLAGS)" \
-	$(MAKE) -C $(PKG_BUILD_DIR) $(MAKE_FLAGS) $(MAKE_ALFRED_FLAGS) all
-endef
 
 define Package/alfred/install
 	$(INSTALL_DIR) $(1)/usr/sbin

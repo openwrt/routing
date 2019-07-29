@@ -56,7 +56,7 @@ define Package/cjdns-tests
 	TITLE:=cjdns test cases
 	URL:=https://github.com/cjdelisle/cjdns
 	MAINTAINER:=Lars Gierth <larsg@systemli.org>
-	DEPENDS:=+libpthread +librt
+	DEPENDS:=+libpthread +librt @!arc
 endef
 
 define Package/cjdns-test/description

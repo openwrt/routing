@@ -1,0 +1,242 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 19 Jun 2019 21:38:09 +0200
+Subject: alfred: vis: Use rtnl to query list of hardifs of meshif
+
+The normal way of network related programs to query the state of interfaces
+is to use the rtnetlink. Most of these data can also be queried via sysfs
+but it is better to use the same way for both retrieving the list of
+interfaces and modifying the list of interfaces.
+
+Also the sysfs files are deprecated and cause warnings when access:
+
+  batman_adv: [Deprecated]: batadv-vis (pid 832) Use of sysfs file "mesh_iface".
+  Use batadv genl family instead
+
+In worst case, the file doesn't even exist when batman-adv was compiled
+without sysfs support.
+
+Reported-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/alfred.git/commit/a34f044de561ce90f67b5760059f818bfb35b449
+
+diff --git a/vis/vis.c b/vis/vis.c
+index beaeca150bcac583e9506b9504fa026131f50d5d..37956b100fad72257f5bab2b9f49908da59520cc 100644
+--- a/vis/vis.c
++++ b/vis/vis.c
+@@ -372,70 +372,146 @@ static void clear_lists(struct globals *globals)
+ 	}
+ }
+ 
++static int query_rtnl_link(int ifindex, nl_recvmsg_msg_cb_t func, void *arg)
++{
++	struct ifinfomsg rt_hdr = {
++		.ifi_family = IFLA_UNSPEC,
++	};
++	struct nl_sock *sock;
++	struct nl_msg *msg;
++	struct nl_cb *cb;
++	int err = 0;
++	int ret;
++
++	sock = nl_socket_alloc();
++	if (!sock)
++		return -ENOMEM;
++
++	ret = nl_connect(sock, NETLINK_ROUTE);
++	if (ret < 0) {
++		err = -ENOMEM;
++		goto err_free_sock;
++	}
++
++	cb = nl_cb_alloc(NL_CB_DEFAULT);
++	if (!cb) {
++		err = -ENOMEM;
++		goto err_free_sock;
++	}
++
++	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, func, arg);
++
++	msg = nlmsg_alloc_simple(RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP);
++	if (!msg) {
++		err = -ENOMEM;
++		goto err_free_cb;
++	}
++
++	ret = nlmsg_append(msg, &rt_hdr, sizeof(rt_hdr), NLMSG_ALIGNTO);
++	if (ret < 0) {
++		err = -ENOMEM;
++		goto err_free_msg;
++	}
++
++	ret = nla_put_u32(msg, IFLA_MASTER, ifindex);
++	if (ret < 0) {
++		err = -ENOMEM;
++		goto err_free_msg;
++	}
++
++	ret = nl_send_auto_complete(sock, msg);
++	if (ret < 0)
++		goto err_free_msg;
++
++	nl_recvmsgs(sock, cb);
++
++err_free_msg:
++	nlmsg_free(msg);
++err_free_cb:
++	nl_cb_put(cb);
++err_free_sock:
++	nl_socket_free(sock);
++
++	return err;
++}
++
++struct register_interfaces_rtnl_arg {
++	struct globals *globals;
++	int ifindex;
++};
++
++static struct nla_policy link_policy[IFLA_MAX + 1] = {
++	[IFLA_IFNAME] = { .type = NLA_STRING, .maxlen = IFNAMSIZ },
++	[IFLA_MASTER] = { .type = NLA_U32 },
++};
++
++static int register_interfaces_rtnl_parse(struct nl_msg *msg, void *arg)
++{
++	struct register_interfaces_rtnl_arg *register_arg = arg;
++	struct nlattr *attrs[IFLA_MAX + 1];
++	char path_buff[PATH_BUFF_LEN];
++	struct ifinfomsg *ifm;
++	char *content_newline;
++	char *file_content;
++	char *ifname;
++	int master;
++	int ret;
++
++	ifm = nlmsg_data(nlmsg_hdr(msg));
++	ret = nlmsg_parse(nlmsg_hdr(msg), sizeof(*ifm), attrs, IFLA_MAX,
++			  link_policy);
++	if (ret < 0)
++		goto err;
++
++	if (!attrs[IFLA_IFNAME])
++		goto err;
++
++	if (!attrs[IFLA_MASTER])
++		goto err;
++
++	ifname = nla_get_string(attrs[IFLA_IFNAME]);
++	master = nla_get_u32(attrs[IFLA_MASTER]);
++
++	/* required on older kernels which don't prefilter the results */
++	if (master != register_arg->ifindex)
++		goto err;
++
++	snprintf(path_buff, PATH_BUFF_LEN, SYS_IFACE_STATUS_FMT, ifname);
++	file_content = read_file(path_buff);
++	if (!file_content)
++		goto free_file;
++
++	content_newline = strstr(file_content, "\n");
++	if (content_newline)
++		*content_newline = '\0';
++
++	if (strcmp(file_content, "active") != 0)
++		goto err;
++
++	get_if_index_byname(register_arg->globals, ifname);
++
++free_file:
++	free(file_content);
++	file_content = NULL;
++err:
++	return NL_OK;
++}
++
+ static int register_interfaces(struct globals *globals)
+ {
+-	DIR *iface_base_dir;
+-	struct dirent *iface_dir;
+-	char *path_buff, *file_content;
+-	char *content_newline;
++	struct register_interfaces_rtnl_arg register_arg = {
++		.globals = globals,
++	};
+ 
+-	path_buff = malloc(PATH_BUFF_LEN);
+-	if (!path_buff) {
+-		perror("Error - could not allocate path buffer");
+-		goto err;
+-	}
++	register_arg.ifindex = if_nametoindex(globals->interface);
++	if (!globals->interface)
++		return EXIT_FAILURE;
+ 
+-	iface_base_dir = opendir(SYS_IFACE_PATH);
+-	if (!iface_base_dir) {
+-		fprintf(stderr, "Error - the directory '%s' could not be read: %s\n",
+-		       SYS_IFACE_PATH, strerror(errno));
+-		fprintf(stderr, "Is the batman-adv module loaded and sysfs mounted ?\n");
+-		goto err_buff;
+-	}
+ 
+-	while ((iface_dir = readdir(iface_base_dir)) != NULL) {
+-		snprintf(path_buff, PATH_BUFF_LEN, SYS_MESH_IFACE_FMT, iface_dir->d_name);
+-		file_content = read_file(path_buff);
+-		if (!file_content)
+-			continue;
++	query_rtnl_link(register_arg.ifindex, register_interfaces_rtnl_parse,
++			&register_arg);
+ 
+-		if (file_content[strlen(file_content) - 1] == '\n')
+-			file_content[strlen(file_content) - 1] = '\0';
+-
+-		if (strcmp(file_content, "none") == 0)
+-			goto free_line;
+-
+-		if (strcmp(file_content, globals->interface) != 0)
+-			goto free_line;
+-
+-		free(file_content);
+-		file_content = NULL;
+-
+-		snprintf(path_buff, PATH_BUFF_LEN, SYS_IFACE_STATUS_FMT, iface_dir->d_name);
+-		file_content = read_file(path_buff);
+-		if (!file_content)
+-			continue;
+-
+-		content_newline = strstr(file_content, "\n");
+-		if (content_newline)
+-			*content_newline = '\0';
+-
+-		if (strcmp(file_content, "active") == 0)
+-			get_if_index_byname(globals, iface_dir->d_name);
+-
+-free_line:
+-		free(file_content);
+-		file_content = NULL;
+-	}
+-
+-	free(path_buff);
+-	closedir(iface_base_dir);
+ 	return EXIT_SUCCESS;
+-
+-err_buff:
+-	free(path_buff);
+-err:
+-	return EXIT_FAILURE;
+ }
+ 
+ static const int parse_orig_list_mandatory[] = {
+diff --git a/vis/vis.h b/vis/vis.h
+index 6870dd4ad8570135f4ab2edf0219d74778b7d061..b04a89351778806e84acae88ff3869cf68bcb1a3 100644
+--- a/vis/vis.h
++++ b/vis/vis.h
+@@ -25,7 +25,6 @@
+ 
+ #define SYS_IFACE_PATH				"/sys/class/net"
+ #define DEBUG_BATIF_PATH_FMT			"%s/batman_adv/%s"
+-#define SYS_MESH_IFACE_FMT			SYS_IFACE_PATH"/%s/batman_adv/mesh_iface"
+ #define SYS_IFACE_STATUS_FMT			SYS_IFACE_PATH"/%s/batman_adv/iface_status"
+ 
+ 

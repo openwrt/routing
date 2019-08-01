@@ -1,5 +1,5 @@
 From: Sven Eckelmann <sven@narfation.org>
-Date: Thu, 13 Jun 2019 21:12:16 +0200
+Date: Tue, 9 Jul 2019 19:26:48 +0200
 Subject: batctl: Add elp_interval setting command
 
 B.A.T.M.A.N. V introduced a hard interface specific setting called
@@ -8,7 +8,7 @@ emits probing packets for neighbor sensing (ELP).
 
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
-Forwarded: https://patchwork.open-mesh.org/patch/17949/
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/df5c452a446951c5f2fde265d08f3c2809ac2334
 
 diff --git a/Makefile b/Makefile
 index b7bd545e92963c62128efe60c0dc401bdd9fa023..f071da20f866bff6c162d697d2e43fa9d68ee08d 100755
@@ -167,10 +167,10 @@ index 0000000000000000000000000000000000000000..0a5e98923a622f52e523696b1ec1bfb8
 +	      &batctl_settings_elp_interval,
 +	      "[interval]        \tdisplay or modify elp_interval setting");
 diff --git a/man/batctl.8 b/man/batctl.8
-index acb4288c4e6f59b322d20631ef8e3aee6f2215e5..690da023fd1ac6f51915a9167e92030a650fe1bd 100644
+index a5656cf9059bd82c1b85928c22e30d01c56e475f..eef7cd8f1246b83f03627cf307471abcade87cfc 100644
 --- a/man/batctl.8
 +++ b/man/batctl.8
-@@ -93,6 +93,10 @@ the bonding mode.
+@@ -97,6 +97,10 @@ the bonding mode.
  batctl will monitor for events from the netlink kernel interface of batman-adv. The local timestamp of the event will be printed
  when parameter \fB\-t\fP is specified. Parameter \fB\-r\fP will do the same but with relative timestamps.
  .br

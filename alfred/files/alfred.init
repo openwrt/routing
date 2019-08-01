@@ -86,7 +86,7 @@ alfred_start() {
 	append args "-b $batmanif"
 
 	if [ "$batmanif" != "none" ]; then
-		wait_for_dir "$batmanif" "/sys/class/net/$batmanif/mesh"
+		wait_for_dir "$batmanif" "/sys/devices/virtual/net/$batmanif"
 	fi
 
 	append alfred_args "$args"

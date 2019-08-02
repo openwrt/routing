@@ -1,0 +1,29 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 7 Jul 2019 22:19:22 +0200
+Subject: batman-adv: Fix netlink dumping of all mcast_flags buckets
+
+The bucket variable is only updated outside the loop over the mcast_flags
+buckets. It will only be updated during a dumping run when the dumping has
+to be interrupted and a new message has to be started.
+
+This could result in repeated or missing entries when the multicast flags
+are dumped to userspace.
+
+Fixes: 06c82b7b15b1 ("batman-adv: Add inconsistent multicast netlink dump detection")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/d1de7f7aa316d6f7b3268f61afa88f5d2c1a5db5
+
+diff --git a/net/batman-adv/multicast.c b/net/batman-adv/multicast.c
+index ec54e236e345432496df8f55b2e00fbad92f3444..50fe9dfb088b60a911756c8c22cac1db6ef10ca4 100644
+--- a/net/batman-adv/multicast.c
++++ b/net/batman-adv/multicast.c
+@@ -1653,7 +1653,7 @@ __batadv_mcast_flags_dump(struct sk_buff *msg, u32 portid,
+ 
+ 	while (bucket_tmp < hash->size) {
+ 		if (batadv_mcast_flags_dump_bucket(msg, portid, cb, hash,
+-						   *bucket, &idx_tmp))
++						   bucket_tmp, &idx_tmp))
+ 			break;
+ 
+ 		bucket_tmp++;

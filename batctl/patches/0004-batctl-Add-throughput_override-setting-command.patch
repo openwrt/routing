@@ -1,5 +1,5 @@
 From: Sven Eckelmann <sven@narfation.org>
-Date: Thu, 13 Jun 2019 21:12:17 +0200
+Date: Tue, 9 Jul 2019 19:26:49 +0200
 Subject: batctl: Add throughput_override setting command
 
 B.A.T.M.A.N. V introduced a hard interface specific setting called
@@ -9,7 +9,7 @@ set to 0 then batman-adv will try to estimate the throughput by itself.
 
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
-Forwarded: https://patchwork.open-mesh.org/patch/17950/
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/e5e6560df82813a9aad4a6c958be4d8ea012e909
 
 diff --git a/Makefile b/Makefile
 index f071da20f866bff6c162d697d2e43fa9d68ee08d..e3747a2a28eb34323e34a1e22f5507dd1d7cd0f6 100755
@@ -52,10 +52,10 @@ index 92983aa6030e2a890283bca448b9203cd4d56b51..128f539852fa085d023fb6d26ae436e7
  ===============
  
 diff --git a/man/batctl.8 b/man/batctl.8
-index 690da023fd1ac6f51915a9167e92030a650fe1bd..b8218963712bbf0cc9470459896fc904cd393748 100644
+index eef7cd8f1246b83f03627cf307471abcade87cfc..d42b6825dd3172009369e370e45ed6e7a9bf9d0d 100644
 --- a/man/batctl.8
 +++ b/man/batctl.8
-@@ -203,6 +203,12 @@ supported routing algorithms are displayed.
+@@ -207,6 +207,12 @@ supported routing algorithms are displayed.
  Otherwise the parameter is used to select the routing algorithm for the following
  batX interface to be created.
  .br

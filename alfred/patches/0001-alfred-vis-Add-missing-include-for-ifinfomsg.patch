@@ -1,0 +1,21 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 1 Aug 2019 15:54:32 +0200
+Subject: alfred: vis: Add missing include for ifinfomsg
+
+Fixes: 0fc6e6674428 ("alfred: vis: Retrieve hardif status via generic netlink")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/alfred.git/commit/ce26453bd72829ac9561acd8d3a06a3937341687
+
+diff --git a/vis/vis.c b/vis/vis.c
+index 947456343125458845f26dc38b53f18d6fd42d75..8df3056612d5da3678603a6e6430923c0c86cde0 100644
+--- a/vis/vis.c
++++ b/vis/vis.c
+@@ -10,6 +10,7 @@
+ #include <dirent.h>
+ #include <errno.h>
+ #include <getopt.h>
++#include <linux/rtnetlink.h>
+ #include <net/if.h>
+ #include <netinet/in.h>
+ #include <signal.h>

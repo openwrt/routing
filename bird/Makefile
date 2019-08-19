@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2009-2016 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
@@ -7,12 +7,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird
-PKG_VERSION:=1.6.6
+PKG_VERSION:=1.6.7
 PKG_RELEASE:=1
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=ftp://bird.network.cz/pub/bird
-PKG_HASH:=975b3b7aefbe1e0dc9c11e55517f0ca2d82cca1d544e2e926f78bc843aaf2d70
+PKG_HASH:=7eab27ff4b0117a33d20f61b161b647e1fd354b9303c4ed4d3f99260b2173dc9
 PKG_BUILD_DEPENDS:=ncurses readline
 PKG_MAINTAINER:=Álvaro Fernández Rojas <noltari@gmail.com>
 

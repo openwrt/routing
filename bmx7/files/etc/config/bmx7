@@ -1,11 +1,10 @@
-
 # for more information:
-# http://bmx6.net/projects/bmx6/wiki
+# https://github.com/bmx-routing/bmx7/
 # options execute: bmx7 --help
 
 config 'bmx7' 'general'
-#       option 'runtimeDir' '/var/run/bmx7'
-#	option 'trustedNodesDir' '/etc/bmx7/trustedNodes'
+#        option 'runtimeDir' '/var/run/bmx7'
+#        option 'trustedNodesDir' '/etc/bmx7/trustedNodes'
 
 #config 'plugin'
 #        option 'plugin' 'bmx7_config.so'
@@ -19,21 +18,17 @@ config 'bmx7' 'general'
 #config 'plugin'
 #        option 'plugin' 'bmx7_iwinfo.so'
 
-
 config 'dev' 'mesh_1'
         option 'dev' 'br-lan'
 
 config 'dev' 'mesh_2'
         option 'dev' 'wlan0'
 
-
-
 #config 'plugin'
 #        option 'plugin' 'bmx7_tun.so'
 
 #config 'plugin'
 #        option 'plugin' 'bmx7_table.so'
-
 
 #config 'tunDev' default
 #        option 'tunDev' 'default'
@@ -50,8 +45,3 @@ config 'dev' 'mesh_2'
 #        option 'tunOut' 'ip4'
 #        option 'network' '10.0.0.0/9'
 #        option 'minPrefixLen' '27'
-
-
-
-
-

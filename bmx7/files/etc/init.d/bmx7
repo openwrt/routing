@@ -6,7 +6,7 @@ BIN=/usr/sbin/bmx7
 CONF=/etc/config/bmx7
 
 start_service() {
-	cd /root/
+	cd /root/ || return
 	while pgrep -f mac80211.sh ; do sleep 1; done
 
 	procd_open_instance "bmx7"

@@ -1,44 +1,20 @@
-#
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License along
-#    with this program; if not, write to the Free Software Foundation, Inc.,
-#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#    The full GNU General Public License is included in this distribution in
-#    the file called "COPYING".
-#
-# Contibutors:
-#	Axel Neumann, Simó Albert i Beltran, Pau Escrich
-#
-
-
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bmx7
-
-PKG_SOURCE_PROTO:=git
-
-PKG_SOURCE_URL:=https://github.com/bmx-routing/bmx7.git
-
-PKG_REV:=cc245a22e54b5e110384485f18d9b805c91d8b71
-PKG_MIRROR_HASH:=378228450b7790bb07b1d478f123e9196c1040d9f55ec42e83090249574a3d6b
-PKG_VERSION:=r2019030802
+PKG_VERSION:=7.1.1
 PKG_RELEASE:=1
-PKG_LICENSE:=GPL-2.0
 
-PKG_SOURCE_VERSION:=$(PKG_REV)
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/bmx-routing/bmx7/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=5f88df1c95e5cb842a6016bb1604e3e7f6097c63c5c9916edc3c84e96d4f5f65
+PKG_UNPACK:=$(TAR) -C $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION) \
+	--strip-components=2 -xzf $(DL_DIR)/$(PKG_SOURCE) $(PKG_NAME)-$(PKG_VERSION)/src
+
+PKG_MAINTAINER:=Axel Neumann <neumann@cgws.de>
+PKG_LICENSE:=GPL-2.0-or-later
+PKG_LICENSE_FILES:=LICENSE
+
+PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -58,13 +34,12 @@ define Package/bmx7/Default
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
   TITLE:=BMX7 layer 3 routing daemon
-  URL:=http://github.com/bmx-routing/bmx7
-  MAINTAINER:=Axel Neumann <neumann@cgws.de>
+  URL:=https://github.com/bmx-routing/bmx7
   DEPENDS:=+zlib +libmbedtls +libiwinfo
 endef
 
 define Package/bmx7/description
-BMX7 routing daemon supporting securely-entrusted IPv6 (and IPv4in6) routing
+  BMX7 routing daemon supporting securely-entrusted IPv6 (and IPv4in6) routing
 endef
 
 define Package/bmx7
@@ -81,7 +56,7 @@ endef
 define Package/bmx7-iwinfo
   $(call Package/bmx7/Default)
   DEPENDS:=bmx7 +libiwinfo
-  TITLE:=link characteristics plugin based on libiwinfo (recommended!)
+  TITLE:=link characteristics plugin via libiwinfo (recommended!)
 endef
 
 define Package/bmx7-topology
@@ -179,7 +154,6 @@ define Package/bmx7-table/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lib/bmx7_table/bmx7_table.so $(1)/usr/lib/bmx7_table.so
 endef
-
 
 $(eval $(call BuildPackage,bmx7))
 $(eval $(call BuildPackage,bmx7-uci-config))

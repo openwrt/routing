@@ -15,7 +15,8 @@ PKG_HASH:=3454dc8bd6cb264e2decda1b99ef3f837535ed33802abc6c39551c181d3984ce
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
-PKG_LICENSE:=GPL-2.0
+PKG_LICENSE:=GPL-2.0-only MIT
+PKG_LICENSE_FILES:=LICENSES/preferred/GPL-2.0 LICENSES/preferred/MIT
 PKG_EXTMOD_SUBDIRS=net/batman-adv
 
 STAMP_CONFIGURED_DEPENDS := $(STAGING_DIR)/usr/include/mac80211-backport/backport/autoconf.h

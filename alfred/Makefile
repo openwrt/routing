@@ -8,9 +8,9 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=alfred
-PKG_VERSION:=2019.3
-PKG_RELEASE:=2
-PKG_HASH:=a4c37920de497701680abb55c49cdcd11e4e7135e0e7e79259c35492a3df4766
+PKG_VERSION:=2019.4
+PKG_RELEASE:=0
+PKG_HASH:=b5525b396595004654335ac1ebf9de1aab90263e66d5bcc43fc8a708b56a18ea
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)

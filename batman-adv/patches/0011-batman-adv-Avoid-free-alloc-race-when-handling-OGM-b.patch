@@ -1,0 +1,136 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 3 Oct 2019 17:02:01 +0200
+Subject: batman-adv: Avoid free/alloc race when handling OGM buffer
+
+Each slave interface of an B.A.T.M.A.N. IV virtual interface has an OGM
+packet buffer which is initialized using data from the RTNL lock protected
+netdevice notifier and other rtnetlink related hooks. It is sent regularly
+via various slave interfaces of the batadv virtual interface and in this
+process also modified (realloced) to integrate additional state information
+via TVLV containers.
+
+It must be avoided that the worker item is executed without a common lock
+with the netdevice notifier/rtnetlink helpers. Otherwise it can either
+happen that half modified/freed data is sent out or functions modifying the
+OGM buffer try to access already freed memory regions.
+
+Reported-by: syzbot+0cc629f19ccb8534935b@syzkaller.appspotmail.com
+Fixes: ea6f8d42a595 ("batman-adv: move /proc interface handling to /sys")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/9b8ceef26c697d0c8319748428944c3339a498dc
+
+diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
+index d78938e3e0085d9cff138b805148a0e77de3f654..e20c3813182c422a52f58178f05010869c5ebe66 100644
+--- a/net/batman-adv/bat_iv_ogm.c
++++ b/net/batman-adv/bat_iv_ogm.c
+@@ -29,6 +29,7 @@
+ #include <linux/random.h>
+ #include <linux/rculist.h>
+ #include <linux/rcupdate.h>
++#include <linux/rtnetlink.h>
+ #include <linux/seq_file.h>
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+@@ -193,6 +194,8 @@ static int batadv_iv_ogm_iface_enable(struct batadv_hard_iface *hard_iface)
+ 	unsigned char *ogm_buff;
+ 	u32 random_seqno;
+ 
++	ASSERT_RTNL();
++
+ 	/* randomize initial seqno to avoid collision */
+ 	get_random_bytes(&random_seqno, sizeof(random_seqno));
+ 	atomic_set(&hard_iface->bat_iv.ogm_seqno, random_seqno);
+@@ -217,6 +220,8 @@ static int batadv_iv_ogm_iface_enable(struct batadv_hard_iface *hard_iface)
+ 
+ static void batadv_iv_ogm_iface_disable(struct batadv_hard_iface *hard_iface)
+ {
++	ASSERT_RTNL();
++
+ 	kfree(hard_iface->bat_iv.ogm_buff);
+ 	hard_iface->bat_iv.ogm_buff = NULL;
+ }
+@@ -226,6 +231,8 @@ static void batadv_iv_ogm_iface_update_mac(struct batadv_hard_iface *hard_iface)
+ 	struct batadv_ogm_packet *batadv_ogm_packet;
+ 	unsigned char *ogm_buff = hard_iface->bat_iv.ogm_buff;
+ 
++	ASSERT_RTNL();
++
+ 	batadv_ogm_packet = (struct batadv_ogm_packet *)ogm_buff;
+ 	ether_addr_copy(batadv_ogm_packet->orig,
+ 			hard_iface->net_dev->dev_addr);
+@@ -239,6 +246,8 @@ batadv_iv_ogm_primary_iface_set(struct batadv_hard_iface *hard_iface)
+ 	struct batadv_ogm_packet *batadv_ogm_packet;
+ 	unsigned char *ogm_buff = hard_iface->bat_iv.ogm_buff;
+ 
++	ASSERT_RTNL();
++
+ 	batadv_ogm_packet = (struct batadv_ogm_packet *)ogm_buff;
+ 	batadv_ogm_packet->ttl = BATADV_TTL;
+ }
+@@ -753,6 +762,8 @@ static void batadv_iv_ogm_schedule(struct batadv_hard_iface *hard_iface)
+ 	u16 tvlv_len = 0;
+ 	unsigned long send_time;
+ 
++	ASSERT_RTNL();
++
+ 	if (hard_iface->if_status == BATADV_IF_NOT_IN_USE ||
+ 	    hard_iface->if_status == BATADV_IF_TO_BE_REMOVED)
+ 		return;
+@@ -1643,16 +1654,12 @@ static void batadv_iv_ogm_process(const struct sk_buff *skb, int ogm_offset,
+ 	batadv_orig_node_put(orig_node);
+ }
+ 
+-static void batadv_iv_send_outstanding_bat_ogm_packet(struct work_struct *work)
++static void
++batadv_iv_send_outstanding_forw_packet(struct batadv_forw_packet *forw_packet)
+ {
+-	struct delayed_work *delayed_work;
+-	struct batadv_forw_packet *forw_packet;
+ 	struct batadv_priv *bat_priv;
+ 	bool dropped = false;
+ 
+-	delayed_work = to_delayed_work(work);
+-	forw_packet = container_of(delayed_work, struct batadv_forw_packet,
+-				   delayed_work);
+ 	bat_priv = netdev_priv(forw_packet->if_incoming->soft_iface);
+ 
+ 	if (atomic_read(&bat_priv->mesh_state) == BATADV_MESH_DEACTIVATING) {
+@@ -1681,6 +1688,20 @@ static void batadv_iv_send_outstanding_bat_ogm_packet(struct work_struct *work)
+ 		batadv_forw_packet_free(forw_packet, dropped);
+ }
+ 
++static void batadv_iv_send_outstanding_bat_ogm_packet(struct work_struct *work)
++{
++	struct delayed_work *delayed_work;
++	struct batadv_forw_packet *forw_packet;
++
++	delayed_work = to_delayed_work(work);
++	forw_packet = container_of(delayed_work, struct batadv_forw_packet,
++				   delayed_work);
++
++	rtnl_lock();
++	batadv_iv_send_outstanding_forw_packet(forw_packet);
++	rtnl_unlock();
++}
++
+ static int batadv_iv_ogm_receive(struct sk_buff *skb,
+ 				 struct batadv_hard_iface *if_incoming)
+ {
+diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
+index f298e9a04986faf40db04ece14180b7f43b5a7b7..f3084b005ed641d8ab8910df542762bc7dff450a 100644
+--- a/net/batman-adv/types.h
++++ b/net/batman-adv/types.h
+@@ -71,10 +71,10 @@ enum batadv_dhcp_recipient {
+  * struct batadv_hard_iface_bat_iv - per hard-interface B.A.T.M.A.N. IV data
+  */
+ struct batadv_hard_iface_bat_iv {
+-	/** @ogm_buff: buffer holding the OGM packet */
++	/** @ogm_buff: buffer holding the OGM packet. rtnl protected */
+ 	unsigned char *ogm_buff;
+ 
+-	/** @ogm_buff_len: length of the OGM packet buffer */
++	/** @ogm_buff_len: length of the OGM packet buffer. rtnl protected */
+ 	int ogm_buff_len;
+ 
+ 	/** @ogm_seqno: OGM sequence number - used to identify each OGM */

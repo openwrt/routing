@@ -1,0 +1,138 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 13 Oct 2019 21:03:06 +0200
+Subject: batman-adv: Introduce own OGM2 buffer mutex
+
+Only a single function is currently automatically locked by the rtnl_lock
+because (unlike B.A.T.M.A.N. IV) the OGM2 buffer is independent of the hard
+interfaces on which it will be transmitted. A private mutex can be used
+instead to avoid unnecessary delays which would have been introduced by the
+global lock.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/8069c581f9097f1f9398f2d49047a1dab8093821
+
+diff --git a/net/batman-adv/bat_v_ogm.c b/net/batman-adv/bat_v_ogm.c
+index 034bdc5e31e7b1b6f12c06da9977b3b6663da7f3..74452e9385b1a6e81be64af259dfc371cd3e9655 100644
+--- a/net/batman-adv/bat_v_ogm.c
++++ b/net/batman-adv/bat_v_ogm.c
+@@ -17,11 +17,12 @@
+ #include <linux/kernel.h>
+ #include <linux/kref.h>
+ #include <linux/list.h>
++#include <linux/lockdep.h>
++#include <linux/mutex.h>
+ #include <linux/netdevice.h>
+ #include <linux/random.h>
+ #include <linux/rculist.h>
+ #include <linux/rcupdate.h>
+-#include <linux/rtnetlink.h>
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+ #include <linux/stddef.h>
+@@ -130,7 +131,7 @@ static void batadv_v_ogm_send_softif(struct batadv_priv *bat_priv)
+ 	u16 tvlv_len = 0;
+ 	int ret;
+ 
+-	ASSERT_RTNL();
++	lockdep_assert_held(&bat_priv->bat_v.ogm_buff_mutex);
+ 
+ 	if (atomic_read(&bat_priv->mesh_state) == BATADV_MESH_DEACTIVATING)
+ 		goto out;
+@@ -230,11 +231,12 @@ static void batadv_v_ogm_send(struct work_struct *work)
+ 	struct batadv_priv_bat_v *bat_v;
+ 	struct batadv_priv *bat_priv;
+ 
+-	rtnl_lock();
+ 	bat_v = container_of(work, struct batadv_priv_bat_v, ogm_wq.work);
+ 	bat_priv = container_of(bat_v, struct batadv_priv, bat_v);
++
++	mutex_lock(&bat_priv->bat_v.ogm_buff_mutex);
+ 	batadv_v_ogm_send_softif(bat_priv);
+-	rtnl_unlock();
++	mutex_unlock(&bat_priv->bat_v.ogm_buff_mutex);
+ }
+ 
+ /**
+@@ -263,13 +265,15 @@ void batadv_v_ogm_primary_iface_set(struct batadv_hard_iface *primary_iface)
+ 	struct batadv_priv *bat_priv = netdev_priv(primary_iface->soft_iface);
+ 	struct batadv_ogm2_packet *ogm_packet;
+ 
+-	ASSERT_RTNL();
+-
++	mutex_lock(&bat_priv->bat_v.ogm_buff_mutex);
+ 	if (!bat_priv->bat_v.ogm_buff)
+-		return;
++		goto unlock;
+ 
+ 	ogm_packet = (struct batadv_ogm2_packet *)bat_priv->bat_v.ogm_buff;
+ 	ether_addr_copy(ogm_packet->orig, primary_iface->net_dev->dev_addr);
++
++unlock:
++	mutex_unlock(&bat_priv->bat_v.ogm_buff_mutex);
+ }
+ 
+ /**
+@@ -873,8 +877,6 @@ int batadv_v_ogm_init(struct batadv_priv *bat_priv)
+ 	unsigned char *ogm_buff;
+ 	u32 random_seqno;
+ 
+-	ASSERT_RTNL();
+-
+ 	bat_priv->bat_v.ogm_buff_len = BATADV_OGM2_HLEN;
+ 	ogm_buff = kzalloc(bat_priv->bat_v.ogm_buff_len, GFP_ATOMIC);
+ 	if (!ogm_buff)
+@@ -893,6 +895,8 @@ int batadv_v_ogm_init(struct batadv_priv *bat_priv)
+ 	atomic_set(&bat_priv->bat_v.ogm_seqno, random_seqno);
+ 	INIT_DELAYED_WORK(&bat_priv->bat_v.ogm_wq, batadv_v_ogm_send);
+ 
++	mutex_init(&bat_priv->bat_v.ogm_buff_mutex);
++
+ 	return 0;
+ }
+ 
+@@ -904,7 +908,11 @@ void batadv_v_ogm_free(struct batadv_priv *bat_priv)
+ {
+ 	cancel_delayed_work_sync(&bat_priv->bat_v.ogm_wq);
+ 
++	mutex_lock(&bat_priv->bat_v.ogm_buff_mutex);
++
+ 	kfree(bat_priv->bat_v.ogm_buff);
+ 	bat_priv->bat_v.ogm_buff = NULL;
+ 	bat_priv->bat_v.ogm_buff_len = 0;
++
++	mutex_unlock(&bat_priv->bat_v.ogm_buff_mutex);
+ }
+diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
+index f3084b005ed641d8ab8910df542762bc7dff450a..09f44bac693fcb3dc13c33319f4928a472a14b2e 100644
+--- a/net/batman-adv/types.h
++++ b/net/batman-adv/types.h
+@@ -16,6 +16,7 @@
+ #include <linux/compiler.h>
+ #include <linux/if_ether.h>
+ #include <linux/kref.h>
++#include <linux/mutex.h>
+ #include <linux/netdevice.h>
+ #include <linux/netlink.h>
+ #include <linux/sched.h> /* for linux/wait.h */
+@@ -1477,15 +1478,18 @@ struct batadv_softif_vlan {
+  * struct batadv_priv_bat_v - B.A.T.M.A.N. V per soft-interface private data
+  */
+ struct batadv_priv_bat_v {
+-	/** @ogm_buff: buffer holding the OGM packet. rtnl protected */
++	/** @ogm_buff: buffer holding the OGM packet */
+ 	unsigned char *ogm_buff;
+ 
+-	/** @ogm_buff_len: length of the OGM packet buffer. rtnl protected */
++	/** @ogm_buff_len: length of the OGM packet buffer */
+ 	int ogm_buff_len;
+ 
+ 	/** @ogm_seqno: OGM sequence number - used to identify each OGM */
+ 	atomic_t ogm_seqno;
+ 
++	/** @ogm_buff_mutex: lock protecting ogm_buff and ogm_buff_len */
++	struct mutex ogm_buff_mutex;
++
+ 	/** @ogm_wq: workqueue used to schedule OGM transmissions */
+ 	struct delayed_work ogm_wq;
+ };

@@ -1,0 +1,119 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 3 Oct 2019 17:02:01 +0200
+Subject: batman-adv: Avoid free/alloc race when handling OGM2 buffer
+
+A B.A.T.M.A.N. V virtual interface has an OGM2 packet buffer which is
+initialized using data from the RTNL lock protected netdevice notifier and
+other rtnetlink related hooks. It is sent regularly via various slave
+interfaces of the batadv virtual interface and in this process also
+modified (realloced) to integrate additional state information via TVLV
+containers.
+
+It must be avoided that the worker item is executed without a common lock
+with the netdevice notifier/rtnetlink helpers. Otherwise it can either
+happen that half modified data is sent out or the functions modifying the
+OGM2 buffer try to access already freed memory regions.
+
+Fixes: 632835348e65 ("batman-adv: OGMv2 - add basic infrastructure")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/14ee24576213ff02272b7f8d975c7c61d5448aa2
+
+diff --git a/net/batman-adv/bat_v_ogm.c b/net/batman-adv/bat_v_ogm.c
+index bc06e3cdfa84f63cc003867d4453a88249d3fb18..034bdc5e31e7b1b6f12c06da9977b3b6663da7f3 100644
+--- a/net/batman-adv/bat_v_ogm.c
++++ b/net/batman-adv/bat_v_ogm.c
+@@ -21,6 +21,7 @@
+ #include <linux/random.h>
+ #include <linux/rculist.h>
+ #include <linux/rcupdate.h>
++#include <linux/rtnetlink.h>
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+ #include <linux/stddef.h>
+@@ -116,14 +117,12 @@ static void batadv_v_ogm_send_to_if(struct sk_buff *skb,
+ }
+ 
+ /**
+- * batadv_v_ogm_send() - periodic worker broadcasting the own OGM
+- * @work: work queue item
++ * batadv_v_ogm_send_softif() - periodic worker broadcasting the own OGM
++ * @bat_priv: the bat priv with all the soft interface information
+  */
+-static void batadv_v_ogm_send(struct work_struct *work)
++static void batadv_v_ogm_send_softif(struct batadv_priv *bat_priv)
+ {
+ 	struct batadv_hard_iface *hard_iface;
+-	struct batadv_priv_bat_v *bat_v;
+-	struct batadv_priv *bat_priv;
+ 	struct batadv_ogm2_packet *ogm_packet;
+ 	struct sk_buff *skb, *skb_tmp;
+ 	unsigned char *ogm_buff;
+@@ -131,8 +130,7 @@ static void batadv_v_ogm_send(struct work_struct *work)
+ 	u16 tvlv_len = 0;
+ 	int ret;
+ 
+-	bat_v = container_of(work, struct batadv_priv_bat_v, ogm_wq.work);
+-	bat_priv = container_of(bat_v, struct batadv_priv, bat_v);
++	ASSERT_RTNL();
+ 
+ 	if (atomic_read(&bat_priv->mesh_state) == BATADV_MESH_DEACTIVATING)
+ 		goto out;
+@@ -223,6 +221,22 @@ static void batadv_v_ogm_send(struct work_struct *work)
+ 	return;
+ }
+ 
++/**
++ * batadv_v_ogm_send() - periodic worker broadcasting the own OGM
++ * @work: work queue item
++ */
++static void batadv_v_ogm_send(struct work_struct *work)
++{
++	struct batadv_priv_bat_v *bat_v;
++	struct batadv_priv *bat_priv;
++
++	rtnl_lock();
++	bat_v = container_of(work, struct batadv_priv_bat_v, ogm_wq.work);
++	bat_priv = container_of(bat_v, struct batadv_priv, bat_v);
++	batadv_v_ogm_send_softif(bat_priv);
++	rtnl_unlock();
++}
++
+ /**
+  * batadv_v_ogm_iface_enable() - prepare an interface for B.A.T.M.A.N. V
+  * @hard_iface: the interface to prepare
+@@ -249,6 +263,8 @@ void batadv_v_ogm_primary_iface_set(struct batadv_hard_iface *primary_iface)
+ 	struct batadv_priv *bat_priv = netdev_priv(primary_iface->soft_iface);
+ 	struct batadv_ogm2_packet *ogm_packet;
+ 
++	ASSERT_RTNL();
++
+ 	if (!bat_priv->bat_v.ogm_buff)
+ 		return;
+ 
+@@ -857,6 +873,8 @@ int batadv_v_ogm_init(struct batadv_priv *bat_priv)
+ 	unsigned char *ogm_buff;
+ 	u32 random_seqno;
+ 
++	ASSERT_RTNL();
++
+ 	bat_priv->bat_v.ogm_buff_len = BATADV_OGM2_HLEN;
+ 	ogm_buff = kzalloc(bat_priv->bat_v.ogm_buff_len, GFP_ATOMIC);
+ 	if (!ogm_buff)
+diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
+index e0b25104cbfa9f715df364658621c29faa7ad637..f298e9a04986faf40db04ece14180b7f43b5a7b7 100644
+--- a/net/batman-adv/types.h
++++ b/net/batman-adv/types.h
+@@ -1477,10 +1477,10 @@ struct batadv_softif_vlan {
+  * struct batadv_priv_bat_v - B.A.T.M.A.N. V per soft-interface private data
+  */
+ struct batadv_priv_bat_v {
+-	/** @ogm_buff: buffer holding the OGM packet */
++	/** @ogm_buff: buffer holding the OGM packet. rtnl protected */
+ 	unsigned char *ogm_buff;
+ 
+-	/** @ogm_buff_len: length of the OGM packet buffer */
++	/** @ogm_buff_len: length of the OGM packet buffer. rtnl protected */
+ 	int ogm_buff_len;
+ 
+ 	/** @ogm_seqno: OGM sequence number - used to identify each OGM */

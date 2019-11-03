@@ -30,7 +30,7 @@ define Package/luci-app-cjdns
 	SUBMENU:=3. Applications
 	TITLE:=Encrypted near-zero-conf mesh routing protocol
 	URL:=https://github.com/cjdelisle/cjdns
-	MAINTAINER:=Lars Gierth <larsg@systemli.org>
+	MAINTAINER:=William Fleurant <meshnet@protonmail.com>
 	DEPENDS:=+cjdns +luci-base
 endef
 

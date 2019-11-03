@@ -18,18 +18,22 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cjdns
 PKG_VERSION:=20.4
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
-PKG_SOURCE_URL:=https://github.com/cjdelisle/cjdns.git
+PKG_SOURCE_VERSION:=cjdns-v$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-v$(PKG_VERSION).tar.xz
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=45cdd8b3eebb18b6239feeef3b787e40d773edfb
-PKG_LICENSE:=GPL-3.0
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_SOURCE_VERSION).tar.bz2
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_SOURCE_VERSION)
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_SOURCE_VERSION)
+PKG_SOURCE_URL:=https://github.com/cjdelisle/cjdns.git
+PKG_MIRROR_HASH:=fd694d9c33b68274647efe5081c5053068a499e2079d05434be6c7b4d18451d9
+
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
+
+PKG_MAINTAINER:=William Fleurant <meshnet@protonmail.com>
+PKG_LICENSE:=GPL-3.0-or-later
+PKG_LICENSE_FILES:=LICENSE
 
 include $(INCLUDE_DIR)/package.mk
-
 
 define Package/cjdns
 	SECTION:=net
@@ -37,7 +41,6 @@ define Package/cjdns
 	SUBMENU:=Routing and Redirection
 	TITLE:=Encrypted near-zero-conf mesh routing protocol
 	URL:=https://github.com/cjdelisle/cjdns
-	MAINTAINER:=William Fleurant <meshnet@protonmail.com>
 	DEPENDS:=@!arc @IPV6 +kmod-tun +libnl-tiny +libpthread +librt \
 		+libuci-lua +lua-bencode +dkjson +luasocket +lua-sha2
 endef
@@ -55,12 +58,11 @@ define Package/cjdns-tests
 	SUBMENU:=Routing and Redirection
 	TITLE:=cjdns test cases
 	URL:=https://github.com/cjdelisle/cjdns
-	MAINTAINER:=Lars Gierth <larsg@systemli.org>
 	DEPENDS:=+libpthread +librt @!arc
 endef
 
 define Package/cjdns-test/description
-	cjdns test cases
+	Builds cjdns test cases binary test_testcjdroute_c
 endef
 
 define Build/Configure
@@ -132,7 +134,6 @@ define Package/cjdns/postinst
 #!/bin/sh
 if [ -z $${IPKG_INSTROOT} ] ; then
 	( . /etc/uci-defaults/cjdns ) && rm -f /etc/uci-defaults/cjdns
-	# TODO: we should have an 'Enable' button instead
 	/etc/init.d/cjdns enabled || /etc/init.d/cjdns enable
 	exit 0
 fi

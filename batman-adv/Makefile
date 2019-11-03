@@ -9,13 +9,14 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batman-adv
 
-PKG_VERSION:=2019.2
-PKG_RELEASE:=4
-PKG_HASH:=70c3f6a6cf88d2b25681a76768a52ed92d9fe992ba8e358368b6a8088757adc8
+PKG_VERSION:=2019.4
+PKG_RELEASE:=0
+PKG_HASH:=de07be3f46dddadc3f9608ca11814ecae534c65ccd7cbfeb9762f8e90a17f660
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
-PKG_LICENSE:=GPL-2.0
+PKG_LICENSE:=GPL-2.0-only MIT
+PKG_LICENSE_FILES:=LICENSES/preferred/GPL-2.0 LICENSES/preferred/MIT
 PKG_EXTMOD_SUBDIRS=net/batman-adv
 
 STAMP_CONFIGURED_DEPENDS := $(STAGING_DIR)/usr/include/mac80211-backport/backport/autoconf.h

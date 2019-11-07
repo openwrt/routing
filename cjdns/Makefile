@@ -17,15 +17,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cjdns
-PKG_VERSION:=20.4
+PKG_VERSION:=v20.4
 PKG_RELEASE:=2
 
-PKG_SOURCE_VERSION:=cjdns-v$(PKG_VERSION)
-PKG_SOURCE:=$(PKG_NAME)-v$(PKG_VERSION).tar.xz
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)
+PKG_SOURCE_VERSION:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/cjdelisle/cjdns.git
-PKG_MIRROR_HASH:=fd694d9c33b68274647efe5081c5053068a499e2079d05434be6c7b4d18451d9
+PKG_MIRROR_HASH:=5e0036660626c3acf0050cf2e47aa87d262474184efb9d69538dbab4512113f8
 
 PKG_MAINTAINER:=William Fleurant <meshnet@protonmail.com>
 PKG_LICENSE:=GPL-3.0-or-later
@@ -77,8 +75,8 @@ PKG_DO_VARS+= UCLIBC=1
 endif
 
 define Build/Compile
-	$(INSTALL_DIR) $(BUILD_DIR)/$(PKG_NAME)/tmp
-	(cd $(BUILD_DIR)/$(PKG_NAME) && \
+	$(INSTALL_DIR) $(BUILD_DIR)/$(PKG_SOURCE_VERSION)/tmp
+	(cd $(BUILD_DIR)/$(PKG_SOURCE_VERSION) && \
 	CROSS="true" \
 	CC="$(TARGET_CC)" \
 	AR="$(TARGET_AR)" \
@@ -89,7 +87,7 @@ define Build/Compile
 	TARGET_ARCH="$(CONFIG_ARCH)" \
 	SSP_SUPPORT="$(CONFIG_SSP_SUPPORT)" \
 	GYP_ADDITIONAL_ARGS="-f make-linux" \
-	CJDNS_BUILD_TMPDIR="$(BUILD_DIR)/$(PKG_NAME)/tmp" \
+	CJDNS_BUILD_TMPDIR="$(BUILD_DIR)/$(PKG_SOURCE_VERSION)/tmp" \
 	$(PKG_DO_VARS) \
 	exec ./do)
 endef
@@ -108,11 +106,11 @@ define Package/cjdns/install
 		$(1)/usr/bin
 
 	$(INSTALL_BIN) \
-		$(BUILD_DIR)/$(PKG_NAME)/cjdroute \
+		$(BUILD_DIR)/$(PKG_SOURCE_VERSION)/cjdroute \
 		$(1)/usr/sbin
 
 	$(INSTALL_BIN) \
-		$(BUILD_DIR)/$(PKG_NAME)/publictoip6 \
+		$(BUILD_DIR)/$(PKG_SOURCE_VERSION)/publictoip6 \
 		$(1)/usr/bin
 
 	$(INSTALL_BIN) \
@@ -140,7 +138,7 @@ endef
 define Package/cjdns-tests/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) \
-		$(BUILD_DIR)/$(PKG_NAME)/build_linux/test_testcjdroute_c \
+		$(BUILD_DIR)/$(PKG_SOURCE_VERSION)/build_linux/test_testcjdroute_c \
 		$(1)/usr/bin
 endef
 

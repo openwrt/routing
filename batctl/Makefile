@@ -94,7 +94,7 @@ MAKE_VARS += \
         LIBNL_GENL_NAME="libnl-tiny"
 
 MAKE_FLAGS += \
-        REVISION="openwrt-$(PKG_VERSION)-$(PKG_RELEASE)"
+        REVISION="$(PKG_VERSION)-openwrt-$(PKG_RELEASE)"
 
 config-n := \
 	aggregation \

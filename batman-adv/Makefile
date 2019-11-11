@@ -76,7 +76,7 @@ NOSTDINC_FLAGS = \
 	-I$(PKG_BUILD_DIR)/include/ \
 	-include backport/backport.h \
 	-include $(PKG_BUILD_DIR)/compat-hacks.h \
-	-DBATADV_SOURCE_VERSION=\\\"openwrt-$(PKG_VERSION)-$(PKG_RELEASE)\\\"
+	-DBATADV_SOURCE_VERSION=\\\"$(PKG_VERSION)-openwrt-$(PKG_RELEASE)\\\"
 
 COMPAT_SOURCES = \
 	$(if $(CONFIG_BATMAN_ADV_MCAST),../../compat-sources/net/core/skbuff.o,) \

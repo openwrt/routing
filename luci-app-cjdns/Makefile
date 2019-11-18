@@ -31,7 +31,7 @@ define Package/luci-app-cjdns
 	SUBMENU:=3. Applications
 	TITLE:=Encrypted near-zero-conf mesh routing protocol
 	URL:=https://github.com/cjdelisle/cjdns
-	DEPENDS:=+cjdns +luci-base
+	DEPENDS:=+cjdns +luci-compat +luci-base
 endef
 
 define Package/luci-app-cjdns/description

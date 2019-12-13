@@ -1,0 +1,43 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 28 Nov 2019 12:43:49 +0100
+Subject: batman-adv: Fix DAT candidate selection on little endian systems
+
+The distributed arp table is using a DHT to store and retrieve MAC address
+information for an IP address. This is done using unicast messages to
+selected peers. The potential peers are looked up using the IP address and
+the VID.
+
+While the IP address is always stored in big endian byte order, it is not
+the case of the VID. It can (depending on the host system) either be big
+endian or little endian. The host must therefore always convert it to big
+endian to ensure that all devices calculate the same peers for the same
+lookup data.
+
+Fixes: 3e26722bc9f2 ("batman-adv: make the Distributed ARP Table vlan aware")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Acked-by: Antonio Quartulli <a@unstable.cc>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/728aea06f38e0e4d70f4f7d43698187f7f7055c5
+
+diff --git a/net/batman-adv/distributed-arp-table.c b/net/batman-adv/distributed-arp-table.c
+index b0af3a11d4069cb7e44419d4494f20dd653dbca8..ec7bf5a4a9fc724b63da7bfd7ece79f32b104d99 100644
+--- a/net/batman-adv/distributed-arp-table.c
++++ b/net/batman-adv/distributed-arp-table.c
+@@ -285,6 +285,7 @@ static u32 batadv_hash_dat(const void *data, u32 size)
+ 	u32 hash = 0;
+ 	const struct batadv_dat_entry *dat = data;
+ 	const unsigned char *key;
++	__be16 vid;
+ 	u32 i;
+ 
+ 	key = (const unsigned char *)&dat->ip;
+@@ -294,7 +295,8 @@ static u32 batadv_hash_dat(const void *data, u32 size)
+ 		hash ^= (hash >> 6);
+ 	}
+ 
+-	key = (const unsigned char *)&dat->vid;
++	vid = htons(dat->vid);
++	key = (__force const unsigned char *)&vid;
+ 	for (i = 0; i < sizeof(dat->vid); i++) {
+ 		hash += key[i];
+ 		hash += (hash << 10);

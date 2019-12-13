@@ -118,6 +118,18 @@ static inline int batadv_access_ok(int type, const void __user *p,
 
 #endif /* < KERNEL_VERSION(5, 0, 0) */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
+
+#ifndef fallthrough
+#if __GNUC__ > 7 && !defined(__CHECKER__)
+# define fallthrough                    __attribute__((__fallthrough__))
+#else
+# define fallthrough                    do {} while (0)  /* fallthrough */
+#endif
+#endif
+
+#endif /* < KERNEL_VERSION(5, 4, 0) */
+
 /* <DECLARE_EWMA> */
 
 #include <linux/version.h>

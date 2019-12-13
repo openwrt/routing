@@ -25,7 +25,7 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/d3be478f1aa27b47f61c4a62e18eb063d47c9168
 
 diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
-index cb27949f4086643ebd018a0a01ab0b848ce5123f..b87bf2e511e0cd702a94594b8ddfe107ee17cef2 100644
+index 5b2ef12cfabb24ccbe2c1848cfff4d1ded9bd0b0..f5941837c3ad463f276cffdb25f9b6cd87af0e92 100644
 --- a/net/batman-adv/bat_iv_ogm.c
 +++ b/net/batman-adv/bat_iv_ogm.c
 @@ -35,6 +35,7 @@
@@ -217,10 +217,10 @@ index cb27949f4086643ebd018a0a01ab0b848ce5123f..b87bf2e511e0cd702a94594b8ddfe107
  				 struct batadv_hard_iface *if_incoming)
  {
 diff --git a/net/batman-adv/hard-interface.c b/net/batman-adv/hard-interface.c
-index 2f0d42f2f913e74cf10c0c6ce89320434994cac5..48123e9e3a6d221a9033bc2949e19a306e973546 100644
+index 36f0962040d16af4f9ed82629ff03ce85c83ed57..c4e0435c952db87c89727633c184320820812cda 100644
 --- a/net/batman-adv/hard-interface.c
 +++ b/net/batman-adv/hard-interface.c
-@@ -30,6 +30,7 @@
+@@ -29,6 +29,7 @@
  #include <linux/kernel.h>
  #include <linux/kref.h>
  #include <linux/list.h>
@@ -228,7 +228,7 @@ index 2f0d42f2f913e74cf10c0c6ce89320434994cac5..48123e9e3a6d221a9033bc2949e19a30
  #include <linux/netdevice.h>
  #include <linux/printk.h>
  #include <linux/rculist.h>
-@@ -929,6 +930,7 @@ batadv_hardif_add_interface(struct net_device *net_dev)
+@@ -933,6 +934,7 @@ batadv_hardif_add_interface(struct net_device *net_dev)
  	INIT_LIST_HEAD(&hard_iface->list);
  	INIT_HLIST_HEAD(&hard_iface->neigh_list);
  
@@ -237,7 +237,7 @@ index 2f0d42f2f913e74cf10c0c6ce89320434994cac5..48123e9e3a6d221a9033bc2949e19a30
  	kref_init(&hard_iface->refcount);
  
 diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
-index 05542a32f8c9c00b9d0cd7dbbab60cb773724613..c843a69677d1e0eefaf6a1432541052b7cd2965a 100644
+index 44c423447fe163eb3b9df5ec5cf229bed6b8d65b..85f52dc42e17f7ed550f13048a2e2bd9d372196b 100644
 --- a/net/batman-adv/types.h
 +++ b/net/batman-adv/types.h
 @@ -83,14 +83,17 @@ enum batadv_dhcp_recipient {

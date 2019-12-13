@@ -22,7 +22,7 @@ Acked-by: Antonio Quartulli <a@unstable.cc>
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/07b6051ebcfaa7ea89b4f278eca2ff4070d29e56
 
 diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
-index 73bf6a93a3cf1141a34657bf1284893199e04db9..3db8a0278046c0a9f4d2604f0067ba4efe3ef588 100644
+index 0b7b36fa0d5cd440ddef141ad27acfe7b20aee43..36f244125d24c800d35249af7639d39a516588d4 100644
 --- a/net/batman-adv/bat_iv_ogm.c
 +++ b/net/batman-adv/bat_iv_ogm.c
 @@ -463,17 +463,23 @@ static u8 batadv_hop_penalty(u8 tq, const struct batadv_priv *bat_priv)

@@ -101,10 +101,10 @@ index 5f4fe1889053d4ea7624e4500dcefe2601371024..f5feaa8c4fd228228fea519771e2c9e1
  	ogm_buff = kzalloc(bat_priv->bat_v.ogm_buff_len, GFP_ATOMIC);
  	if (!ogm_buff)
 diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
-index 5137d859694c28f60cad33325127617c047412ff..bf33f04e055bbf288ce6800d0b93da1b4cd9b70d 100644
+index 5c5762f0f89c8b79b52288104d975dc3753bbf82..11ced015ab639f0d82f12ae533a92f356734cafa 100644
 --- a/net/batman-adv/types.h
 +++ b/net/batman-adv/types.h
-@@ -984,8 +984,8 @@ struct batadv_softif_vlan {
+@@ -990,8 +990,8 @@ struct batadv_softif_vlan {
  
  /**
   * struct batadv_priv_bat_v - B.A.T.M.A.N. V per soft-interface private data

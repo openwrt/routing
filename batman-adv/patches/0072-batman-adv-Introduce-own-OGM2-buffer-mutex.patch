@@ -104,7 +104,7 @@ index f5feaa8c4fd228228fea519771e2c9e123b10345..a9240a0bedad109aba58e30038fe91a4
 +	mutex_unlock(&bat_priv->bat_v.ogm_buff_mutex);
  }
 diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
-index 8906e551c85991e6b085108cf6f2b734b48fc231..57df7c68dfee8d6bed72edbd044d95016a5dd75e 100644
+index 2489d5e403c1bcbcc9008f51303f7b1ea4753ea2..3d9704ce31b4a162c01a74021ef18d53d992d506 100644
 --- a/net/batman-adv/types.h
 +++ b/net/batman-adv/types.h
 @@ -27,6 +27,7 @@
@@ -115,7 +115,7 @@ index 8906e551c85991e6b085108cf6f2b734b48fc231..57df7c68dfee8d6bed72edbd044d9501
  #include <linux/netdevice.h>
  #include <linux/netlink.h>
  #include <linux/sched.h> /* for linux/wait.h */
-@@ -984,15 +985,17 @@ struct batadv_softif_vlan {
+@@ -990,15 +991,17 @@ struct batadv_softif_vlan {
  
  /**
   * struct batadv_priv_bat_v - B.A.T.M.A.N. V per soft-interface private data

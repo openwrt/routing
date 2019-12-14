@@ -25,7 +25,7 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/d3be478f1aa27b47f61c4a62e18eb063d47c9168
 
 diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
-index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877aae3f10d 100644
+index ccb60591a01886ceef22408e9387a8a3fda05a36..80fc960e656eb2f11f58fc8211235e033331bfd5 100644
 --- a/net/batman-adv/bat_iv_ogm.c
 +++ b/net/batman-adv/bat_iv_ogm.c
 @@ -34,6 +34,7 @@
@@ -44,7 +44,7 @@ index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877
  #include <linux/seq_file.h>
  #include <linux/skbuff.h>
  #include <linux/slab.h>
-@@ -367,7 +367,7 @@ static int batadv_iv_ogm_iface_enable(struct batadv_hard_iface *hard_iface)
+@@ -371,7 +371,7 @@ static int batadv_iv_ogm_iface_enable(struct batadv_hard_iface *hard_iface)
  	unsigned char *ogm_buff;
  	u32 random_seqno;
  
@@ -53,7 +53,7 @@ index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877
  
  	/* randomize initial seqno to avoid collision */
  	get_random_bytes(&random_seqno, sizeof(random_seqno));
-@@ -375,8 +375,10 @@ static int batadv_iv_ogm_iface_enable(struct batadv_hard_iface *hard_iface)
+@@ -379,8 +379,10 @@ static int batadv_iv_ogm_iface_enable(struct batadv_hard_iface *hard_iface)
  
  	hard_iface->bat_iv.ogm_buff_len = BATADV_OGM_HLEN;
  	ogm_buff = kmalloc(hard_iface->bat_iv.ogm_buff_len, GFP_ATOMIC);
@@ -65,7 +65,7 @@ index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877
  
  	hard_iface->bat_iv.ogm_buff = ogm_buff;
  
-@@ -388,41 +390,59 @@ static int batadv_iv_ogm_iface_enable(struct batadv_hard_iface *hard_iface)
+@@ -392,41 +394,59 @@ static int batadv_iv_ogm_iface_enable(struct batadv_hard_iface *hard_iface)
  	batadv_ogm_packet->reserved = 0;
  	batadv_ogm_packet->tq = BATADV_TQ_MAX_VALUE;
  
@@ -132,7 +132,7 @@ index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877
  }
  
  /* when do we schedule our own ogm to be sent */
-@@ -921,7 +941,11 @@ batadv_iv_ogm_slide_own_bcast_window(struct batadv_hard_iface *hard_iface)
+@@ -925,7 +945,11 @@ batadv_iv_ogm_slide_own_bcast_window(struct batadv_hard_iface *hard_iface)
  	}
  }
  
@@ -145,7 +145,7 @@ index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877
  {
  	struct batadv_priv *bat_priv = netdev_priv(hard_iface->soft_iface);
  	unsigned char **ogm_buff = &hard_iface->bat_iv.ogm_buff;
-@@ -932,11 +956,7 @@ static void batadv_iv_ogm_schedule(struct batadv_hard_iface *hard_iface)
+@@ -936,11 +960,7 @@ static void batadv_iv_ogm_schedule(struct batadv_hard_iface *hard_iface)
  	u16 tvlv_len = 0;
  	unsigned long send_time;
  
@@ -158,7 +158,7 @@ index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877
  
  	/* the interface gets activated here to avoid race conditions between
  	 * the moment of activating the interface in
-@@ -1004,6 +1024,17 @@ out:
+@@ -1008,6 +1028,17 @@ out:
  		batadv_hardif_put(primary_if);
  }
  
@@ -176,7 +176,7 @@ index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877
  /**
   * batadv_iv_ogm_orig_update - use OGM to update corresponding data in an
   *  originator
-@@ -1788,12 +1819,16 @@ static void batadv_iv_ogm_process(const struct sk_buff *skb, int ogm_offset,
+@@ -1792,12 +1823,16 @@ static void batadv_iv_ogm_process(const struct sk_buff *skb, int ogm_offset,
  	batadv_orig_node_put(orig_node);
  }
  
@@ -195,7 +195,7 @@ index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877
  	bat_priv = netdev_priv(forw_packet->if_incoming->soft_iface);
  
  	if (atomic_read(&bat_priv->mesh_state) == BATADV_MESH_DEACTIVATING) {
-@@ -1822,20 +1857,6 @@ out:
+@@ -1826,20 +1861,6 @@ out:
  		batadv_forw_packet_free(forw_packet, dropped);
  }
  
@@ -217,10 +217,10 @@ index 54c5be029b7418bc97d87e7642e258bfed120874..3fb3feaf5e462f7263754b81a06fc877
  				 struct batadv_hard_iface *if_incoming)
  {
 diff --git a/net/batman-adv/hard-interface.c b/net/batman-adv/hard-interface.c
-index 6969f580d0bfd0428f1c6985eaec8bbbf5a0d38b..72b63117fe47c4cb91eb8512b4f44d6b0bc670c9 100644
+index 6d96ecd14fb0881e3384850bc34063b999fe5c93..0060d3cf2cfcad24fb26c190e588689e768584d5 100644
 --- a/net/batman-adv/hard-interface.c
 +++ b/net/batman-adv/hard-interface.c
-@@ -29,6 +29,7 @@
+@@ -28,6 +28,7 @@
  #include <linux/kernel.h>
  #include <linux/kref.h>
  #include <linux/list.h>
@@ -228,7 +228,7 @@ index 6969f580d0bfd0428f1c6985eaec8bbbf5a0d38b..72b63117fe47c4cb91eb8512b4f44d6b
  #include <linux/netdevice.h>
  #include <linux/printk.h>
  #include <linux/rculist.h>
-@@ -896,6 +897,7 @@ batadv_hardif_add_interface(struct net_device *net_dev)
+@@ -905,6 +906,7 @@ batadv_hardif_add_interface(struct net_device *net_dev)
  	INIT_LIST_HEAD(&hard_iface->list);
  	INIT_HLIST_HEAD(&hard_iface->neigh_list);
  
@@ -237,7 +237,7 @@ index 6969f580d0bfd0428f1c6985eaec8bbbf5a0d38b..72b63117fe47c4cb91eb8512b4f44d6b
  	kref_init(&hard_iface->refcount);
  
 diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
-index 57df7c68dfee8d6bed72edbd044d95016a5dd75e..ee1a3243b160b5ca87e1a42654e579d7358aab6b 100644
+index 3d9704ce31b4a162c01a74021ef18d53d992d506..6854cb2b107024ad3588ac7eedd71339e529e4f8 100644
 --- a/net/batman-adv/types.h
 +++ b/net/batman-adv/types.h
 @@ -79,14 +79,16 @@ enum batadv_dhcp_recipient {

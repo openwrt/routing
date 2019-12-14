@@ -22,10 +22,10 @@ Acked-by: Antonio Quartulli <a@unstable.cc>
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/07b6051ebcfaa7ea89b4f278eca2ff4070d29e56
 
 diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
-index 7bfd0d7ef49df8e699f91e2b827b824aa3657c0d..5afc4e9646d622c6f924d4610ac58eb77404b37a 100644
+index 73ea771287fd8babc6c8858643e84c1d9cba3691..8967bc91423cd36b3a4dc240150ff2a694f5bed4 100644
 --- a/net/batman-adv/bat_iv_ogm.c
 +++ b/net/batman-adv/bat_iv_ogm.c
-@@ -450,17 +450,23 @@ static u8 batadv_hop_penalty(u8 tq, const struct batadv_priv *bat_priv)
+@@ -454,17 +454,23 @@ static u8 batadv_hop_penalty(u8 tq, const struct batadv_priv *bat_priv)
   * batadv_iv_ogm_aggr_packet - checks if there is another OGM attached
   * @buff_pos: current position in the skb
   * @packet_len: total length of the skb
@@ -54,7 +54,7 @@ index 7bfd0d7ef49df8e699f91e2b827b824aa3657c0d..5afc4e9646d622c6f924d4610ac58eb7
  
  	return (next_buff_pos <= packet_len) &&
  	       (next_buff_pos <= BATADV_MAX_AGGREGATION_BYTES);
-@@ -488,7 +494,7 @@ static void batadv_iv_ogm_send_to_if(struct batadv_forw_packet *forw_packet,
+@@ -492,7 +498,7 @@ static void batadv_iv_ogm_send_to_if(struct batadv_forw_packet *forw_packet,
  
  	/* adjust all flags and log packets */
  	while (batadv_iv_ogm_aggr_packet(buff_pos, forw_packet->packet_len,
@@ -63,7 +63,7 @@ index 7bfd0d7ef49df8e699f91e2b827b824aa3657c0d..5afc4e9646d622c6f924d4610ac58eb7
  		/* we might have aggregated direct link packets with an
  		 * ordinary base packet
  		 */
-@@ -1838,7 +1844,7 @@ static int batadv_iv_ogm_receive(struct sk_buff *skb,
+@@ -1842,7 +1848,7 @@ static int batadv_iv_ogm_receive(struct sk_buff *skb,
  
  	/* unpack the aggregated packets and process them one by one */
  	while (batadv_iv_ogm_aggr_packet(ogm_offset, skb_headlen(skb),

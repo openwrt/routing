@@ -21,7 +21,7 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/9b8ceef26c697d0c8319748428944c3339a498dc
 
 diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
-index 3db8a0278046c0a9f4d2604f0067ba4efe3ef588..cb27949f4086643ebd018a0a01ab0b848ce5123f 100644
+index 36f244125d24c800d35249af7639d39a516588d4..5b2ef12cfabb24ccbe2c1848cfff4d1ded9bd0b0 100644
 --- a/net/batman-adv/bat_iv_ogm.c
 +++ b/net/batman-adv/bat_iv_ogm.c
 @@ -42,6 +42,7 @@
@@ -118,7 +118,7 @@ index 3db8a0278046c0a9f4d2604f0067ba4efe3ef588..cb27949f4086643ebd018a0a01ab0b84
  				 struct batadv_hard_iface *if_incoming)
  {
 diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
-index 8eaec92aff8919f0c6ca6b05be22e592b7ae0e1a..d43f1ec4532d1fda1d50061e581f4770a6037739 100644
+index 3392198ff146ba77d320104663e97ab21559d556..49e4e6cb506f192e85e96e8b3e68be3fdc2dca57 100644
 --- a/net/batman-adv/types.h
 +++ b/net/batman-adv/types.h
 @@ -82,10 +82,10 @@ enum batadv_dhcp_recipient {

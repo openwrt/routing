@@ -59,7 +59,7 @@ MAKE_FLAGS += \
 	CONFIG_ALFRED_CAPABILITIES=n \
         LIBNL_NAME="libnl-tiny" \
         LIBNL_GENL_NAME="libnl-tiny" \
-        REVISION="openwrt-$(PKG_VERSION)-$(PKG_RELEASE)"
+        REVISION="$(PKG_VERSION)-openwrt-$(PKG_RELEASE)"
 
 TARGET_CFLAGS  += -ffunction-sections -fdata-sections -flto
 TARGET_LDFLAGS += -Wl,--gc-sections -fuse-linker-plugin

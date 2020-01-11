@@ -9,13 +9,15 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ahcpd
 PKG_VERSION:=0.53
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://www.pps.univ-paris-diderot.fr/~jch/software/files/
-PKG_MD5SUM:=a1a610bf20965aa522cd766bf3d5829a
-PKG_LICENSE:=MIT
+PKG_SOURCE_URL:=https://www.irif.fr/~jch/software/files/
+PKG_HASH:=a4622e817d2b2a9b878653f085585bd57f3838cc546cca6028d3b73ffcac0d52
 
+PKG_MAINTAINER:=Gabriel Kerneis <gabriel@kerneis.info>
+PKG_LICENSE:=MIT
+PKG_LICENSE_FILES:=LICENCE
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -23,8 +25,7 @@ define Package/ahcpd
   SECTION:=net
   CATEGORY:=Network
   TITLE:=Ad-Hoc Configuration Protocol daemon
-  URL:=http://www.pps.univ-paris-diderot.fr/~jch/software/ahcp/
-  MAINTAINER:=Gabriel Kerneis <gabriel@kerneis.info>
+  URL:=https://www.irif.fr/~jch/software/ahcp/
   DEPENDS:=@IPV6 +ip +librt
 endef
 

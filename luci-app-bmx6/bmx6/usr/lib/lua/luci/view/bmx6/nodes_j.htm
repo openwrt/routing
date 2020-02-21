@@ -87,7 +87,7 @@
 		  document.getElementById('extra-info').innerHTML = document.getElementById(id).innerHTML;
 		}
 	
-		new TablePooler(5,"/cgi-bin/bmx6-info", {'$neighbours':''}, "descriptions_table", function(st){
+		new TablePooler(5,"/cgi-bin/bmx6-info", {'neighbours':''}, "descriptions_table", function(st){
 	  	  var infoicon = "<%=resource%>/bmx6/world_small.png";
 		  var nodeicon = "<%=resource%>/bmx6/world.png";
 	  	  var originators = st.neighbours[0].originators;

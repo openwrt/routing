@@ -88,7 +88,7 @@ define Build/Compile
 	$(MAKE) $(PKG_JOBS) -C "$(LINUX_DIR)" \
 		ARCH="$(LINUX_KARCH)" \
 		CROSS_COMPILE="$(TARGET_CROSS)" \
-		SUBDIRS="$(PKG_BUILD_DIR)/net/batman-adv" \
+		M="$(PKG_BUILD_DIR)/net/batman-adv" \
 		$(PKG_EXTRA_KCONFIG) \
 		EXTRA_CFLAGS="$(PKG_EXTRA_CFLAGS)" \
 		NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)" \

@@ -17,6 +17,15 @@
 #endif /* < KERNEL_VERSION(4, 15, 0) */
 
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 16, 0)
+
+#ifndef sizeof_field
+#define sizeof_field(TYPE, MEMBER) sizeof((((TYPE *)0)->MEMBER))
+#endif
+
+#endif /* < KERNEL_VERSION(4, 16, 0) */
+
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 1, 0)
 
 #include_next <linux/igmp.h>

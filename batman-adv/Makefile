@@ -1,23 +1,19 @@
-#
-# Copyright (C) 2010 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
+# SPDX-License-Identifier: GPL-2.0-only
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batman-adv
-
 PKG_VERSION:=2020.0
 PKG_RELEASE:=1
-PKG_HASH:=a12a32d1ec65b94b54ca86e6f31ac1b947bf04449aad0c96dfe936746bd0c585
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
+PKG_HASH:=a12a32d1ec65b94b54ca86e6f31ac1b947bf04449aad0c96dfe936746bd0c585
+PKG_EXTMOD_SUBDIRS:=net/batman-adv
+
+PKG_MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
 PKG_LICENSE:=GPL-2.0-only MIT
 PKG_LICENSE_FILES:=LICENSES/preferred/GPL-2.0 LICENSES/preferred/MIT
-PKG_EXTMOD_SUBDIRS=net/batman-adv
 
 STAMP_CONFIGURED_DEPENDS := $(STAGING_DIR)/usr/include/mac80211-backport/backport/autoconf.h
 
@@ -25,22 +21,21 @@ include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/batman-adv
-  URL:=https://www.open-mesh.org/
-  MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
   SUBMENU:=Network Support
-  DEPENDS:=+BATMAN_ADV_BLA:kmod-lib-crc16 +kmod-lib-crc32c +kmod-cfg80211 +batctl
   TITLE:=B.A.T.M.A.N. Adv
+  URL:=https://www.open-mesh.org/
+  DEPENDS:=+BATMAN_ADV_BLA:kmod-lib-crc16 +kmod-lib-crc32c +kmod-cfg80211 +batctl
   FILES:=$(PKG_BUILD_DIR)/net/batman-adv/batman-adv.$(LINUX_KMOD_SUFFIX)
   AUTOLOAD:=$(call AutoProbe,batman-adv)
 endef
 
 define KernelPackage/batman-adv/description
-B.A.T.M.A.N. (better approach to mobile ad-hoc networking) is
-a routing protocol for multi-hop ad-hoc mesh networks. The
-networks may be wired or wireless. See
-https://www.open-mesh.org/ for more information and user space
-tools. This package builds version $(PKG_VERSION) of the kernel
-module.
+  B.A.T.M.A.N. (better approach to mobile ad-hoc networking) is
+  a routing protocol for multi-hop ad-hoc mesh networks. The
+  networks may be wired or wireless. See
+  https://www.open-mesh.org/ for more information and user space
+  tools. This package builds version $(PKG_VERSION) of the kernel
+  module.
 endef
 
 define KernelPackage/batman-adv/config

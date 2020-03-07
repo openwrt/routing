@@ -36,7 +36,6 @@ define Package/batctl-tiny
 $(call Package/batctl/Default)
   TITLE:=B.A.T.M.A.N. Advanced user space configuration tool (Minimal)
   VARIANT:=tiny
-  PROVIDES:=batctl
   ALTERNATIVES:=100:/usr/sbin/batctl:/usr/libexec/batctl-tiny
 endef
 

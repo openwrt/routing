@@ -1,54 +1,47 @@
-#
-# Copyright (C) 2014 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
+# SPDX-License-Identifier: GPL-2.0-only
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batctl
-
-PKG_VERSION:=2019.5
-PKG_RELEASE:=0
-PKG_HASH:=ffe5857a33068ec174140c154610d76d833524d840a2fc2d1a15e16686213cad
+PKG_VERSION:=2020.0
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
+PKG_HASH:=60efe9b148f66aa1b29110493244dc9f1f1d722e6d96969e4d4b2c0ab9278104
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
+
+PKG_MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
 PKG_LICENSE:=GPL-2.0-only ISC MIT
 PKG_LICENSE_FILES:=LICENSES/preferred/GPL-2.0 LICENSES/preferred/MIT LICENSES/deprecated/ISC
-
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/batctl/Default
-  URL:=https://www.open-mesh.org/
   SECTION:=net
   CATEGORY:=Network
+  URL:=https://www.open-mesh.org/
   DEPENDS:=+libnl-tiny +libc +librt
   PROVIDES:=batctl
-  MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
 endef
 
 define Package/batctl/description
-batctl is a more intuitive managment utility for B.A.T.M.A.N.-Advanced.
-It is an easier method for configuring batman-adv and provides some
-additional tools for debugging as well. This package builds
-version $(PKG_VERSION) of the user space utility.
+  batctl is a more intuitive managment utility for B.A.T.M.A.N.-Advanced.
+  It is an easier method for configuring batman-adv and provides some
+  additional tools for debugging as well. This package builds
+  version $(PKG_VERSION) of the user space utility.
 endef
 
 define Package/batctl-tiny
 $(call Package/batctl/Default)
   TITLE:=B.A.T.M.A.N. Advanced user space configuration tool (Minimal)
   VARIANT:=tiny
-  PROVIDES:=batctl
   ALTERNATIVES:=100:/usr/sbin/batctl:/usr/libexec/batctl-tiny
 endef
 
 define Package/batctl-tiny/description
 $(Package/batctl/description)
-Only configuration relevant subcommands are enabled.
+  Only configuration relevant subcommands are enabled.
 endef
 
 define Package/batctl-default
@@ -60,7 +53,7 @@ endef
 
 define Package/batctl-default/description
 $(Package/batctl/description)
-Standard subcommands for configuration and online debugging are enabled.
+  Standard subcommands for configuration and online debugging are enabled.
 endef
 
 define Package/batctl-full
@@ -72,7 +65,7 @@ endef
 
 define Package/batctl-full/description
 $(Package/batctl/description)
-Subcommands for configuration, online and offline debugging are enabled.
+  Subcommands for configuration, online and offline debugging are enabled.
 endef
 
 # The linker can identify unused sections of a binary when each symbol is stored

@@ -17,6 +17,15 @@
 #endif /* < KERNEL_VERSION(4, 15, 0) */
 
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 16, 0)
+
+#ifndef sizeof_field
+#define sizeof_field(TYPE, MEMBER) sizeof((((TYPE *)0)->MEMBER))
+#endif
+
+#endif /* < KERNEL_VERSION(4, 16, 0) */
+
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 1, 0)
 
 #include_next <linux/igmp.h>
@@ -53,40 +62,6 @@ static inline int batadv_ip_mc_check_igmp2(struct sk_buff *skb,
 	ip_mc_check_igmp_get(__VA_ARGS__, batadv_ip_mc_check_igmp2, batadv_ip_mc_check_igmp1)(__VA_ARGS__)
 
 #endif /* < KERNEL_VERSION(5, 1, 0) */
-
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0)
-
-#include_next <linux/cache.h>
-
-/* hack for netlink.c which marked the family ops as ro */
-#ifdef __ro_after_init
-#undef __ro_after_init
-#endif
-#define __ro_after_init
-
-#endif /* < KERNEL_VERSION(4, 10, 0) */
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 11, 9)
-
-#include <linux/netdevice.h>
-
-/* work around missing attribute needs_free_netdev and priv_destructor in
- * net_device
- */
-#define ether_setup(dev) \
-	void batadv_softif_free2(struct net_device *dev) \
-	{ \
-		batadv_softif_free(dev); \
-		free_netdev(dev); \
-	} \
-	void (*t1)(struct net_device *dev) __attribute__((unused)); \
-	bool t2 __attribute__((unused)); \
-	ether_setup(dev)
-#define needs_free_netdev destructor = batadv_softif_free2; t2
-#define priv_destructor destructor = batadv_softif_free2; t1
-
-#endif /* < KERNEL_VERSION(4, 11, 9) */
 
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)

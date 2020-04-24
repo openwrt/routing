@@ -1,0 +1,37 @@
+From: Leonardo Mörlein <me@irrelefant.net>
+Date: Wed, 8 Apr 2020 23:49:03 +0200
+Subject: batctl: Return EXIT_FAILURE when throughputmeter failed
+
+The command returned a success even an error was shown during the
+execution.
+
+  $ (sudo batctl tp 77:77:77:77:77:77 && echo true) || echo false
+  Destination unreachable
+  true
+
+Instead it should indicate a failure when the kernel replied with a
+non-success return_value:
+
+  $ (sudo ./batctl tp 77:77:77:77:77:77 && echo true) || echo false
+  Destination unreachable
+  false
+
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Leonardo Mörlein <me@irrelefant.net>
+[sven@narfation.org: adjusted commit message]
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/df8bf5164b6904f61ae0b0db090fb5bb41b4f06d
+
+diff --git a/throughputmeter.c b/throughputmeter.c
+index f9d98cfcac86d7a9398e2adddd143924b38e50b0..f19d4891981c99b7b9f3fae39c8d59f549243d0a 100644
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -465,6 +465,7 @@ static int throughputmeter(struct state *state, int argc, char **argv)
+ 		goto out;
+ 	}
+ 
++	ret = EXIT_FAILURE;
+ 	switch (result.return_value) {
+ 	case BATADV_TP_REASON_DST_UNREACHABLE:
+ 		fprintf(stderr, "Destination unreachable\n");

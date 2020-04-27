@@ -1,0 +1,38 @@
+From: Xiyu Yang <xiyuyang19@fudan.edu.cn>
+Date: Wed, 15 Apr 2020 16:31:50 +0800
+Subject: batman-adv: Fix refcnt leak in batadv_show_throughput_override
+
+batadv_show_throughput_override() invokes batadv_hardif_get_by_netdev(),
+which gets a batadv_hard_iface object from net_dev with increased refcnt
+and its reference is assigned to a local pointer 'hard_iface'.
+
+When batadv_show_throughput_override() returns, "hard_iface" becomes
+invalid, so the refcount should be decreased to keep refcount balanced.
+
+The issue happens in the normal path of
+batadv_show_throughput_override(), which forgets to decrease the refcnt
+increased by batadv_hardif_get_by_netdev() before the function returns,
+causing a refcnt leak.
+
+Fix this issue by calling batadv_hardif_put() before the
+batadv_show_throughput_override() returns in the normal path.
+
+Fixes: c513176e4b7a ("batman-adv: add throughput override attribute to hard_ifaces")
+Signed-off-by: Xiyu Yang <xiyuyang19@fudan.edu.cn>
+Signed-off-by: Xin Tan <tanxin.ctf@gmail.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/f301bfed59b146a63471d0f147b767d7cafede6f
+
+diff --git a/net/batman-adv/sysfs.c b/net/batman-adv/sysfs.c
+index 80fc3253c3368e3cc356176c5ba961542de0a8c9..c20f2bab9db56021f7280ebdfc2afcfd772991bd 100644
+--- a/net/batman-adv/sysfs.c
++++ b/net/batman-adv/sysfs.c
+@@ -1189,6 +1189,7 @@ static ssize_t batadv_show_throughput_override(struct kobject *kobj,
+ 
+ 	tp_override = atomic_read(&hard_iface->bat_v.throughput_override);
+ 
++	batadv_hardif_put(hard_iface);
+ 	return sprintf(buff, "%u.%u MBit\n", tp_override / 10,
+ 		       tp_override % 10);
+ }

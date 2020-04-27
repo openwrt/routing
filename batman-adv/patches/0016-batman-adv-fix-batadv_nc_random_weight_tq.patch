@@ -1,0 +1,59 @@
+From: George Spelvin <lkml@sdf.org>
+Date: Sun, 8 Mar 2020 09:44:59 -0400
+Subject: batman-adv: fix batadv_nc_random_weight_tq
+
+and change to pseudorandom numbers, as this is a traffic dithering
+operation that doesn't need crypto-grade.
+
+The previous code operated in 4 steps:
+
+1. Generate a random byte 0 <= rand_tq <= 255
+2. Multiply it by BATADV_TQ_MAX_VALUE - tq
+3. Divide by 255 (= BATADV_TQ_MAX_VALUE)
+4. Return BATADV_TQ_MAX_VALUE - rand_tq
+
+This would apperar to scale (BATADV_TQ_MAX_VALUE - tq) by a random
+value between 0/255 and 255/255.
+
+But!  The intermediate value between steps 3 and 4 is stored in a u8
+variable.  So it's truncated, and most of the time, is less than 255, after
+which the division produces 0.  Specifically, if tq is odd, the product is
+always even, and can never be 255.  If tq is even, there's exactly one
+random byte value that will produce a product byte of 255.
+
+Thus, the return value is 255 (511/512 of the time) or 254 (1/512
+of the time).
+
+If we assume that the truncation is a bug, and the code is meant to scale
+the input, a simpler way of looking at it is that it's returning a random
+value between tq and BATADV_TQ_MAX_VALUE, inclusive.
+
+Well, we have an optimized function for doing just that.
+
+Fixes: c3289f3650d3 ("batman-adv: network coding - code and transmit packets if possible")
+Signed-off-by: George Spelvin <lkml@sdf.org>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/db48c60b0edb995450ee846157364bd09bb23762
+
+diff --git a/net/batman-adv/network-coding.c b/net/batman-adv/network-coding.c
+index c5e7906045f3c62c052400c44a18bca0a38499ba..b7f3d9ef83cfcc136888cd2487dcdd88cb16d6d9 100644
+--- a/net/batman-adv/network-coding.c
++++ b/net/batman-adv/network-coding.c
+@@ -1009,15 +1009,8 @@ static struct batadv_nc_path *batadv_nc_get_path(struct batadv_priv *bat_priv,
+  */
+ static u8 batadv_nc_random_weight_tq(u8 tq)
+ {
+-	u8 rand_val, rand_tq;
+-
+-	get_random_bytes(&rand_val, sizeof(rand_val));
+-
+ 	/* randomize the estimated packet loss (max TQ - estimated TQ) */
+-	rand_tq = rand_val * (BATADV_TQ_MAX_VALUE - tq);
+-
+-	/* normalize the randomized packet loss */
+-	rand_tq /= BATADV_TQ_MAX_VALUE;
++	u8 rand_tq = prandom_u32_max(BATADV_TQ_MAX_VALUE + 1 - tq);
+ 
+ 	/* convert to (randomized) estimated tq again */
+ 	return BATADV_TQ_MAX_VALUE - rand_tq;

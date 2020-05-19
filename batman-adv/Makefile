@@ -69,6 +69,7 @@ NOSTDINC_FLAGS = \
 	-I$(STAGING_DIR)/usr/include/mac80211 \
 	-I$(STAGING_DIR)/usr/include/mac80211/uapi \
 	-I$(PKG_BUILD_DIR)/include/ \
+	-include backport/autoconf.h \
 	-include backport/backport.h \
 	-include $(PKG_BUILD_DIR)/compat-hacks.h \
 	-DBATADV_SOURCE_VERSION=\\\"$(PKG_VERSION)-openwrt-$(PKG_RELEASE)\\\"

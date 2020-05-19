@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batman-adv
 PKG_VERSION:=2020.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
@@ -75,8 +75,7 @@ NOSTDINC_FLAGS = \
 
 define Build/Compile
 	$(MAKE) $(PKG_JOBS) -C "$(LINUX_DIR)" \
-		ARCH="$(LINUX_KARCH)" \
-		CROSS_COMPILE="$(TARGET_CROSS)" \
+		$(KERNEL_MAKE_FLAGS) \
 		M="$(PKG_BUILD_DIR)/net/batman-adv" \
 		$(PKG_EXTRA_KCONFIG) \
 		EXTRA_CFLAGS="$(PKG_EXTRA_CFLAGS)" \

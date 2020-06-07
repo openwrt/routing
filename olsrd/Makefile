@@ -36,7 +36,7 @@ endef
 define Package/olsrd
   $(call Package/olsrd/template)
   MENU:=1
-  DEPENDS:=+libpthread
+  DEPENDS:=+libpthread @BROKEN
 endef
 
 define Package/olsrd/conffiles

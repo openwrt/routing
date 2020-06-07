@@ -18,9 +18,10 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-cjdns
 PKG_VERSION:=1.3
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
-PKG_LICENSE:=GPL-3.0
+PKG_MAINTAINER:=William Fleurant <meshnet@protonmail.com>
+PKG_LICENSE:=GPL-3.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -30,7 +31,6 @@ define Package/luci-app-cjdns
 	SUBMENU:=3. Applications
 	TITLE:=Encrypted near-zero-conf mesh routing protocol
 	URL:=https://github.com/cjdelisle/cjdns
-	MAINTAINER:=Lars Gierth <larsg@systemli.org>
 	DEPENDS:=+cjdns +luci-base
 endef
 
@@ -47,8 +47,9 @@ define Build/Compile
 endef
 
 define Package/luci-app-cjdns/install
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci $(1)/usr/share/rpcd/acl.d
 	$(CP) ./luasrc/* $(1)/usr/lib/lua/luci
+	$(CP) ./files/luci-app-cjdns.json $(1)/usr/share/rpcd/acl.d
 endef
 
 $(eval $(call BuildPackage,luci-app-cjdns))

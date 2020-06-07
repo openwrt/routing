@@ -1,0 +1,15 @@
+{
+        "luci-app-cjdns": {
+                "description": "Grant access to LuCI app cjdns",
+                "read": {
+                        "uci": [ "cjdns" ]
+                },
+                "write": {
+                        "file": {
+                                "/usr/bin/cjdrouteconf": [ "exec" ]
+                        },
+                        "uci": [ "cjdns" ]
+                }
+        }
+}
+

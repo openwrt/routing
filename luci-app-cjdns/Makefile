@@ -18,7 +18,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-cjdns
 PKG_VERSION:=1.3
-PKG_RELEASE:=7
+PKG_RELEASE:=8
 
 PKG_MAINTAINER:=William Fleurant <meshnet@protonmail.com>
 PKG_LICENSE:=GPL-3.0-or-later
@@ -45,8 +45,9 @@ define Build/Compile
 endef
 
 define Package/luci-app-cjdns/install
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci $(1)/usr/share/rpcd/acl.d
 	$(CP) ./luasrc/* $(1)/usr/lib/lua/luci
+	$(CP) ./files/luci-app-cjdns.json $(1)/usr/share/rpcd/acl.d
 endef
 
 $(eval $(call BuildPackage,luci-app-cjdns))

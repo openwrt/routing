@@ -101,7 +101,7 @@ fi
 
 if [ "$QUERY" == 'tunnels' ]; then
   tunnels=$(bmx6 -c --jshow tunnels /r=0)
-  if [ -z $tunnels ]; then
+  if [ -z "$tunnels" ]; then
     echo '{ "tunnels" : [] }'
   else
     echo $tunnels

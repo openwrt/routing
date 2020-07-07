@@ -1,0 +1,38 @@
+From: Marek Lindner <mareklindner@neomailbox.ch>
+Date: Wed, 29 Apr 2020 12:09:44 +0200
+Subject: batctl: fix endianness when reading radiotap header
+
+All radiotap header fields are specified in little endian byte-order.
+Header length conversion is necessary on some platforms.
+
+Fixes: c6fcdb6dc9a9 ("batctl: add radiotap wifi packet decapsulation support")
+Signed-off-by: Marek Lindner <mareklindner@neomailbox.ch>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/440ae55a6ef96eb73ee628f9237915cf9fb26dee
+
+diff --git a/tcpdump.c b/tcpdump.c
+index 8106a6457ac1b000f2f802e4b0a751d783540b69..72c1869eb50d25c1f6b1e1fcae42199b9337cb4e 100644
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -15,6 +15,7 @@
+ #include <time.h>
+ #include <sys/time.h>
+ #include <arpa/inet.h>
++#include <endian.h>
+ #include <net/if.h>
+ #include <net/if_arp.h>
+ #include <netinet/in.h>
+@@ -1034,10 +1035,10 @@ static int monitor_header_length(unsigned char *packet_buff, ssize_t buff_len, i
+ 			return -1;
+ 
+ 		radiotap_hdr = (struct radiotap_header*)packet_buff;
+-		if (buff_len <= radiotap_hdr->it_len)
++		if (buff_len <= le16toh(radiotap_hdr->it_len))
+ 			return -1;
+ 		else
+-			return radiotap_hdr->it_len;
++			return le16toh(radiotap_hdr->it_len);
+ 	}
+ 
+ 	return -1;

@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodogsplash
 PKG_FIXUP:=autoreconf
-PKG_VERSION:=4.4.0
+PKG_VERSION:=5.0.0
 PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=https://codeload.github.com/nodogsplash/nodogsplash/tar.gz/v$(PKG_VERSION)?
 PKG_SOURCE:=nodogsplash-$(PKG_VERSION).tar.gz
-PKG_HASH:=6f309847f36be85cdbdd2f940f44791c53c64657fa8253c6318f913da95c1e9c
+PKG_HASH:=a7665f4a42997746a31e9217f2f54e360aa7fc4bc72bd89faa08f1ccf7875b5e
 PKG_BUILD_DIR:=$(BUILD_DIR)/nodogsplash-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Moritz Warning <moritzwarning@web.de>
@@ -59,10 +59,6 @@ define Package/nodogsplash/install
 	$(CP) $(PKG_BUILD_DIR)/openwrt/nodogsplash/files/etc/init.d/nodogsplash $(1)/etc/init.d/
 	$(CP) $(PKG_BUILD_DIR)/openwrt/nodogsplash/files/etc/uci-defaults/40_nodogsplash $(1)/etc/uci-defaults/
 	$(CP) $(PKG_BUILD_DIR)/openwrt/nodogsplash/files/usr/lib/nodogsplash/restart.sh $(1)/usr/lib/nodogsplash/
-	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/PreAuth/demo-preauth.sh $(1)/usr/lib/nodogsplash/login.sh
-	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/get_client_interface.sh $(1)/usr/lib/nodogsplash/
-	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/unescape.sh $(1)/usr/lib/nodogsplash/
-	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/fas-aes/fas-aes.php $(1)/etc/nodogsplash/
 endef
 
 define Package/nodogsplash/postrm

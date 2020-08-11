@@ -1,0 +1,20 @@
+--- a/src-plugins/generic/dlep/radio/dlep_radio_internal.h
++++ b/src-plugins/generic/dlep/radio/dlep_radio_internal.h
+@@ -49,6 +49,6 @@
+ #include "core/oonf_logging.h"
+ 
+ /* headers only for use inside the DLEP_RADIO subsystem */
+-enum oonf_log_source LOG_DLEP_RADIO;
++extern enum oonf_log_source LOG_DLEP_RADIO;
+ 
+ #endif /* DLEP_RADIO_INTERNAL_H_ */
+--- a/src-plugins/generic/nl80211_listener/nl80211_internal.h
++++ b/src-plugins/generic/nl80211_listener/nl80211_internal.h
+@@ -49,6 +49,6 @@
+ #include "core/oonf_logging.h"
+ 
+ /* headers only for use inside the NL80211 subsystem */
+-enum oonf_log_source LOG_NL80211;
++extern enum oonf_log_source LOG_NL80211;
+ 
+ #endif /* NL80211_INTERNAL_H_ */

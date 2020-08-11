@@ -1,0 +1,40 @@
+--- a/src-plugins/generic/nl80211_listener/nl80211_internal.h
++++ b/src-plugins/generic/nl80211_listener/nl80211_internal.h
+@@ -49,6 +49,6 @@
+ #include "core/oonf_logging.h"
+ 
+ /* headers only for use inside the NL80211 subsystem */
+-enum oonf_log_source LOG_NL80211;
++extern enum oonf_log_source LOG_NL80211;
+ 
+ #endif /* NL80211_INTERNAL_H_ */
+--- a/src-plugins/nhdp/nhdp/nhdp_internal.h
++++ b/src-plugins/nhdp/nhdp/nhdp_internal.h
+@@ -49,8 +49,8 @@
+ #include "core/oonf_logging.h"
+ 
+ /* headers only for use inside the NHDP subsystem */
+-enum oonf_log_source LOG_NHDP;
+-enum oonf_log_source LOG_NHDP_R;
+-enum oonf_log_source LOG_NHDP_W;
++extern enum oonf_log_source LOG_NHDP;
++extern enum oonf_log_source LOG_NHDP_R;
++extern enum oonf_log_source LOG_NHDP_W;
+ 
+ #endif /* NHDP_INTERNAL_H_ */
+--- a/src-plugins/olsrv2/olsrv2/olsrv2_internal.h
++++ b/src-plugins/olsrv2/olsrv2/olsrv2_internal.h
+@@ -50,9 +50,9 @@
+ #include "core/oonf_logging.h"
+ 
+ /* headers only for use inside the OLSRv2 subsystem */
+-EXPORT enum oonf_log_source LOG_OLSRV2;
+-EXPORT enum oonf_log_source LOG_OLSRV2_R;
+-EXPORT enum oonf_log_source LOG_OLSRV2_ROUTING;
+-EXPORT enum oonf_log_source LOG_OLSRV2_W;
++EXPORT extern enum oonf_log_source LOG_OLSRV2;
++EXPORT extern enum oonf_log_source LOG_OLSRV2_R;
++EXPORT extern enum oonf_log_source LOG_OLSRV2_ROUTING;
++EXPORT extern enum oonf_log_source LOG_OLSRV2_W;
+ 
+ #endif /* OLSRV2_INTERNAL_H_ */

@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=prince
 PKG_VERSION:=v0.4
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 # out of source build
 CMAKE_BINARY_SUBDIR:=build

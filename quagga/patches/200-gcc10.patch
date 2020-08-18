@@ -26,7 +26,7 @@
 -struct in_addr            qpim_all_pim_routers_addr;
 +extern int                       qpim_mroute_oif_highest_vif_index;
 +extern struct list              *qpim_channel_oil_list; /* list of struct channel_oil */
-+extern struct in_addr            qpim_all_pim_routers_addr;
++static struct in_addr            qpim_all_pim_routers_addr;
  int                       qpim_t_periodic; /* Period between Join/Prune Messages */
 -struct list              *qpim_upstream_list; /* list of struct pim_upstream */
 +extern struct list              *qpim_upstream_list; /* list of struct pim_upstream */

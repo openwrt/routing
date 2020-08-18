@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=quagga
 PKG_VERSION:=1.1.0
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 PKG_HASH:=f7a43a9c59bfd3722002210530b2553c8d5cc05bfea5acd56d4f102b9f55dc63
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -185,6 +185,8 @@ CONFIGURE_ARGS+= \
 
 MAKE_FLAGS += \
 	CFLAGS="$(TARGET_CFLAGS) -std=gnu99"
+
+TARGET_CFLAGS += -fcommon
 
 define Package/quagga/install
 	$(INSTALL_DIR) $(1)/usr/sbin

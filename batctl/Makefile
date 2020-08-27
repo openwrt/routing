@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=batctl
 
 PKG_VERSION:=2019.2
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 PKG_HASH:=fb656208ff7d4cd8b1b422f60c9e6d8747302a347cbf6c199d7afa9b80f80ea3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -167,7 +167,7 @@ config-tables := \
 	claimtable \
 	dat_cache \
 	gateways \
-	loglevel \
+	mcast_flags \
 	nc_nodes \
 	neighbors \
 	originators \

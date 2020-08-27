@@ -3,12 +3,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batctl
-PKG_VERSION:=2020.2
+PKG_VERSION:=2020.3
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
-PKG_HASH:=d29cdb53ee68abd5027eae07d9fd645b3f154e0d577efa2666c1334bb6d60efd
+PKG_HASH:=3513f7eb3f61817b6894b90832aa5eba513293f487d174ebc98f1bafc9165c64
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
@@ -154,7 +154,7 @@ config-tables := \
 	claimtable \
 	dat_cache \
 	gateways \
-	loglevel \
+	mcast_flags \
 	nc_nodes \
 	neighbors \
 	originators \

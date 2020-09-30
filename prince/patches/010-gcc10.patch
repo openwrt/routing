@@ -1,0 +1,20 @@
+--- a/prince/include/common.h
++++ b/prince/include/common.h
+@@ -35,12 +35,12 @@ typedef struct routing_plugin_ {
+ 
+ } routing_plugin;
+ 
+-routing_plugin *(*new_plugin_p)(char *host, int port, int json_type,
++static routing_plugin *(*new_plugin_p)(char *host, int port, int json_type,
+ 				int timer_port);
+ 
+-int (*get_initial_timers_p)(routing_plugin *o, struct timers *t);
+-int (*get_topology_p)(routing_plugin *o);
+-int (*push_timers_p)(routing_plugin *o, struct timers t);
+-void (*delete_plugin_p)(routing_plugin *o);
++static int (*get_initial_timers_p)(routing_plugin *o, struct timers *t);
++static int (*get_topology_p)(routing_plugin *o);
++static int (*push_timers_p)(routing_plugin *o, struct timers t);
++static void (*delete_plugin_p)(routing_plugin *o);
+ 
+ #endif /* SRC_COMMON_H_ */

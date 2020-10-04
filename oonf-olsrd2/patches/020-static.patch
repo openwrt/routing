@@ -1,0 +1,32 @@
+--- a/src-plugins/nhdp/nhdp/nhdp.c
++++ b/src-plugins/nhdp/nhdp/nhdp.c
+@@ -187,9 +187,9 @@ static struct oonf_rfc5444_protocol *_protocol;
+ static struct netaddr _originator_v4, _originator_v6;
+ 
+ /* logging sources for NHDP subsystem */
+-static enum oonf_log_source LOG_NHDP;
+-static enum oonf_log_source LOG_NHDP_R;
+-static enum oonf_log_source LOG_NHDP_W;
++enum oonf_log_source LOG_NHDP;
++enum oonf_log_source LOG_NHDP_R;
++enum oonf_log_source LOG_NHDP_W;
+ 
+ /**
+  * Initialize additional logging sources for NHDP
+--- a/src-plugins/olsrv2/olsrv2/olsrv2.c
++++ b/src-plugins/olsrv2/olsrv2/olsrv2.c
+@@ -255,10 +255,10 @@ static uint64_t _overwrite_tc_interval;
+ static uint64_t _overwrite_tc_validity;
+ 
+ /* Additional logging sources */
+-static enum oonf_log_source LOG_OLSRV2;
+-static enum oonf_log_source LOG_OLSRV2_R;
+-static enum oonf_log_source LOG_OLSRV2_ROUTING;
+-static enum oonf_log_source LOG_OLSRV2_W;
++enum oonf_log_source LOG_OLSRV2;
++enum oonf_log_source LOG_OLSRV2_R;
++enum oonf_log_source LOG_OLSRV2_ROUTING;
++enum oonf_log_source LOG_OLSRV2_W;
+ 
+ /**
+  * Initialize additional logging sources for NHDP

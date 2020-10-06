@@ -1,0 +1,38 @@
+--- a/src/schedule.c
++++ b/src/schedule.c
+@@ -375,7 +375,9 @@ loop4Event:
+ 					continue;
+ 				}
+ 
++#ifdef SIOCGSTAMP
+ 				ioctl(pb.i.iif->rx_mcast_sock, SIOCGSTAMP, &(pb.i.tv_stamp));
++#endif
+ 
+ 				rx_packet(&pb);
+ 
+@@ -401,7 +403,9 @@ loop4Event:
+ 					continue;
+ 				}
+ 
++#ifdef SIOCGSTAMP
+ 				ioctl(pb.i.iif->rx_fullbrc_sock, SIOCGSTAMP, &(pb.i.tv_stamp));
++#endif
+ 
+ 				rx_packet(&pb);
+ 
+@@ -451,10 +455,15 @@ loop4Event:
+ 					}
+ 				}
+ #endif
++#ifdef SIOCGSTAMP
+ 				if (tv_stamp == NULL)
+ 					ioctl(pb.i.iif->unicast_sock, SIOCGSTAMP, &(pb.i.tv_stamp));
+ 				else
+ 					timercpy(&(pb.i.tv_stamp), tv_stamp);
++#else
++				if (tv_stamp)
++					timercpy(&(pb.i.tv_stamp), tv_stamp);
++#endif
+ 
+ 				rx_packet(&pb);
+ 

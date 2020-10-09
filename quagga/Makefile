@@ -174,6 +174,7 @@ CONFIGURE_ARGS+= \
 	--disable-ospfclient \
 	--disable-capabilities \
 	--disable-doc \
+	--disable-nhrpd \
 	$(call autoconf_bool,CONFIG_PACKAGE_quagga-libzebra,zebra) \
 	$(call autoconf_bool,CONFIG_PACKAGE_quagga-libospf,ospfd) \
 	$(call autoconf_bool,CONFIG_PACKAGE_quagga-bgpd,bgpd) \

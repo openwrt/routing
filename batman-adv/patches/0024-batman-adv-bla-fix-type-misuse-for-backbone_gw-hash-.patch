@@ -1,0 +1,41 @@
+From: Linus Lüssing <ll@simonwunderlich.de>
+Date: Thu, 27 Aug 2020 17:34:48 +0200
+Subject: batman-adv: bla: fix type misuse for backbone_gw hash indexing
+
+It seems that due to a copy & paste error the void pointer
+in batadv_choose_backbone_gw() is cast to the wrong type.
+
+Fixing this by using "struct batadv_bla_backbone_gw" instead of "struct
+batadv_bla_claim" which better matches the caller's side.
+
+For now it seems that we were lucky because the two structs both have
+their orig/vid and addr/vid in the beginning. However I stumbled over
+this issue when I was trying to add some debug variables in front of
+"orig" in batadv_backbone_gw, which caused hash lookups to fail.
+
+Fixes: 7e15c9305ce0 ("batman-adv: don't rely on positions in struct for hashing")
+Signed-off-by: Linus Lüssing <ll@simonwunderlich.de>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/398a706cd46c1fc085aef56ae8ed11f76e182bd1
+
+diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
+index 5f6309ade1ea19f6a0bd27e8cbc5fcfba8f7dda5..62d2e766dd3929e54070c13225f0f71c7f59a212 100644
+--- a/net/batman-adv/bridge_loop_avoidance.c
++++ b/net/batman-adv/bridge_loop_avoidance.c
+@@ -83,11 +83,12 @@ static inline u32 batadv_choose_claim(const void *data, u32 size)
+  */
+ static inline u32 batadv_choose_backbone_gw(const void *data, u32 size)
+ {
+-	const struct batadv_bla_claim *claim = (struct batadv_bla_claim *)data;
++	const struct batadv_bla_backbone_gw *gw;
+ 	u32 hash = 0;
+ 
+-	hash = jhash(&claim->addr, sizeof(claim->addr), hash);
+-	hash = jhash(&claim->vid, sizeof(claim->vid), hash);
++	gw = (struct batadv_bla_backbone_gw *)data;
++	hash = jhash(&gw->orig, sizeof(gw->orig), hash);
++	hash = jhash(&gw->vid, sizeof(gw->vid), hash);
+ 
+ 	return hash % size;
+ }

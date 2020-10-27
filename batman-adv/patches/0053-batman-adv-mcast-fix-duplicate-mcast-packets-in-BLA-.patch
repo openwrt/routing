@@ -1,0 +1,156 @@
+From: Linus Lüssing <linus.luessing@c0d3.blue>
+Date: Tue, 15 Sep 2020 09:54:09 +0200
+Subject: batman-adv: mcast: fix duplicate mcast packets in BLA backbone from mesh
+
+Scenario:
+* Multicast frame send from mesh to a BLA backbone (multiple nodes
+  with their bat0 bridged together, with BLA enabled)
+
+Issue:
+* BLA backbone nodes receive the frame multiple times on bat0,
+  once from mesh->bat0 and once from each backbone_gw from LAN
+
+For unicast, a node will send only to the best backbone gateway
+according to the TQ. However for multicast we currently cannot determine
+if multiple destination nodes share the same backbone if they don't share
+the same backbone with us. So we need to keep sending the unicasts to
+all backbone gateways and let the backbone gateways decide which one
+will forward the frame. We can use the CLAIM mechanism to make this
+decision.
+
+One catch: The batman-adv gateway feature for DHCP packets potentially
+sends multicast packets in the same batman-adv unicast header as the
+multicast optimizations code. And we are not allowed to drop those even
+if we did not claim the source address of the sender, as for such
+packets there is only this one multicast-in-unicast packet.
+
+How can we distinguish the two cases?
+
+The gateway feature uses a batman-adv unicast 4 address header. While
+the multicast-to-unicasts feature uses a simple, 3 address batman-adv
+unicast header. So let's use this to distinguish.
+
+Fixes: e32470167379 ("batman-adv: check incoming packet type for bla")
+Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Acked-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/d7665cf8a824c41c61c6e2110ab63d37eb7a8ef7
+
+diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
+index 26f590ba31d49a85143f67f1c002a25dc007b594..4dc67a0d081c06507aba87f7bec03488817791b2 100644
+--- a/net/batman-adv/bridge_loop_avoidance.c
++++ b/net/batman-adv/bridge_loop_avoidance.c
+@@ -1827,7 +1827,7 @@ batadv_bla_loopdetect_check(struct batadv_priv *bat_priv, struct sk_buff *skb,
+  * @bat_priv: the bat priv with all the soft interface information
+  * @skb: the frame to be checked
+  * @vid: the VLAN ID of the frame
+- * @is_bcast: the packet came in a broadcast packet type.
++ * @packet_type: the batman packet type this frame came in
+  *
+  * batadv_bla_rx avoidance checks if:
+  *  * we have to race for a claim
+@@ -1839,7 +1839,7 @@ batadv_bla_loopdetect_check(struct batadv_priv *bat_priv, struct sk_buff *skb,
+  * further process the skb.
+  */
+ bool batadv_bla_rx(struct batadv_priv *bat_priv, struct sk_buff *skb,
+-		   unsigned short vid, bool is_bcast)
++		   unsigned short vid, int packet_type)
+ {
+ 	struct batadv_bla_backbone_gw *backbone_gw;
+ 	struct ethhdr *ethhdr;
+@@ -1861,9 +1861,24 @@ bool batadv_bla_rx(struct batadv_priv *bat_priv, struct sk_buff *skb,
+ 		goto handled;
+ 
+ 	if (unlikely(atomic_read(&bat_priv->bla.num_requests)))
+-		/* don't allow broadcasts while requests are in flight */
+-		if (is_multicast_ether_addr(ethhdr->h_dest) && is_bcast)
+-			goto handled;
++		/* don't allow multicast packets while requests are in flight */
++		if (is_multicast_ether_addr(ethhdr->h_dest))
++			/* Both broadcast flooding or multicast-via-unicasts
++			 * delivery might send to multiple backbone gateways
++			 * sharing the same LAN and therefore need to coordinate
++			 * which backbone gateway forwards into the LAN,
++			 * by claiming the payload source address.
++			 *
++			 * Broadcast flooding and multicast-via-unicasts
++			 * delivery use the following two batman packet types.
++			 * Note: explicitly exclude BATADV_UNICAST_4ADDR,
++			 * as the DHCP gateway feature will send explicitly
++			 * to only one BLA gateway, so the claiming process
++			 * should be avoided there.
++			 */
++			if (packet_type == BATADV_BCAST ||
++			    packet_type == BATADV_UNICAST)
++				goto handled;
+ 
+ 	ether_addr_copy(search_claim.addr, ethhdr->h_source);
+ 	search_claim.vid = vid;
+@@ -1898,13 +1913,14 @@ bool batadv_bla_rx(struct batadv_priv *bat_priv, struct sk_buff *skb,
+ 		goto allow;
+ 	}
+ 
+-	/* if it is a broadcast ... */
+-	if (is_multicast_ether_addr(ethhdr->h_dest) && is_bcast) {
++	/* if it is a multicast ... */
++	if (is_multicast_ether_addr(ethhdr->h_dest) &&
++	    (packet_type == BATADV_BCAST || packet_type == BATADV_UNICAST)) {
+ 		/* ... drop it. the responsible gateway is in charge.
+ 		 *
+-		 * We need to check is_bcast because with the gateway
++		 * We need to check packet type because with the gateway
+ 		 * feature, broadcasts (like DHCP requests) may be sent
+-		 * using a unicast packet type.
++		 * using a unicast 4 address packet type. See comment above.
+ 		 */
+ 		goto handled;
+ 	} else {
+diff --git a/net/batman-adv/bridge_loop_avoidance.h b/net/batman-adv/bridge_loop_avoidance.h
+index 71f95a3e4d3f335890408685432f18e5d7411a76..af28fdb01467ce290c2a00d0741f01a6e4f347ee 100644
+--- a/net/batman-adv/bridge_loop_avoidance.h
++++ b/net/batman-adv/bridge_loop_avoidance.h
+@@ -48,7 +48,7 @@ static inline bool batadv_bla_is_loopdetect_mac(const uint8_t *mac)
+ 
+ #ifdef CONFIG_BATMAN_ADV_BLA
+ bool batadv_bla_rx(struct batadv_priv *bat_priv, struct sk_buff *skb,
+-		   unsigned short vid, bool is_bcast);
++		   unsigned short vid, int packet_type);
+ bool batadv_bla_tx(struct batadv_priv *bat_priv, struct sk_buff *skb,
+ 		   unsigned short vid);
+ bool batadv_bla_is_backbone_gw(struct sk_buff *skb,
+@@ -79,7 +79,7 @@ bool batadv_bla_check_claim(struct batadv_priv *bat_priv, u8 *addr,
+ 
+ static inline bool batadv_bla_rx(struct batadv_priv *bat_priv,
+ 				 struct sk_buff *skb, unsigned short vid,
+-				 bool is_bcast)
++				 int packet_type)
+ {
+ 	return false;
+ }
+diff --git a/net/batman-adv/soft-interface.c b/net/batman-adv/soft-interface.c
+index 267f6e6c802f1a7d3eb41a0f3aa2142ca3b21414..82582abd92485b68254789fb6e2108ae5e547dd6 100644
+--- a/net/batman-adv/soft-interface.c
++++ b/net/batman-adv/soft-interface.c
+@@ -425,10 +425,10 @@ void batadv_interface_rx(struct net_device *soft_iface,
+ 	struct vlan_ethhdr *vhdr;
+ 	struct ethhdr *ethhdr;
+ 	unsigned short vid;
+-	bool is_bcast;
++	int packet_type;
+ 
+ 	batadv_bcast_packet = (struct batadv_bcast_packet *)skb->data;
+-	is_bcast = (batadv_bcast_packet->packet_type == BATADV_BCAST);
++	packet_type = batadv_bcast_packet->packet_type;
+ 
+ 	skb_pull_rcsum(skb, hdr_size);
+ 	skb_reset_mac_header(skb);
+@@ -471,7 +471,7 @@ void batadv_interface_rx(struct net_device *soft_iface,
+ 	/* Let the bridge loop avoidance check the packet. If will
+ 	 * not handle it, we can safely push it up.
+ 	 */
+-	if (batadv_bla_rx(bat_priv, skb, vid, is_bcast))
++	if (batadv_bla_rx(bat_priv, skb, vid, packet_type))
+ 		goto out;
+ 
+ 	if (orig_node)

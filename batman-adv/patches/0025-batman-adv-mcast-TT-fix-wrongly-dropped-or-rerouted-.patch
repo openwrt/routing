@@ -1,0 +1,45 @@
+From: Linus Lüssing <linus.luessing@c0d3.blue>
+Date: Fri, 4 Sep 2020 20:28:00 +0200
+Subject: batman-adv: mcast/TT: fix wrongly dropped or rerouted packets
+
+The unicast packet rerouting code makes several assumptions. For
+instance it assumes that there is always exactly one destination in the
+TT. This breaks for multicast frames in a unicast packets in several ways:
+
+For one thing if there is actually no TT entry and the destination node
+was selected due to the multicast tvlv flags it announced. Then an
+intermediate node will wrongly drop the packet.
+
+For another thing if there is a TT entry but the TTVN of this entry is
+newer than the originally addressed destination node: Then the
+intermediate node will wrongly redirect the packet, leading to
+duplicated multicast packets at a multicast listener and missing
+packets at other multicast listeners or multicast routers.
+
+Fixing this by not applying the unicast packet rerouting to batman-adv
+unicast packets with a multicast payload. We are not able to detect a
+roaming multicast listener at the moment and will just continue to send
+the multicast frame to both the new and old destination for a while in
+case of such a roaming multicast listener.
+
+Fixes: cea194d90b11 ("batman-adv: improved client announcement mechanism")
+Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/22e740c5e6c9342e0f5028beb3d14b84a018d113
+
+diff --git a/net/batman-adv/routing.c b/net/batman-adv/routing.c
+index f0f864820dead3e7811a6b0d522ec84954d9aec2..708e90cb18a6e95409f50e41708d903dd8301f9c 100644
+--- a/net/batman-adv/routing.c
++++ b/net/batman-adv/routing.c
+@@ -826,6 +826,10 @@ static bool batadv_check_unicast_ttvn(struct batadv_priv *bat_priv,
+ 	vid = batadv_get_vid(skb, hdr_len);
+ 	ethhdr = (struct ethhdr *)(skb->data + hdr_len);
+ 
++	/* do not reroute multicast frames in a unicast header */
++	if (is_multicast_ether_addr(ethhdr->h_dest))
++		return true;
++
+ 	/* check if the destination client was served by this node and it is now
+ 	 * roaming. In this case, it means that the node has got a ROAM_ADV
+ 	 * message and that it knows the new destination in the mesh to re-route

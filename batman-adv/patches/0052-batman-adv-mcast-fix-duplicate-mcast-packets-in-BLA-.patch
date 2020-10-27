@@ -41,10 +41,10 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Origin: backport, https://git.open-mesh.org/batman-adv.git/commit/3c39a2455a5be02ecceeaf1a15976bddd611392e
 
 diff --git a/net/batman-adv/multicast.c b/net/batman-adv/multicast.c
-index 39640d3d6fbdf8244344db6e79f2d769eb0972d9..adfad7cb34b4d3a8b6ebffd6b19854616ca0f97b 100644
+index 39640d3d6fbdf8244344db6e79f2d769eb0972d9..764c304ffa5f6dc976050fa6b6f6e0891981c4f4 100644
 --- a/net/batman-adv/multicast.c
 +++ b/net/batman-adv/multicast.c
-@@ -62,6 +62,7 @@
+@@ -62,10 +62,12 @@
  #include <uapi/linux/batadv_packet.h>
  #include <uapi/linux/batman_adv.h>
  
@@ -52,7 +52,12 @@ index 39640d3d6fbdf8244344db6e79f2d769eb0972d9..adfad7cb34b4d3a8b6ebffd6b1985461
  #include "hard-interface.h"
  #include "hash.h"
  #include "log.h"
-@@ -1027,6 +1028,35 @@ batadv_mcast_forw_mode(struct batadv_priv *bat_priv, struct sk_buff *skb,
+ #include "netlink.h"
++#include "send.h"
+ #include "soft-interface.h"
+ #include "translation-table.h"
+ #include "tvlv.h"
+@@ -1027,6 +1029,35 @@ batadv_mcast_forw_mode(struct batadv_priv *bat_priv, struct sk_buff *skb,
  	}
  }
  

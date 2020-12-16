@@ -31,7 +31,7 @@
    free(d->psk);
    d->psk = malloc(psk_len);
    if (!d->psk)
-@@ -1011,6 +1014,9 @@ bool dtls_set_psk(dtls d, const char *psk, size_t psk_len)
+@@ -1011,6 +1014,9 @@ bool dtls_set_psk(dtls d, const char *ps
    SSL_CTX_set_psk_client_callback(d->ssl_client_ctx, _client_psk);
    SSL_CTX_set_psk_server_callback(d->ssl_server_ctx, _server_psk);
    return true;

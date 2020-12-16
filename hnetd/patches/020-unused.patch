@@ -1,0 +1,10 @@
+--- a/src/hnetd.h
++++ b/src/hnetd.h
+@@ -39,6 +39,7 @@
+ 
+ #endif /* __APPLE__ */
+ 
++#undef __unused
+ #include <stddef.h>
+ #include <stdint.h>
+ #include <time.h>

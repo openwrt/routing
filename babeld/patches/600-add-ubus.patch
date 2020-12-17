@@ -1,0 +1,93 @@
+--- a/babeld.c
++++ b/babeld.c
+@@ -55,6 +55,8 @@ THE SOFTWARE.
+ #include "rule.h"
+ #include "version.h"
+ 
++#include "ubus.h"
++
+ struct timeval now;
+ 
+ unsigned char myid[8];
+@@ -536,6 +538,9 @@ main(int argc, char **argv)
+         }
+     }
+ 
++    if(ubus_bindings)
++        babeld_add_ubus();
++
+     init_signals();
+     rc = resize_receive_buffer(1500);
+     if(rc < 0)
+@@ -635,6 +640,8 @@ main(int argc, char **argv)
+                 FD_SET(local_sockets[i].fd, &readfds);
+                 maxfd = MAX(maxfd, local_sockets[i].fd);
+             }
++            if(ubus_bindings)
++                maxfd = babeld_ubus_add_read_sock(&readfds, maxfd);
+             rc = select(maxfd + 1, &readfds, NULL, NULL, &tv);
+             if(rc < 0) {
+                 if(errno != EINTR) {
+@@ -703,6 +710,9 @@ main(int argc, char **argv)
+             i++;
+         }
+ 
++        if(ubus_bindings)
++            babeld_ubus_receive(&readfds);
++
+         if(reopening) {
+             kernel_dump_time = now.tv_sec;
+             check_neighbours_timeout = now;
+--- a/Makefile
++++ b/Makefile
+@@ -11,11 +11,11 @@ LDLIBS = -lrt
+ 
+ SRCS = babeld.c net.c kernel.c util.c interface.c source.c neighbour.c \
+        route.c xroute.c message.c resend.c configuration.c local.c \
+-       disambiguation.c rule.c
++       disambiguation.c rule.c ubus.c
+ 
+ OBJS = babeld.o net.o kernel.o util.o interface.o source.o neighbour.o \
+        route.o xroute.o message.o resend.o configuration.o local.o \
+-       disambiguation.o rule.o
++       disambiguation.o rule.o ubus.o
+ 
+ babeld: $(OBJS)
+ 	$(CC) $(CFLAGS) $(LDFLAGS) -o babeld $(OBJS) $(LDLIBS)
+--- a/generate-version.sh
++++ b/generate-version.sh
+@@ -10,4 +10,4 @@ else
+     version="unknown"
+ fi
+ 
+-echo "#define BABELD_VERSION \"$version\""
++echo "#define BABELD_VERSION \"$version-ubus-mod\""
+--- a/configuration.c
++++ b/configuration.c
+@@ -41,6 +41,7 @@ THE SOFTWARE.
+ #include "kernel.h"
+ #include "configuration.h"
+ #include "rule.h"
++#include "ubus.h"
+ 
+ static struct filter *input_filters = NULL;
+ static struct filter *output_filters = NULL;
+@@ -850,7 +851,8 @@ parse_option(int c, gnc_t gnc, void *clo
+               strcmp(token, "daemonise") == 0 ||
+               strcmp(token, "skip-kernel-setup") == 0 ||
+               strcmp(token, "ipv6-subtrees") == 0 ||
+-              strcmp(token, "reflect-kernel-metric") == 0) {
++              strcmp(token, "reflect-kernel-metric") == 0 ||
++              strcmp(token, "ubus-bindings") == 0) {
+         int b;
+         c = getbool(c, &b, gnc, closure);
+         if(c < -1)
+@@ -868,6 +870,8 @@ parse_option(int c, gnc_t gnc, void *clo
+             has_ipv6_subtrees = b;
+         else if(strcmp(token, "reflect-kernel-metric") == 0)
+             reflect_kernel_metric = b;
++        else if(strcmp(token, "ubus-bindings") == 0)
++            ubus_bindings = b;
+         else
+             abort();
+     } else if(strcmp(token, "protocol-group") == 0) {

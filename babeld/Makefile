@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=babeld
 PKG_VERSION:=1.9.2
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://www.irif.fr/~jch/software/files/
@@ -28,7 +28,7 @@ define Package/babeld
   SUBMENU:=Routing and Redirection
   TITLE:=A loop-avoiding distance-vector routing protocol
   URL:=https://www.irif.fr/~jch/software/babel/
-  DEPENDS:=@IPV6
+  DEPENDS:=@IPV6 +libubus +libubox
 endef
 
 define Package/babeld/description
@@ -47,6 +47,7 @@ endef
 MAKE_FLAGS+= \
 	CFLAGS="$(TARGET_CFLAGS)" \
 	LDLIBS="" \
+	LDLIBS+="-lubus -lubox"
 
 define Package/babeld/install
 	$(INSTALL_DIR) $(1)/usr/sbin

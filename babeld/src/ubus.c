@@ -87,7 +87,8 @@ static void babeld_add_xroute_buf(struct xroute *xroute, struct blob_buf *b) {
   blobmsg_close_table(b, prefix);
 }
 
-// Sends an exported routes message on ubus socket, splitting apart IPv4 and IPv6 routes.
+// Sends an exported routes message on ubus socket, splitting apart IPv4 and
+// IPv6 routes.
 static void babeld_ubus_get_xroutes(struct ubus_context *ctx_local,
                                     struct ubus_object *obj,
                                     struct ubus_request_data *req,
@@ -187,7 +188,8 @@ static void babeld_add_route_buf(struct babel_route *route,
   blobmsg_close_table(b, prefix);
 }
 
-// Sends received routes message on ubus socket, splitting apart IPv4 and IPv6 routes.
+// Sends received routes message on ubus socket, splitting apart IPv4 and IPv6
+// routes.
 static void babeld_ubus_get_routes(struct ubus_context *ctx_local,
                                    struct ubus_object *obj,
                                    struct ubus_request_data *req,
@@ -259,7 +261,8 @@ static void babeld_add_neighbour_buf(struct neighbour *neigh,
   blobmsg_close_table(b, neighbour);
 }
 
-// Sends neighbours message on ubus socket, splitting apart IPv4 and IPv6 neighbours.
+// Sends neighbours message on ubus socket, splitting apart IPv4 and IPv6
+// neighbours.
 static void babeld_ubus_get_neighbours(struct ubus_context *ctx_local,
                                        struct ubus_object *obj,
                                        struct ubus_request_data *req,
@@ -342,7 +345,8 @@ static bool ubus_init_object() {
   return true;
 }
 
-// Initializes the global ubus context, connecting to the bus to be able to receive and send messages.
+// Initializes the global ubus context, connecting to the bus to be able to
+// receive and send messages.
 static bool babeld_ubus_init(void) {
   if (shared_ctx)
     return true;
@@ -352,6 +356,63 @@ static bool babeld_ubus_init(void) {
     return false;
 
   return true;
+}
+
+void ubus_notify_route(struct babel_route *route, int kind) {
+  struct blob_buf b = {0};
+  char method[13]; // max is route.change
+
+  if (!babeld_object.has_subscribers)
+    return;
+
+  if (!route)
+    return;
+
+  if (!shared_ctx)
+    return;
+
+  blob_buf_init(&b, 0);
+  babeld_add_route_buf(route, &b);
+  sprintf(method, "route.%s", local_kind(kind));
+  ubus_notify(shared_ctx, &babeld_object, method, b.head, -1);
+}
+
+void ubus_notify_xroute(struct xroute *xroute, int kind) {
+  struct blob_buf b = {0};
+  char method[14]; // max is xroute.change
+
+  if (!babeld_object.has_subscribers)
+    return;
+
+  if (!xroute)
+    return;
+
+  if (!shared_ctx)
+    return;
+
+  blob_buf_init(&b, 0);
+  babeld_add_xroute_buf(xroute, &b);
+  sprintf(method, "xroute.%s", local_kind(kind));
+  ubus_notify(shared_ctx, &babeld_object, method, b.head, -1);
+}
+
+void ubus_notify_neighbour(struct neighbour *neigh, int kind) {
+  struct blob_buf b = {0};
+  char method[13]; // max is neigh.change
+
+  if (!babeld_object.has_subscribers)
+    return;
+
+  if (!neigh)
+    return;
+
+  if (!shared_ctx)
+    return;
+
+  blob_buf_init(&b, 0);
+  babeld_add_neighbour_buf(neigh, &b);
+  sprintf(method, "neigh.%s", local_kind(kind));
+  ubus_notify(shared_ctx, &babeld_object, method, b.head, -1);
 }
 
 void babeld_ubus_receive(fd_set *readfds) {

@@ -91,3 +91,57 @@
          else
              abort();
      } else if(strcmp(token, "protocol-group") == 0) {
+--- a/local.c
++++ b/local.c
+@@ -42,6 +42,8 @@ THE SOFTWARE.
+ #include "local.h"
+ #include "version.h"
+ 
++#include "ubus.h"
++
+ int local_server_socket = -1;
+ struct local_socket local_sockets[MAX_LOCAL_SOCKETS];
+ int num_local_sockets = 0;
+@@ -80,7 +82,7 @@ write_timeout(int fd, const void *buf, i
+     }
+ }
+ 
+-static const char *
++const char *
+ local_kind(int kind)
+ {
+     switch(kind) {
+@@ -191,6 +193,8 @@ local_notify_neighbour(struct neighbour
+         if(local_sockets[i].monitor)
+             local_notify_neighbour_1(&local_sockets[i], neigh, kind);
+     }
++    if(ubus_bindings)
++	    ubus_notify_neighbour(neigh, kind);
+ }
+ 
+ static void
+@@ -228,6 +232,8 @@ local_notify_xroute(struct xroute *xrout
+         if(local_sockets[i].monitor)
+             local_notify_xroute_1(&local_sockets[i], xroute, kind);
+     }
++    if(ubus_bindings)
++	    ubus_notify_xroute(xroute, kind);
+ }
+ 
+ static void
+@@ -273,6 +279,8 @@ local_notify_route(struct babel_route *r
+         if(local_sockets[i].monitor)
+             local_notify_route_1(&local_sockets[i], route, kind);
+     }
++    if(ubus_bindings)
++	    ubus_notify_route(route, kind);
+ }
+ 
+ static void
+--- a/local.h
++++ b/local.h
+@@ -55,3 +55,4 @@ int local_read(struct local_socket *s);
+ int local_header(struct local_socket *s);
+ struct local_socket *local_socket_create(int fd);
+ void local_socket_destroy(int i);
++const char * local_kind(int kind);

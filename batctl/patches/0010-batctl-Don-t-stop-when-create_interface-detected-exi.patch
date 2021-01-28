@@ -1,0 +1,31 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 15 Jan 2021 23:38:31 +0100
+Subject: batctl: Don't stop when create_interface detected existing interface
+
+"batctl meshif bat0 interface add ..." should never be called in parallel.
+But when something still does this, it could be that the code first detects
+the missing meshif and then tries to create it - which fails when another
+process requested the creation of the same interface slightly before batctl
+did it.
+
+But this should not prevent batctl to add the lower interface to the
+meshif. It is not really important that the batctl process was the one
+which created it - only that it exists is important.
+
+Fixes: 25022e0b154d ("batctl: Use rtnl to add/remove interfaces")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/5d465bfd9a19c4bda20fb4e36c6e4b22c56ceb17
+
+diff --git a/interface.c b/interface.c
+index 138a6cd45744081a04f986fe4be67901b3305b74..2c6a78ad17cb716fbb7f6a1c78e0076494397b01 100644
+--- a/interface.c
++++ b/interface.c
+@@ -479,7 +479,7 @@ static int interface(struct state *state, int argc, char **argv)
+ 	ifmaster = if_nametoindex(state->mesh_iface);
+ 	if (!manual_mode && !ifmaster && rest_argv[0][0] == 'a') {
+ 		ret = create_interface(state->mesh_iface);
+-		if (ret < 0) {
++		if (ret < 0 && ret != -EEXIST) {
+ 			fprintf(stderr,
+ 				"Error - failed to create batman-adv interface: %s\n",
+ 				strerror(-ret));

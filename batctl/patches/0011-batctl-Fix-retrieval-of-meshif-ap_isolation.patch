@@ -1,0 +1,26 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 31 Oct 2020 18:00:26 +0100
+Subject: batctl: Fix retrieval of meshif ap_isolation
+
+The batadv command to retrieve the attributes is called
+BATADV_CMD_GET_MESH. The used BATADV_CMD_SET_MESH will only return the
+current settings via the "config" multicast group which is not evaluated by
+the ap_isolation command.
+
+Fixes: c56a63a5f12a ("batctl: Support generic netlink for ap_isolation command")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/107cee536a0f8024208923f49a2a548b40bfc432
+
+diff --git a/ap_isolation.c b/ap_isolation.c
+index 36fd4d607d03768251150951ebe450740501d446..4854bcd1d6514a02786388dc014966f326818122 100644
+--- a/ap_isolation.c
++++ b/ap_isolation.c
+@@ -36,7 +36,7 @@ static int get_attrs_ap_isolation(struct nl_msg *msg, void *arg)
+ 
+ static int get_ap_isolation(struct state *state)
+ {
+-	enum batadv_nl_commands nl_cmd = BATADV_CMD_SET_MESH;
++	enum batadv_nl_commands nl_cmd = BATADV_CMD_GET_MESH;
+ 
+ 	if (state->selector == SP_VLAN)
+ 		nl_cmd = BATADV_CMD_GET_VLAN;

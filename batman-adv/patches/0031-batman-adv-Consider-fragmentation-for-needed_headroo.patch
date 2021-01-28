@@ -1,0 +1,30 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 26 Nov 2020 18:15:06 +0100
+Subject: batman-adv: Consider fragmentation for needed_headroom
+
+If a batman-adv packets has to be fragmented, then the original batman-adv
+packet header is not stripped away. Instead, only a new header is added in
+front of the packet after it was split.
+
+This size must be considered to avoid cost intensive reallocations during
+the transmission through the various device layers.
+
+Fixes: e2b4301f4e2d ("batman-adv: Add lower layer needed_(head|tail)room to own ones")
+Reported-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/92064deda9b063ca2d5a53b307c6127a9453357c
+
+diff --git a/net/batman-adv/hard-interface.c b/net/batman-adv/hard-interface.c
+index 62b926dd4aaeffd82da83654c8e568de2c3714fb..e0f70ae28df4e2fb0a7972a1ca9d5fcc986c0d6c 100644
+--- a/net/batman-adv/hard-interface.c
++++ b/net/batman-adv/hard-interface.c
+@@ -553,6 +553,9 @@ static void batadv_hardif_recalc_extra_skbroom(struct net_device *soft_iface)
+ 	needed_headroom = lower_headroom + (lower_header_len - ETH_HLEN);
+ 	needed_headroom += batadv_max_header_len();
+ 
++	/* fragmentation headers don't strip the unicast/... header */
++	needed_headroom += sizeof(struct batadv_frag_packet);
++
+ 	soft_iface->needed_headroom = needed_headroom;
+ 	soft_iface->needed_tailroom = lower_tailroom;
+ }

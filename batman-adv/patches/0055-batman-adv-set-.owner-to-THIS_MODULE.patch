@@ -1,0 +1,25 @@
+From: Taehee Yoo <ap420073@gmail.com>
+Date: Sun, 15 Nov 2020 10:30:04 +0000
+Subject: batman-adv: set .owner to THIS_MODULE
+
+If THIS_MODULE is not set, the module would be removed while debugfs is
+being used.
+It eventually makes kernel panic.
+
+Fixes: 24571be14371 ("batman-adv: add routing debug log accessible via debugfs")
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/6e2937539a2c9f8a8536515258bc1f08bed19a06
+
+diff --git a/net/batman-adv/log.c b/net/batman-adv/log.c
+index 853773e45f7921bccc142ed4208ff2d377134b49..837f67c9fad3505448d12bec631d9bec71e66e5f 100644
+--- a/net/batman-adv/log.c
++++ b/net/batman-adv/log.c
+@@ -205,6 +205,7 @@ static const struct file_operations batadv_log_fops = {
+ 	.read           = batadv_log_read,
+ 	.poll           = batadv_log_poll,
+ 	.llseek         = no_llseek,
++	.owner          = THIS_MODULE,
+ };
+ 
+ /**

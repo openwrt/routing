@@ -1,0 +1,41 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 26 Nov 2020 18:24:49 +0100
+Subject: batman-adv: Don't always reallocate the fragmentation skb head
+
+When a packet is fragmented by batman-adv, the original batman-adv header
+is not modified. Only a new fragmentation is inserted between the original
+one and the ethernet header. The code must therefore make sure that it has
+a writable region of this size in the skbuff head.
+
+But it is not useful to always reallocate the skbuff by this size even when
+there would be more than enough headroom still in the skb. The reallocation
+is just to costly during in this codepath.
+
+Fixes: db56e4ecf5c2 ("batman-adv: Fragment and send skbs larger than mtu")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/3e3ff987876d3be70d928561acbefe5a48ab1654
+
+diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
+index f1d202ff396cd69949915a9e90e763f3a68255b7..0da90e73c79bffe86072f0d704f0777d76b35f4c 100644
+--- a/net/batman-adv/fragmentation.c
++++ b/net/batman-adv/fragmentation.c
+@@ -527,13 +527,14 @@ int batadv_frag_send_packet(struct sk_buff *skb,
+ 		frag_header.no++;
+ 	}
+ 
+-	/* Make room for the fragment header. */
+-	if (batadv_skb_head_push(skb, header_size) < 0 ||
+-	    pskb_expand_head(skb, header_size + ETH_HLEN, 0, GFP_ATOMIC) < 0) {
+-		ret = -ENOMEM;
++	/* make sure that there is at least enough head for the fragmentation
++	 * and ethernet headers
++	 */
++	ret = skb_cow_head(skb, ETH_HLEN + header_size);
++	if (ret < 0)
+ 		goto put_primary_if;
+-	}
+ 
++	skb_push(skb, header_size);
+ 	memcpy(skb->data, &frag_header, header_size);
+ 
+ 	/* Send the last fragment */

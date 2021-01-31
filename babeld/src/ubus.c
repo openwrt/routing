@@ -360,7 +360,7 @@ static bool babeld_ubus_init(void) {
 
 void ubus_notify_route(struct babel_route *route, int kind) {
   struct blob_buf b = {0};
-  char method[13]; // max is route.change
+  char method[50]; // possible methods are route.change, route.add, route.flush
 
   if (!babeld_object.has_subscribers)
     return;
@@ -373,13 +373,13 @@ void ubus_notify_route(struct babel_route *route, int kind) {
 
   blob_buf_init(&b, 0);
   babeld_add_route_buf(route, &b);
-  sprintf(method, "route.%s", local_kind(kind));
+  snprintf(method, sizeof(method), "route.%s", local_kind(kind));
   ubus_notify(shared_ctx, &babeld_object, method, b.head, -1);
 }
 
 void ubus_notify_xroute(struct xroute *xroute, int kind) {
   struct blob_buf b = {0};
-  char method[14]; // max is xroute.change
+  char method[50]; // possible methods are route.change, route.add, route.flush
 
   if (!babeld_object.has_subscribers)
     return;
@@ -392,13 +392,13 @@ void ubus_notify_xroute(struct xroute *xroute, int kind) {
 
   blob_buf_init(&b, 0);
   babeld_add_xroute_buf(xroute, &b);
-  sprintf(method, "xroute.%s", local_kind(kind));
+  snprintf(method, sizeof(method), "xroute.%s", local_kind(kind));
   ubus_notify(shared_ctx, &babeld_object, method, b.head, -1);
 }
 
 void ubus_notify_neighbour(struct neighbour *neigh, int kind) {
   struct blob_buf b = {0};
-  char method[13]; // max is neigh.change
+  char method[50]; // possible methods are route.change, route.add, route.flush
 
   if (!babeld_object.has_subscribers)
     return;
@@ -411,7 +411,7 @@ void ubus_notify_neighbour(struct neighbour *neigh, int kind) {
 
   blob_buf_init(&b, 0);
   babeld_add_neighbour_buf(neigh, &b);
-  sprintf(method, "neigh.%s", local_kind(kind));
+  snprintf(method, sizeof(method), "neigh.%s", local_kind(kind));
   ubus_notify(shared_ctx, &babeld_object, method, b.head, -1);
 }
 

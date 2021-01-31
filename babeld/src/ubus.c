@@ -379,7 +379,7 @@ void ubus_notify_route(struct babel_route *route, int kind) {
 
 void ubus_notify_xroute(struct xroute *xroute, int kind) {
   struct blob_buf b = {0};
-  char method[50]; // possible methods are route.change, route.add, route.flush
+  char method[50]; // possible methods are xroute.change, xroute.add, xroute.flush
 
   if (!babeld_object.has_subscribers)
     return;
@@ -398,7 +398,7 @@ void ubus_notify_xroute(struct xroute *xroute, int kind) {
 
 void ubus_notify_neighbour(struct neighbour *neigh, int kind) {
   struct blob_buf b = {0};
-  char method[50]; // possible methods are route.change, route.add, route.flush
+  char method[50]; // possible methods are neigh.change, neigh.add, neigh.flush
 
   if (!babeld_object.has_subscribers)
     return;

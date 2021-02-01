@@ -22,9 +22,9 @@
 */
 
 #include <stdbool.h>
+#include <sys/select.h>
 
 struct babel_route;
-struct fd_set;
 struct neighbour;
 struct xroute;
 

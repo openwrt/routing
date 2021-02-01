@@ -23,9 +23,9 @@
 
 #include <stdbool.h>
 
+struct babel_route;
 struct fd_set;
 struct neighbour;
-struct babel_route;
 struct xroute;
 
 // Whether to enable ubus bindings (boolean option).

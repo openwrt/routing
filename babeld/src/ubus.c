@@ -45,7 +45,7 @@ struct xroute_list_entry {
 // List of received routes (to be used with ubox's list helpers).
 struct route_list_entry {
   struct list_head list;
-  struct route_stream *route;
+  struct babel_route *route;
 };
 
 // List of neighbours (to be used with ubox's list helpers).
@@ -55,10 +55,10 @@ struct neighbour_list_entry {
 };
 
 // Sends a babel info message on ubus socket.
-static void babeld_ubus_babeld_info(struct ubus_context *ctx_local,
-                                    struct ubus_object *obj,
-                                    struct ubus_request_data *req,
-                                    const char *method, struct blob_attr *msg) {
+static int babeld_ubus_babeld_info(struct ubus_context *ctx_local,
+                                   struct ubus_object *obj,
+                                   struct ubus_request_data *req,
+                                   const char *method, struct blob_attr *msg) {
   struct blob_buf b = {0};
   void *prefix;
   char host[64];
@@ -73,6 +73,8 @@ static void babeld_ubus_babeld_info(struct ubus_context *ctx_local,
   ret = ubus_send_reply(ctx_local, req, b.head);
   if (ret)
     fprintf(stderr, "Failed to send reply: %s\n", ubus_strerror(ret));
+
+  return ret;
 }
 
 // Appends an exported route message entry to the buffer.
@@ -89,10 +91,10 @@ static void babeld_add_xroute_buf(struct xroute *xroute, struct blob_buf *b) {
 
 // Sends an exported routes message on ubus socket, splitting apart IPv4 and
 // IPv6 routes.
-static void babeld_ubus_get_xroutes(struct ubus_context *ctx_local,
-                                    struct ubus_object *obj,
-                                    struct ubus_request_data *req,
-                                    const char *method, struct blob_attr *msg) {
+static int babeld_ubus_get_xroutes(struct ubus_context *ctx_local,
+                                   struct ubus_object *obj,
+                                   struct ubus_request_data *req,
+                                   const char *method, struct blob_attr *msg) {
   struct blob_buf b = {0};
   struct xroute_stream *xroutes;
   struct xroute_list_entry *cur, *tmp;
@@ -141,6 +143,8 @@ static void babeld_ubus_get_xroutes(struct ubus_context *ctx_local,
   ret = ubus_send_reply(ctx_local, req, b.head);
   if (ret)
     fprintf(stderr, "Failed to send reply: %s\n", ubus_strerror(ret));
+
+  return ret;
 }
 
 // Appends an route message entry to the buffer.
@@ -190,10 +194,10 @@ static void babeld_add_route_buf(struct babel_route *route,
 
 // Sends received routes message on ubus socket, splitting apart IPv4 and IPv6
 // routes.
-static void babeld_ubus_get_routes(struct ubus_context *ctx_local,
-                                   struct ubus_object *obj,
-                                   struct ubus_request_data *req,
-                                   const char *method, struct blob_attr *msg) {
+static int babeld_ubus_get_routes(struct ubus_context *ctx_local,
+                                  struct ubus_object *obj,
+                                  struct ubus_request_data *req,
+                                  const char *method, struct blob_attr *msg) {
   struct blob_buf b = {0};
   struct route_stream *routes;
   struct route_list_entry *cur, *tmp;
@@ -242,6 +246,8 @@ static void babeld_ubus_get_routes(struct ubus_context *ctx_local,
   ret = ubus_send_reply(ctx_local, req, b.head);
   if (ret)
     fprintf(stderr, "Failed to send reply: %s\n", ubus_strerror(ret));
+
+  return ret;
 }
 
 // Appends an neighbour entry to the buffer.
@@ -255,7 +261,7 @@ static void babeld_add_neighbour_buf(struct neighbour *neigh,
   blobmsg_add_u32(b, "uhello-reach", neigh->uhello.reach);
   blobmsg_add_u32(b, "rxcost", neighbour_rxcost(neigh));
   blobmsg_add_u32(b, "txcost", neigh->txcost);
-  blobmsg_add_u32(b, "rtt", format_thousands(neigh->rtt));
+  blobmsg_add_string(b, "rtt", format_thousands(neigh->rtt));
   blobmsg_add_u32(b, "channel", neigh->ifp->channel);
   blobmsg_add_u8(b, "if_up", if_up(neigh->ifp));
   blobmsg_close_table(b, neighbour);
@@ -263,11 +269,11 @@ static void babeld_add_neighbour_buf(struct neighbour *neigh,
 
 // Sends neighbours message on ubus socket, splitting apart IPv4 and IPv6
 // neighbours.
-static void babeld_ubus_get_neighbours(struct ubus_context *ctx_local,
-                                       struct ubus_object *obj,
-                                       struct ubus_request_data *req,
-                                       const char *method,
-                                       struct blob_attr *msg) {
+static int babeld_ubus_get_neighbours(struct ubus_context *ctx_local,
+                                      struct ubus_object *obj,
+                                      struct ubus_request_data *req,
+                                      const char *method,
+                                      struct blob_attr *msg) {
   struct blob_buf b = {0};
   struct neighbour *neigh;
   struct neighbour_list_entry *cur, *tmp;
@@ -310,6 +316,8 @@ static void babeld_ubus_get_neighbours(struct ubus_context *ctx_local,
   ret = ubus_send_reply(ctx_local, req, b.head);
   if (ret)
     fprintf(stderr, "Failed to send reply: %s\n", ubus_strerror(ret));
+
+  return ret;
 }
 
 // List of functions we expose via the ubus bus.
@@ -379,7 +387,8 @@ void ubus_notify_route(struct babel_route *route, int kind) {
 
 void ubus_notify_xroute(struct xroute *xroute, int kind) {
   struct blob_buf b = {0};
-  char method[50]; // possible methods are xroute.change, xroute.add, xroute.flush
+  char method[50]; // possible methods are xroute.change, xroute.add,
+                   // xroute.flush
 
   if (!babeld_object.has_subscribers)
     return;

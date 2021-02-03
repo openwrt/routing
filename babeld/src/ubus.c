@@ -320,12 +320,78 @@ static int babeld_ubus_get_neighbours(struct ubus_context *ctx_local,
   return ret;
 }
 
+// Enums defining the different ubus-xroute-parameters
+enum {
+  ADD_XROUTE_PREFIX,
+  ADD_XROUTE_PLEN,
+  ADD_XROUTE_SRC_PREFIX,
+  ADD_XROUTE_SRC_PLEN,
+  ADD_XROUTE_METRIC,
+  ADD_XROUTE_IFINDEX,
+  ADD_XROUTE_PROTO,
+  __ADD_XROUTE_MAX
+};
+
+// Json policy describing the ubus-xroute-parameters
+static const struct blobmsg_policy add_xroute_policy[__ADD_XROUTE_MAX] = {
+    [ADD_XROUTE_PREFIX] = {"prefix", BLOBMSG_TYPE_STRING},
+    [ADD_XROUTE_PLEN] = {"plen", BLOBMSG_TYPE_INT32},
+    [ADD_XROUTE_SRC_PREFIX] = {"src_prefix", BLOBMSG_TYPE_STRING},
+    [ADD_XROUTE_SRC_PLEN] = {"src_plen", BLOBMSG_TYPE_INT32},
+    [ADD_XROUTE_METRIC] = {"metric", BLOBMSG_TYPE_INT32},
+    [ADD_XROUTE_IFINDEX] = {"ifindex", BLOBMSG_TYPE_INT32},
+    [ADD_XROUTE_PROTO] = {"proto", BLOBMSG_TYPE_INT32},
+};
+
+// Function that allows to add xroutes via ubus bus
+static int babeld_ubus_add_xroute(struct ubus_context *ctx_local,
+                                  struct ubus_object *obj,
+                                  struct ubus_request_data *req,
+                                  const char *method, struct blob_attr *msg) {
+  struct blob_attr *tb[__ADD_XROUTE_MAX];
+  struct xroute xroute;
+
+  blobmsg_parse(add_xroute_policy, __ADD_XROUTE_MAX, tb, blob_data(msg),
+                blob_len(msg));
+
+  if (!tb[ADD_XROUTE_PREFIX] || !tb[ADD_XROUTE_PLEN] ||
+      !tb[ADD_XROUTE_SRC_PREFIX] || !tb[ADD_XROUTE_SRC_PLEN] ||
+      !tb[ADD_XROUTE_METRIC] || !tb[ADD_XROUTE_IFINDEX] ||
+      !tb[ADD_XROUTE_PROTO])
+    return UBUS_STATUS_INVALID_ARGUMENT;
+
+  xroute.plen = (unsigned char)blobmsg_get_u32(tb[ADD_XROUTE_PLEN]);
+  xroute.src_plen = (unsigned char)blobmsg_get_u32(tb[ADD_XROUTE_SRC_PLEN]);
+  xroute.metric = (unsigned short)blobmsg_get_u32(tb[ADD_XROUTE_METRIC]);
+  xroute.ifindex = blobmsg_get_u32(tb[ADD_XROUTE_IFINDEX]);
+  xroute.proto = blobmsg_get_u32(tb[ADD_XROUTE_PROTO]);
+
+  parse_address(blobmsg_get_string(tb[ADD_XROUTE_PREFIX]), xroute.prefix, NULL);
+  parse_address(blobmsg_get_string(tb[ADD_XROUTE_SRC_PREFIX]),
+                xroute.src_prefix, NULL);
+
+  if (find_xroute(xroute.prefix, xroute.plen, xroute.src_prefix,
+                  xroute.src_plen) != NULL) {
+    fprintf(stderr, "xroute already installed!\n");
+    return UBUS_STATUS_INVALID_ARGUMENT;
+  }
+
+  if (add_xroute(xroute.prefix, xroute.plen, xroute.src_prefix, xroute.src_plen,
+                 xroute.metric, xroute.ifindex, xroute.proto) != 1) {
+    fprintf(stderr, "failed to add xroute!\n");
+    return UBUS_STATUS_INVALID_ARGUMENT;
+  }
+
+  return UBUS_STATUS_OK;
+}
+
 // List of functions we expose via the ubus bus.
 static const struct ubus_method babeld_methods[] = {
     UBUS_METHOD_NOARG("get_info", babeld_ubus_babeld_info),
     UBUS_METHOD_NOARG("get_xroutes", babeld_ubus_get_xroutes),
     UBUS_METHOD_NOARG("get_routes", babeld_ubus_get_routes),
     UBUS_METHOD_NOARG("get_neighbours", babeld_ubus_get_neighbours),
+    UBUS_METHOD("add_xroute", babeld_ubus_add_xroute, add_xroute_policy),
 };
 
 // Definition of the ubus object type.

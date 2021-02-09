@@ -21,7 +21,12 @@
 
 */
 
-#include <libubus.h>
+#include <stdbool.h>
+#include <sys/select.h>
+
+struct babel_route;
+struct neighbour;
+struct xroute;
 
 // Whether to enable ubus bindings (boolean option).
 extern int ubus_bindings;

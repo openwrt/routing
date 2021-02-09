@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/select.h>
 
+#include <libubus.h>
 #include <libubox/blob.h>
 #include <libubox/blobmsg.h>
 #include <libubox/list.h>

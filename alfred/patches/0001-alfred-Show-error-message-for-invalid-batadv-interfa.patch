@@ -1,0 +1,29 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Mon, 15 Feb 2021 19:56:22 +0100
+Subject: alfred: Show error message for invalid batadv interface
+
+The alfred server process always stopped without any informational message
+when the provided batman-adv was not "none" and was not accessible. This
+made it extremely hard to debug the reason why alfred directly stopped
+after launching it.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Forwarded: https://patchwork.open-mesh.org/project/b.a.t.m.a.n./patch/20210215200126.140253-1-sven@narfation.org/
+
+diff --git a/server.c b/server.c
+index fc27246b845af75bd1f459f8bb553aef87cc24d5..efac5ad399df52f8c444711a14bcf4814e38a3bf 100644
+--- a/server.c
++++ b/server.c
+@@ -385,8 +385,11 @@ int alfred_server(struct globals *globals)
+ 	}
+ 
+ 	if (strcmp(globals->mesh_iface, "none") != 0 &&
+-	    batadv_interface_check(globals->mesh_iface) < 0)
++	    batadv_interface_check(globals->mesh_iface) < 0) {
++		fprintf(stderr, "Can't start server: batman-adv interface %s not found\n",
++			globals->mesh_iface);
+ 		return -1;
++	}
+ 
+ 	num_socks = netsock_open_all(globals);
+ 	if (num_socks <= 0) {

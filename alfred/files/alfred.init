@@ -13,53 +13,9 @@ facters_dir="/etc/alfred"
 enable=0
 vis_enable=0
 
-wait_for_dir() {
-	local ifce="$1" dir="$2"
-
-	if ! [ -d "$dir" ] ; then
-		timeout=30
-		echo "waiting $timeout secs for $ifce interface..."
-		for i in $(seq $timeout); do
-			sleep 1
-			[ -d "$dir" ] && break
-			if [ $i = $timeout ] ; then
-				echo "$ifce not detected, alfred not starting."
-				return 1
-			fi
-		done
-	fi
-
-	return 0
-}
-
-wait_for_ll_address() {
-	local iface="$1"
-	local timeout=30
-
-	echo "waiting $timeout secs for $iface address..."
-	for i in $(seq $timeout); do
-		# We look for
-		# - the link-local address (starts with fe80)
-		# - without tentative flag (bit 0x40 in the flags field; the first char of the fifth field is evaluated)
-		# - on interface $iface
-		if awk '
-			BEGIN { RET=1 }
-			$1 ~ /^fe80/ && $5 ~ /^[012389ab]/ && $6 == "'"$iface"'" { RET=0 }
-			END { exit RET }
-		' /proc/net/if_inet6; then
-			return 0
-		fi
-		sleep 1
-	done
-
-	echo "$iface address not detected, alfred not starting."
-	return 1
-}
-
 append_interface()
 {
 	append "interfaces" "$1" ","
-	wait_for_ll_address "$1"
 }
 
 alfred_start() {
@@ -72,7 +28,7 @@ alfred_start() {
 	config_get_bool disabled "$section" disabled 0
 	[ $disabled = 0 ] || return 1
 
-	args=""
+	args="-f"
 
 	config_list_foreach "$section" "interface" append_interface
 	if [ -z "$interfaces" ]; then
@@ -86,10 +42,6 @@ alfred_start() {
 
 	config_get batmanif "$section" batmanif
 	append args "-b $batmanif"
-
-	if [ "$batmanif" != "none" ]; then
-		wait_for_dir "$batmanif" "/sys/devices/virtual/net/$batmanif" || return 1
-	fi
 
 	append alfred_args "$args"
 	enable=1

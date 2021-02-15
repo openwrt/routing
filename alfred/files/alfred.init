@@ -132,7 +132,7 @@ start_service() {
 }
 
 service_triggers() {
-	procd_add_reload_trigger "alfred"
+	procd_add_reload_trigger "alfred" "network"
 }
 
 stop_service() {

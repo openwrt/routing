@@ -1,0 +1,102 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Mon, 15 Feb 2021 20:52:17 +0100
+Subject: alfred: Allow start of server without valid interface
+
+The alfred server always needs interfaces to operate on. But these
+interfaces might not exist at the moment when the daemon process is
+started. This caused an error and stopped the process.
+
+But alfred is able to deal with interfaces which disappeared at runtime but
+existed at startup. To force a similar behavior for the alfred startup, the
+parameter "--force" or "-f" is introduced.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Forwarded: https://patchwork.open-mesh.org/project/b.a.t.m.a.n./patch/20210215200126.140253-4-sven@narfation.org/
+
+diff --git a/alfred.h b/alfred.h
+index f09eb497a6efe62d38891dcac2149a6473f9215a..5bd118cbc6052932cfad9f3eb258ceb4ce06cdc3 100644
+--- a/alfred.h
++++ b/alfred.h
+@@ -117,6 +117,7 @@ struct globals {
+ 	int clientmode_version;
+ 	uint8_t verbose:1;
+ 	uint8_t ipv4mode:1;
++	uint8_t force:1;
+ 
+ 	int unix_sock;
+ 	const char *unix_path;
+diff --git a/main.c b/main.c
+index c7588505fb0a277de3a0c0ac08bb4365b9a9a2a1..2f77e1eb524f621391bf8ea7d56335e927e5197e 100644
+--- a/main.c
++++ b/main.c
+@@ -164,6 +164,7 @@ static struct globals *alfred_init(int argc, char *argv[])
+ 		{"version",		no_argument,		NULL,	'v'},
+ 		{"verbose",		no_argument,		NULL,	'd'},
+ 		{"sync-period",		required_argument,	NULL,	'p'},
++		{"force",		no_argument,		NULL,	'f'},
+ 		{NULL,			0,			NULL,	0},
+ 	};
+ 
+@@ -187,6 +188,7 @@ static struct globals *alfred_init(int argc, char *argv[])
+ 	globals->unix_path = ALFRED_SOCK_PATH_DEFAULT;
+ 	globals->verbose = false;
+ 	globals->ipv4mode = false;
++	globals->force = false;
+ 	globals->update_command = NULL;
+ 	globals->sync_period.tv_sec = ALFRED_INTERVAL;
+ 	globals->sync_period.tv_nsec = 0;
+@@ -194,7 +196,7 @@ static struct globals *alfred_init(int argc, char *argv[])
+ 
+ 	time_random_seed();
+ 
+-	while ((opt = getopt_long(argc, argv, "ms:r:hi:b:vV:M:I:u:dc:p:4:", long_options,
++	while ((opt = getopt_long(argc, argv, "ms:r:hi:b:vV:M:I:u:dc:p:4:f", long_options,
+ 				  &opt_ind)) != -1) {
+ 		switch (opt) {
+ 		case 'r':
+@@ -274,6 +276,9 @@ static struct globals *alfred_init(int argc, char *argv[])
+ 			inet_pton(AF_INET, optarg, &alfred_mcast.ipv4);
+ 			printf(" ** IPv4 Multicast Mode: %x\n", alfred_mcast.ipv4.s_addr);
+ 			break;
++		case 'f':
++			globals->force = true;
++			break;
+ 		case 'h':
+ 		default:
+ 			alfred_usage();
+diff --git a/man/alfred.8 b/man/alfred.8
+index 7e31e12df0b7254e517001be5964d8c5088881e6..424633d4bdb16d25ce7b1a573cc58ab9f0dd1371 100644
+--- a/man/alfred.8
++++ b/man/alfred.8
+@@ -72,6 +72,9 @@ Collect data from the network and prints it on the network
+ \fB\-d\fP, \fB\-\-verbose\fP
+ Show extra information in the data output
+ .TP
++\fB\-d\fP, \fB\-\-force\fP
++Start server even when batman-adv or interface(s) are not yet available.
++.TP
+ \fB\-V\fP, \fB\-\-req\-version\fP \fIversion\fP
+ Specify the data version set for \fB\-s\fP
+ 
+diff --git a/server.c b/server.c
+index 95fc3bc895bf46eb775bf64d963a6eec77399dba..de7ddcff2de8163457bd377c8da99ab3c66ff00e 100644
+--- a/server.c
++++ b/server.c
+@@ -386,14 +386,15 @@ int alfred_server(struct globals *globals)
+ 	}
+ 
+ 	if (strcmp(globals->mesh_iface, "none") != 0 &&
+-	    batadv_interface_check(globals->mesh_iface) < 0) {
++	    batadv_interface_check(globals->mesh_iface) < 0 &&
++	    !globals->force) {
+ 		fprintf(stderr, "Can't start server: batman-adv interface %s not found\n",
+ 			globals->mesh_iface);
+ 		return -1;
+ 	}
+ 
+ 	num_socks = netsock_open_all(globals);
+-	if (num_socks <= 0) {
++	if (num_socks <= 0 && !globals->force) {
+ 		fprintf(stderr, "Failed to open interfaces\n");
+ 		return -1;
+ 	}

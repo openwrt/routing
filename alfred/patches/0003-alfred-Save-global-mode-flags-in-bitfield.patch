@@ -1,0 +1,67 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Mon, 15 Feb 2021 20:34:54 +0100
+Subject: alfred: Save global mode flags in bitfield
+
+The verbose and ipv4mode entries in the globals structure is only used to
+save a boolean information. So just use a bit in a bitfield to store this
+information instead of a full int.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Forwarded: https://patchwork.open-mesh.org/project/b.a.t.m.a.n./patch/20210215200126.140253-3-sven@narfation.org/
+
+diff --git a/alfred.h b/alfred.h
+index 7d6b0b35b5c8b8c3b087589880c390eb035584be..c64ff17ab9be8a16b3e1c86070b93235c226a004 100644
+--- a/alfred.h
++++ b/alfred.h
+@@ -115,8 +115,8 @@ struct globals {
+ 	enum clientmode clientmode;
+ 	int clientmode_arg;
+ 	int clientmode_version;
+-	int verbose;
+-	int ipv4mode;
++	uint8_t verbose:1;
++	uint8_t ipv4mode:1;
+ 
+ 	int unix_sock;
+ 	const char *unix_path;
+diff --git a/main.c b/main.c
+index 7b866cc4275797beb7f614dd1a19ea0099e1281b..f25b6cc11975b8523abf6c59b77a86e94684b03b 100644
+--- a/main.c
++++ b/main.c
+@@ -9,6 +9,7 @@
+ #include <arpa/inet.h>
+ #include <getopt.h>
+ #include <signal.h>
++#include <stdbool.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -181,8 +182,8 @@ static struct globals *alfred_init(int argc, char *argv[])
+ 	globals->clientmode_version = 0;
+ 	globals->mesh_iface = "bat0";
+ 	globals->unix_path = ALFRED_SOCK_PATH_DEFAULT;
+-	globals->verbose = 0;
+-	globals->ipv4mode = 0;
++	globals->verbose = false;
++	globals->ipv4mode = false;
+ 	globals->update_command = NULL;
+ 	globals->sync_period.tv_sec = ALFRED_INTERVAL;
+ 	globals->sync_period.tv_nsec = 0;
+@@ -252,7 +253,7 @@ static struct globals *alfred_init(int argc, char *argv[])
+ 			globals->unix_path = optarg;
+ 			break;
+ 		case 'd':
+-			globals->verbose++;
++			globals->verbose = true;
+ 			break;
+ 		case 'c':
+ 			globals->update_command = optarg;
+@@ -268,7 +269,7 @@ static struct globals *alfred_init(int argc, char *argv[])
+ 			printf(" ** Setting sync interval to: %.9f seconds (%ld.%09ld)\n", sync_period, globals->sync_period.tv_sec, globals->sync_period.tv_nsec);
+ 			break;
+ 		case '4':
+-			globals->ipv4mode = 1;
++			globals->ipv4mode = true;
+ 			inet_pton(AF_INET, optarg, &alfred_mcast.ipv4);
+ 			printf(" ** IPv4 Multicast Mode: %x\n", alfred_mcast.ipv4.s_addr);
+ 			break;

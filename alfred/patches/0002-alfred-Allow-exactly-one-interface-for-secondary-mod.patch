@@ -1,0 +1,72 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Mon, 15 Feb 2021 20:16:15 +0100
+Subject: alfred: Allow exactly one interface for secondary mode
+
+A primary alfred daemon allows syncing over more than one interface. But
+the secondary alfred daemon needs exactly one interface. But the check for
+this property was insufficient because it allowed paramters like
+"-i wlan0,asd" when wlan0 is valid and asd is not valid.
+
+The better solution is to really use the number of interfaces given to
+alfred instead of the number of interfaces evaluated as "valid".
+
+Fixes: 67ae5f57eedd ("alfred: Add support for multiple interfaces per master")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Forwarded: https://patchwork.open-mesh.org/project/b.a.t.m.a.n./patch/20210215200126.140253-2-sven@narfation.org/
+
+diff --git a/alfred.h b/alfred.h
+index 1e2c05835cbfba02ebabefe55afc29f7ef8e12b1..7d6b0b35b5c8b8c3b087589880c390eb035584be 100644
+--- a/alfred.h
++++ b/alfred.h
+@@ -182,6 +182,7 @@ int unix_sock_req_data_finish(struct globals *globals,
+ int vis_update_data(struct globals *globals);
+ /* netsock.c */
+ int netsock_open_all(struct globals *globals);
++size_t netsocket_count_interfaces(struct globals *globals);
+ void netsock_close_all(struct globals *globals);
+ int netsock_set_interfaces(struct globals *globals, char *interfaces);
+ struct interface *netsock_first_interface(struct globals *globals);
+diff --git a/netsock.c b/netsock.c
+index 367b20730500a1c24448200a24149b64059f3381..84b0ec3827e491eead997f58b2b8f26c5b18b843 100644
+--- a/netsock.c
++++ b/netsock.c
+@@ -471,6 +471,17 @@ int netsock_open_all(struct globals *globals)
+ 	return num_socks;
+ }
+ 
++size_t netsocket_count_interfaces(struct globals *globals)
++{
++	struct interface *interface;
++	size_t count = 0;
++
++	list_for_each_entry(interface, &globals->interfaces, list)
++		count++;
++
++	return count;
++}
++
+ void netsock_reopen(struct globals *globals)
+ {
+ 	struct interface *interface;
+diff --git a/server.c b/server.c
+index efac5ad399df52f8c444711a14bcf4814e38a3bf..eb2bc8aeb787e4bf028c8f9e3a523a18c6992be1 100644
+--- a/server.c
++++ b/server.c
+@@ -371,6 +371,7 @@ int alfred_server(struct globals *globals)
+ 	int maxsock, ret, recvs;
+ 	struct timespec last_check, now, tv;
+ 	fd_set fds, errfds;
++	size_t num_interfaces;
+ 	int num_socks;
+ 
+ 	if (create_hashes(globals))
+@@ -397,7 +398,8 @@ int alfred_server(struct globals *globals)
+ 		return -1;
+ 	}
+ 
+-	if (num_socks > 1 && globals->opmode == OPMODE_SECONDARY) {
++	num_interfaces = netsocket_count_interfaces(globals);
++	if (num_interfaces > 1 && globals->opmode == OPMODE_SECONDARY) {
+ 		fprintf(stderr, "More than one interface specified in secondary mode\n");
+ 		return -1;
+ 	}

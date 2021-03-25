@@ -13,11 +13,12 @@ PKG_RELEASE:=1
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=ftp://bird.network.cz/pub/bird
 PKG_HASH:=19d2de83ee25a307b9e5b9e58797dd68766d439bcee33e3ac617ed502370e7f6
-PKG_BUILD_DEPENDS:=ncurses readline
-PKG_MAINTAINER:=Toke Høiland-Jørgensen <toke@toke.dk>
-PKG_BUILD_DIR:=$(BUILD_DIR)/bird-$(PKG_VERSION)
 
-PKG_LICENSE:=GPL-2.0
+PKG_MAINTAINER:=Toke Høiland-Jørgensen <toke@toke.dk>
+PKG_LICENSE:=GPL-2.0-or-later
+
+PKG_BUILD_DEPENDS:=ncurses readline
+PKG_BUILD_DIR:=$(BUILD_DIR)/bird-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 

@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=opennds
 PKG_FIXUP:=autoreconf
-PKG_VERSION:=8.1.1
+PKG_VERSION:=9.0.0
 PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/opennds/tar.gz/v$(PKG_VERSION)?
 PKG_SOURCE:=opennds-$(PKG_VERSION).tar.gz
-PKG_HASH:=9e0ede334755dc95a4133a94304f4294b956d4849c48c5521f12b4ed295e356f
+PKG_HASH:=466dbd78a9464d56f6bf8c8374071e4c21854700a8176a47e72e23930e4271b2
 PKG_BUILD_DIR:=$(BUILD_DIR)/openNDS-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -20,7 +20,6 @@ PKG_BUILD_PARALLEL:=1
 PKG_LICENSE:=GPL-2.0+
 
 include $(INCLUDE_DIR)/package.mk
-
 
 define Package/opennds
 	SUBMENU:=Captive Portals
@@ -42,26 +41,27 @@ define Package/opennds/description
 endef
 
 define Package/opennds/install
-
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/opennds $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ndsctl $(1)/usr/bin/
-
 	$(INSTALL_DIR) $(1)/etc/opennds/htdocs/images
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/usr/lib/opennds
-	$(CP) $(PKG_BUILD_DIR)/resources/splash.html $(1)/etc/opennds/htdocs/
 	$(CP) $(PKG_BUILD_DIR)/resources/splash.css $(1)/etc/opennds/htdocs/
-	$(CP) $(PKG_BUILD_DIR)/resources/status.html $(1)/etc/opennds/htdocs/
 	$(CP) $(PKG_BUILD_DIR)/resources/splash.jpg $(1)/etc/opennds/htdocs/images/
 	$(CP) $(PKG_BUILD_DIR)/linux_openwrt/opennds/files/etc/config/opennds $(1)/etc/config/
+	$(CP) $(PKG_BUILD_DIR)/linux_openwrt/opennds/files/etc/config/opennds $(1)/etc/opennds/config.uci
 	$(CP) $(PKG_BUILD_DIR)/linux_openwrt/opennds/files/etc/init.d/opennds $(1)/etc/init.d/
 	$(CP) $(PKG_BUILD_DIR)/linux_openwrt/opennds/files/etc/uci-defaults/40_opennds $(1)/etc/uci-defaults/
 	$(CP) $(PKG_BUILD_DIR)/linux_openwrt/opennds/files/usr/lib/opennds/restart.sh $(1)/usr/lib/opennds/
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/binauth/binauth_log.sh $(1)/usr/lib/opennds/
-	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/PreAuth/login.sh $(1)/usr/lib/opennds/
+	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/libopennds.sh $(1)/usr/lib/opennds/
+	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/PreAuth/theme_click-to-continue-basic.sh $(1)/usr/lib/opennds/
+	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/PreAuth/theme_click-to-continue-custom-placeholders.sh $(1)/usr/lib/opennds/
+	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/PreAuth/theme_user-email-login-basic.sh $(1)/usr/lib/opennds/
+	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/PreAuth/theme_user-email-login-custom-placeholders.sh $(1)/usr/lib/opennds/
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/get_client_interface.sh $(1)/usr/lib/opennds/
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/get_client_token.sh $(1)/usr/lib/opennds/
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/client_params.sh $(1)/usr/lib/opennds/

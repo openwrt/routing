@@ -13,7 +13,7 @@ or newer - otherwise it will not work as expected.
 This reverts commit 725b4ef5be840cfcd0ca33b9393c14dee40c10f7.
 
 diff --git a/compat-include/net/genetlink.h b/compat-include/net/genetlink.h
-index f16355febac42294491531a3f8049bc680560d0c..d1f80cd88503cdd11e9051f2e90ea533bee89a67 100644
+index 56a9ab22c062b1d0d01ef9d09ce796075d3d6df7..8f542bef10dc0f2682ab2d428c90df9ab97977ce 100644
 --- a/compat-include/net/genetlink.h
 +++ b/compat-include/net/genetlink.h
 @@ -31,17 +31,15 @@ void batadv_genl_dump_check_consistent(struct netlink_callback *cb,
@@ -107,7 +107,7 @@ index f16355febac42294491531a3f8049bc680560d0c..d1f80cd88503cdd11e9051f2e90ea533
  
  #endif /* _NET_BATMAN_ADV_COMPAT_NET_GENETLINK_H_ */
 diff --git a/net/batman-adv/netlink.c b/net/batman-adv/netlink.c
-index 97bcf149633d850ff4fcece6d7dc0d799adb1444..a8f15c04826af1144db655887b754758fc5ab47a 100644
+index f317d206b411d87b4da2f57e35c3fb78cedfb160..bdac5dbd899a9540d58052fd32c8c89520927390 100644
 --- a/net/batman-adv/netlink.c
 +++ b/net/batman-adv/netlink.c
 @@ -1351,7 +1351,7 @@ static void batadv_post_doit(const struct genl_ops *ops, struct sk_buff *skb,

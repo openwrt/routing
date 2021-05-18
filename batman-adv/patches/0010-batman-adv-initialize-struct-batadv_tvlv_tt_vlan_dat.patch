@@ -1,0 +1,41 @@
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Date: Mon, 5 Apr 2021 19:16:50 +0900
+Subject: batman-adv: initialize "struct batadv_tvlv_tt_vlan_data"->reserved field
+
+KMSAN found uninitialized value at batadv_tt_prepare_tvlv_local_data()
+[1], for commit ced72933a5e8ab52 ("batman-adv: use CRC32C instead of CRC16
+in TT code") inserted 'reserved' field into "struct batadv_tvlv_tt_data"
+and commit 7ea7b4a142758dea ("batman-adv: make the TT CRC logic VLAN
+specific") moved that field to "struct batadv_tvlv_tt_vlan_data" but left
+that field uninitialized.
+
+[1] https://syzkaller.appspot.com/bug?id=07f3e6dba96f0eb3cabab986adcd8a58b9bdbe9d
+
+Reported-by: syzbot <syzbot+50ee810676e6a089487b@syzkaller.appspotmail.com>
+Tested-by: syzbot <syzbot+50ee810676e6a089487b@syzkaller.appspotmail.com>
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Fixes: c5e7a06a2961 ("batman-adv: use CRC32C instead of CRC16 in TT code")
+Fixes: 21a57f6e7a3b ("batman-adv: make the TT CRC logic VLAN specific")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/fe8bf38f47a0c1a0e53c487228e3f5a44c86939f
+
+diff --git a/net/batman-adv/translation-table.c b/net/batman-adv/translation-table.c
+index 8a482c5ec67bb22167bca02b4181252045e3b605..c5271ea4dc8321fadc75fca7790b1382102dbb5a 100644
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -891,6 +891,7 @@ batadv_tt_prepare_tvlv_global_data(struct batadv_orig_node *orig_node,
+ 	hlist_for_each_entry_rcu(vlan, &orig_node->vlan_list, list) {
+ 		tt_vlan->vid = htons(vlan->vid);
+ 		tt_vlan->crc = htonl(vlan->tt.crc);
++		tt_vlan->reserved = 0;
+ 
+ 		tt_vlan++;
+ 	}
+@@ -974,6 +975,7 @@ batadv_tt_prepare_tvlv_local_data(struct batadv_priv *bat_priv,
+ 
+ 		tt_vlan->vid = htons(vlan->vid);
+ 		tt_vlan->crc = htonl(vlan->tt.crc);
++		tt_vlan->reserved = 0;
+ 
+ 		tt_vlan++;
+ 	}

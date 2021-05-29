@@ -23,7 +23,6 @@
 #include "net.h"
 #include "resend.h"
 #include "route.h"
-#include "rule.h"
 #include "source.h"
 #include "util.h"
 #include "version.h"
@@ -209,7 +208,7 @@ static int babeld_ubus_get_routes(struct ubus_context *ctx_local,
 
   blob_buf_init(&b, 0);
 
-  routes = route_stream(ROUTE_ALL);
+  routes = route_stream(0);
   if (routes) {
     while (1) {
       struct babel_route *route = route_stream_next(routes);

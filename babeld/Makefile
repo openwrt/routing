@@ -16,7 +16,8 @@ PKG_SOURCE_URL:=https://www.irif.fr/~jch/software/files/
 PKG_HASH:=a5f54a08322640e97399bf4d1411a34319e6e277fbb6fc4966f38a17d72a8dea
 
 PKG_MAINTAINER:=Gabriel Kerneis <gabriel@kerneis.info>, \
-	Baptiste Jonglez <openwrt-pkg@bitsofnetworks.org>
+	Baptiste Jonglez <openwrt-pkg@bitsofnetworks.org>, \
+	Nick Hainke <vincent@systemli.org>
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENCE
 

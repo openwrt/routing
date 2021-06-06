@@ -1,0 +1,631 @@
+From 02b7fae8a0f1d5bab3ec48417db822d56e02ce7e Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Fri, 28 Aug 2020 10:28:31 +0200
+Subject: [PATCH] filtergw: add plugin allow to allow/block gateways (even
+ smartgateway)
+
+The plugin adds a possibility to filter out gateway HNAs. This can be
+very handy e.g. for faulty nodes. A gateway can be taken out directly on
+a central node and all traffic is then redirected. Also the underlying
+smart gateways are adapted. Currently the link multiplier is often used
+to control a faulty node, but it is not necessarily the best way to do
+so.
+
+The plugin also allows to determine the smart gateway on the local node.
+This way you can easily select another gateway node to direct traffic,
+or block a specific one.
+
+Here are some sample configurations:
+
+Only allow Gateway HNA from '10.230.132.40':
+config LoadPlugin
+        option library 'olsrd_filtergw'
+        list originator '10.230.132.40'
+        option allowlist '1'
+
+Block Gateway HNA from '10.230.132.40':
+config LoadPlugin
+        option library 'olsrd_filtergw'
+        list originator '10.230.132.40'
+        option allowlist '0'
+
+The plugin is based on the work of sven-ola, pmelange and booo.
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ Makefile                          |  14 +-
+ lib/filtergw/Makefile             |  62 ++++++
+ lib/filtergw/src/olsrd_filtergw.c | 307 ++++++++++++++++++++++++++++++
+ lib/filtergw/src/olsrd_filtergw.h |  60 ++++++
+ lib/filtergw/src/olsrd_plugin.c   |  97 ++++++++++
+ lib/filtergw/version-script.txt   |  10 +
+ 6 files changed, 549 insertions(+), 1 deletion(-)
+ create mode 100644 lib/filtergw/Makefile
+ create mode 100644 lib/filtergw/src/olsrd_filtergw.c
+ create mode 100644 lib/filtergw/src/olsrd_filtergw.h
+ create mode 100644 lib/filtergw/src/olsrd_plugin.c
+ create mode 100644 lib/filtergw/version-script.txt
+
+--- a/Makefile
++++ b/Makefile
+@@ -234,7 +234,7 @@ rpm:
+ 
+ # This is quite ugly but at least it works
+ ifeq ($(OS),linux)
+-SUBDIRS := arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo info jsoninfo mdns mini nameservice netjson poprouting p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog
++SUBDIRS := arprefresh bmf dot_draw dyn_gw dyn_gw_plain filtergw httpinfo info jsoninfo mdns mini nameservice netjson poprouting p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog
+ else
+ ifeq ($(OS),win32)
+ SUBDIRS := dot_draw httpinfo info jsoninfo mini netjson pgraph secure txtinfo
+@@ -337,6 +337,18 @@ dyn_gw_plain_install:
+ dyn_gw_plain_uninstall:
+ 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dyn_gw_plain DESTDIR=$(DESTDIR) uninstall
+ 
++filtergw:
++		$(MAKECMDPREFIX)$(MAKECMD) -C lib/filtergw
++
++filtergw_clean:
++		$(MAKECMDPREFIX)$(MAKECMD) -C lib/filtergw DESTDIR=$(DESTDIR) clean
++
++filtergw_install:
++		$(MAKECMDPREFIX)$(MAKECMD) -C lib/filtergw DESTDIR=$(DESTDIR) install
++
++filtergw_uninstall:
++		$(MAKECMDPREFIX)$(MAKECMD) -C lib/filtergw DESTDIR=$(DESTDIR) uninstall
++
+ httpinfo:
+ 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/httpinfo
+ 
+--- /dev/null
++++ b/lib/filtergw/Makefile
+@@ -0,0 +1,62 @@
++# The olsr.org Optimized Link-State Routing daemon(olsrd)
++# Copyright (c) 2021, Nick Hainke <vincent@systemli.org>
++# All rights reserved.
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions
++# are met:
++#
++# * Redistributions of source code must retain the above copyright
++#   notice, this list of conditions and the following disclaimer.
++# * Redistributions in binary form must reproduce the above copyright
++#   notice, this list of conditions and the following disclaimer in
++#   the documentation and/or other materials provided with the
++#   distribution.
++# * Neither the name of olsr.org, olsrd nor the names of its
++#   contributors may be used to endorse or promote products derived
++#   from this software without specific prior written permission.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
++# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
++# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++# POSSIBILITY OF SUCH DAMAGE.
++#
++# Visit http://www.olsr.org for more information.
++#
++# If you find this software useful feel free to make a donation
++# to the project. For more information see the website or contact
++# the copyright holders.
++#
++
++OLSRD_PLUGIN =	true
++PLUGIN_NAME =	olsrd_filtergw
++PLUGIN_VER =	0.0.1
++
++TOPDIR =	../..
++include $(TOPDIR)/Makefile.inc
++
++default_target: $(PLUGIN_FULLNAME)
++
++$(PLUGIN_FULLNAME): $(OBJS) version-script.txt
++ifeq ($(VERBOSE),0)
++		@echo "[LD] $@"
++endif
++		$(MAKECMDPREFIX)$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
++
++install:	$(PLUGIN_FULLNAME)
++		$(STRIP) $(PLUGIN_FULLNAME)
++		$(INSTALL_LIB)
++
++uninstall:
++		$(UNINSTALL_LIB)
++
++clean:
++		rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME)
+--- /dev/null
++++ b/lib/filtergw/src/olsrd_filtergw.c
+@@ -0,0 +1,307 @@
++/*
++ * The olsr.org Optimized Link-State Routing daemon (olsrd)
++ *
++ * (c) by the OLSR project
++ *
++ * See our Git repository to find out who worked on this file
++ * and thus is a copyright holder on it.
++ *
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * * Redistributions of source code must retain the above copyright
++ *   notice, this list of conditions and the following disclaimer.
++ * * Redistributions in binary form must reproduce the above copyright
++ *   notice, this list of conditions and the following disclaimer in
++ *   the documentation and/or other materials provided with the
++ *   distribution.
++ * * Neither the name of olsr.org, olsrd nor the names of its
++ *   contributors may be used to endorse or promote products derived
++ *   from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
++ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
++ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ * Visit http://www.olsr.org for more information.
++ *
++ * If you find this software useful feel free to make a donation
++ * to the project. For more information see the website or contact
++ * the copyright holders.
++ *
++ */
++
++#include <arpa/inet.h>
++
++#include "olsr_types.h"
++#include "olsrd_filtergw.h"
++#include "olsr.h"
++#include "defs.h"
++#include "ipcalc.h"
++#include "scheduler.h"
++#include "log.h"
++#include "routing_table.h"
++#include "olsr_cfg.h"
++
++#include <stdio.h>
++#include <string.h>
++#include <stdlib.h>
++#include <sys/time.h>
++#include <net/route.h>
++#include <unistd.h>
++#include <errno.h>
++#include <time.h>
++
++static int is_allowlist = 0;
++
++static struct filter_list * add_to_filter_list(const char *, struct filter_list *);
++
++struct originator_list {
++  union olsr_ip_addr        originator;
++  struct originator_list *  next;
++};
++
++struct filter_group {
++  struct originator_list *  originator_list;
++  struct hna_group *        next;
++};
++
++static struct filter_group * filter_groups = NULL;
++
++/* -------------------------------------------------------------------------
++ * Function   : add_to_originator_list
++ * Description: Add a new ip to originator list
++ * Input      : originator_address - the address of originator
++ *              the_originator_list - the list of originators
++ * Output     : none
++ * Return     : a pointer to the newly added originator, i.e. start of the list
++ * Data Used  : none
++ * ------------------------------------------------------------------------- */
++/* add the valid IPs to the head of the list */
++static struct originator_list *
++add_to_originator_list(union olsr_ip_addr * originator_address, struct originator_list *the_originator_list)
++{
++  struct originator_list *new = calloc(1, sizeof(struct originator_list));
++  if (!new) {
++    olsr_exit("FILTERGW: Out of memory", EXIT_FAILURE);
++  }
++  memcpy(&new->originator, originator_address, olsr_cnf->ipsize);
++  new->next = the_originator_list;
++  return new;
++}
++
++/**
++ * read config file parameters
++ */
++static int
++set_plugin_filter(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
++{
++  union olsr_ip_addr addr;
++
++  if (inet_pton(olsr_cnf->ip_version, value, &addr) <= 0) {
++    OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
++    return 1;
++  }
++
++  if (filter_groups == NULL) {
++      struct filter_group *new = calloc(1, sizeof(struct filter_group));
++      if (new == NULL) {
++        olsr_exit("FILTERGW: Out of memory", EXIT_FAILURE);
++      }
++      filter_groups = new;
++      new->next =  filter_groups;
++  }
++
++  filter_groups->originator_list = add_to_originator_list(&addr, filter_groups->originator_list);
++
++  return 0;
++}
++
++/* -------------------------------------------------------------------------
++ * Function   : olsrd_filtergw_parser
++ * Description: Function to be passed to the parser engine. This function
++ *              processes the incoming message and filters gw hna's.
++ * Input      : m      - message to parse
++ *              in_if  - interface to use (unused in this application)
++ *              ipaddr - IP-address to use (unused in this application)
++ * Output     : none
++ * Return     : false if message should be supressed, true otherwise
++ * Data Used  : none
++ * ------------------------------------------------------------------------- */
++bool
++olsrd_filtergw_parser(
++    union olsr_message *m,
++    struct interface_olsr *in_if __attribute__ ((unused)),
++    union olsr_ip_addr *ipaddr __attribute__ ((unused))
++){
++
++  uint8_t olsr_msgtype;
++  olsr_reltime vtime;
++  uint16_t olsr_msgsize;
++  union olsr_ip_addr originator;
++
++  int hnasize;
++  const uint8_t *curr, *curr_end;
++  uint8_t *olsr_msgsize_p, *curr_hna, *temp_msgsize;
++
++  struct ipaddr_str buf;
++#ifdef DEBUG
++  OLSR_PRINTF(5, "Processing HNA\n");
++#endif
++
++  /* Check if everyting is ok */
++  if (!m) {
++    return false;
++  }
++  curr = (const uint8_t *)m;
++
++  /* olsr_msgtype */
++  pkt_get_u8(&curr, &olsr_msgtype);
++  if (olsr_msgtype != HNA_MESSAGE) {
++    OLSR_PRINTF(1, "not a HNA message!\n");
++    return false;
++  }
++  /* Get vtime */
++  pkt_get_reltime(&curr, &vtime);
++
++  /* olsr_msgsize */
++  pkt_get_u16(&curr, &olsr_msgsize);
++
++  /* validate originator */
++  pkt_get_ipaddress(&curr, &originator);
++  /*printf("HNA from %s\n\n", olsr_ip_to_string(&buf, &originator)); */
++
++  if(!should_filter(&originator))
++  {
++    return true;
++  }
++
++  /* ttl */
++  pkt_ignore_u8(&curr);
++
++  /* hopcnt */
++  pkt_ignore_u8(&curr);
++
++  /* seqno */
++  pkt_ignore_u16(&curr);
++
++  /* msgtype(1) + vtime(1) + msgsize(2) + ttl(1) + hopcnt(1) + seqno(2) = 8 */
++  olsr_msgsize_p = (uint8_t *)m + 2;
++  curr_hna = (uint8_t *)m + 8 + olsr_cnf->ipsize;
++  curr_end = (const uint8_t *)m + olsr_msgsize;
++  hnasize = olsr_msgsize - 8 - olsr_cnf->ipsize;
++
++  if ((hnasize % (2 * olsr_cnf->ipsize)) != 0) {
++    OLSR_PRINTF(1, "Illegal HNA message from %s with size %d!\n",
++        olsr_ip_to_string(&buf, &originator), olsr_msgsize);
++    return false;
++  }
++
++  while (curr < curr_end) {
++    struct olsr_ip_prefix prefix;
++    union olsr_ip_addr mask;
++
++    pkt_get_ipaddress(&curr, &prefix.prefix);
++    pkt_get_ipaddress(&curr, &mask);
++    prefix.prefix_len = olsr_netmask_to_prefix(&mask);
++
++    if (is_prefix_inetgw(&prefix)) {
++      hnasize -= 2 * olsr_cnf->ipsize;
++      if (0 < hnasize) {
++        /* move the rest of the message forward over the gw HNA */
++        memmove(curr_hna, curr, curr_end - curr);
++        curr_end -= 2 * olsr_cnf->ipsize;
++        curr = curr_hna;
++
++        /* update the message size */
++        temp_msgsize = olsr_msgsize_p;
++        olsr_msgsize -= 2 * olsr_cnf->ipsize;
++        pkt_put_u16(&temp_msgsize, olsr_msgsize);
++        continue;
++      }
++      return false;
++    }
++    else
++    {
++      curr_hna += 2 * olsr_cnf->ipsize;
++    }
++  }
++  return true;
++}
++
++static const struct olsrd_plugin_parameters plugin_parameters[] = {
++    {.name = "originator", .set_plugin_parameter = &set_plugin_filter, .data = NULL},
++    {.name = "allowlist", .set_plugin_parameter = &set_plugin_int,  .data = &is_allowlist},
++};
++
++void
++olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
++{
++  *params = plugin_parameters;
++  *size = sizeof(plugin_parameters) / sizeof(*plugin_parameters);
++}
++
++int
++olsrd_plugin_init(void)
++{
++  olsr_parser_add_function(&olsrd_filtergw_parser, HNA_MESSAGE);
++  return 1;
++}
++
++void olsrd_plugin_fini(void) {
++  while(filter_groups) {
++
++    while (filter_groups->originator_list) {
++      struct originator_list* next = filter_groups->originator_list->next;
++      // free(&filter_groups->originator_list->originator);
++      free(filter_groups->originator_list);
++      filter_groups->originator_list = next;
++    }
++
++    struct filter_group* next = filter_groups->next;
++    free(filter_groups);
++  }
++}
++
++/* -------------------------------------------------------------------------
++ * Function   : should_filter
++ * Description: Function used by the parse engine to see if filter applies
++ *              to given originator address.
++ * Input      : originator - ip addr of originator that should be checked
++ * Output     : none
++ * Return     : false if gw should note be supressed, true otherwise
++ * Data Used  : none
++ * ------------------------------------------------------------------------- */
++int should_filter(union olsr_ip_addr * originator)
++{
++  int found = 0;
++
++  if(filter_groups == NULL)
++  {
++    /* if it is allow list but no entry, filter every GW announcement */
++    return is_allowlist;
++  }
++
++  /* for now we only have 1 list entry */
++  struct originator_list *list = filter_groups->originator_list;
++  for (list = filter_groups->originator_list; list; list = list->next) {
++    if(ipequal(&list->originator, originator))
++    {
++      found = 1;
++      break;
++    }
++  }
++  return is_allowlist ? !found : found;
++}
+\ No newline at end of file
+--- /dev/null
++++ b/lib/filtergw/src/olsrd_filtergw.h
+@@ -0,0 +1,60 @@
++/*
++ * The olsr.org Optimized Link-State Routing daemon (olsrd)
++ *
++ * (c) by the OLSR project
++ *
++ * See our Git repository to find out who worked on this file
++ * and thus is a copyright holder on it.
++ *
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * * Redistributions of source code must retain the above copyright
++ *   notice, this list of conditions and the following disclaimer.
++ * * Redistributions in binary form must reproduce the above copyright
++ *   notice, this list of conditions and the following disclaimer in
++ *   the documentation and/or other materials provided with the
++ *   distribution.
++ * * Neither the name of olsr.org, olsrd nor the names of its
++ *   contributors may be used to endorse or promote products derived
++ *   from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
++ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
++ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ * Visit http://www.olsr.org for more information.
++ *
++ * If you find this software useful feel free to make a donation
++ * to the project. For more information see the website or contact
++ * the copyright holders.
++ *
++ */
++
++#ifndef _OLSRD_FILTERGW_H
++#define _OLSRD_FILTERGW_H
++
++#include "olsrd_plugin.h"
++#include "plugin_util.h"
++
++int olsrd_plugin_init(void);
++
++void olsrd_plugin_fini(void);
++
++int olsrd_plugin_interface_version(void);
++
++void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size);
++
++#endif /* _OLSRD_FILTERGW_H */
+\ No newline at end of file
+--- /dev/null
++++ b/lib/filtergw/src/olsrd_plugin.c
+@@ -0,0 +1,97 @@
++/*
++ * The olsr.org Optimized Link-State Routing daemon (olsrd)
++ *
++ * (c) by the OLSR project
++ *
++ * See our Git repository to find out who worked on this file
++ * and thus is a copyright holder on it.
++ *
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * * Redistributions of source code must retain the above copyright
++ *   notice, this list of conditions and the following disclaimer.
++ * * Redistributions in binary form must reproduce the above copyright
++ *   notice, this list of conditions and the following disclaimer in
++ *   the documentation and/or other materials provided with the
++ *   distribution.
++ * * Neither the name of olsr.org, olsrd nor the names of its
++ *   contributors may be used to endorse or promote products derived
++ *   from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
++ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
++ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
++ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ *
++ * Visit http://www.olsr.org for more information.
++ *
++ * If you find this software useful feel free to make a donation
++ * to the project. For more information see the website or contact
++ * the copyright holders.
++ *
++ */
++
++#include "olsrd_plugin.h"
++#include "olsrd_filtergw.h"
++#include "olsr.h"
++#include "builddata.h"
++#include <stdio.h>
++
++#define PLUGIN_NAME              "OLSRD filtergw plugin"
++#define PLUGIN_INTERFACE_VERSION 5
++
++/**
++ * "Private" declarations
++ */
++
++static void my_init(void) __attribute__ ((constructor));
++static void my_fini(void) __attribute__ ((destructor));
++
++/*
++ * Defines the version of the plugin interface that is used
++ * THIS IS NOT THE VERSION OF YOUR PLUGIN!
++ * Do not alter unless you know what you are doing!
++ */
++int
++olsrd_plugin_interface_version(void)
++{
++  return PLUGIN_INTERFACE_VERSION;
++}
++
++/**
++ *Constructor
++ */
++void
++my_init(void)
++{
++  /* Print plugin info to stdout */
++  olsr_printf(0, "%s (%s)\n", PLUGIN_NAME, git_descriptor);
++}
++
++/**
++ *Destructor
++ */
++void
++my_fini(void)
++{
++  olsrd_plugin_fini();
++}
++
++/*
++ * Local Variables:
++ * c-basic-offset: 2
++ * indent-tabs-mode: nil
++ * End:
++ */
+--- /dev/null
++++ b/lib/filtergw/version-script.txt
+@@ -0,0 +1,10 @@
++VERS_1.0
++{
++  global:
++    olsrd_plugin_interface_version;
++    olsrd_plugin_init;
++    olsrd_get_plugin_parameters;
++
++  local:
++    *;
++};

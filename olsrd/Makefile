@@ -54,6 +54,13 @@ define Package/olsrd-mod-dot-draw
   TITLE:=Dot topology information plugin
 endef
 
+
+define Package/olsrd-mod-filtergw
+  $(call Package/olsrd/template)
+  DEPENDS:=olsrd
+  TITLE:=Filter Gateway plugin
+endef
+
 define Package/olsrd-mod-bmf
   $(call Package/olsrd/template)
   DEPENDS:=olsrd +kmod-tun
@@ -174,7 +181,7 @@ MAKE_FLAGS+= \
 	DESTDIR="$(PKG_INSTALL_DIR)" \
 	STRIP="true" \
 	INSTALL_LIB="true" \
-	SUBDIRS="arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo netjson mdns nameservice p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog"
+	SUBDIRS="arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo filtergw jsoninfo netjson mdns nameservice p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog"
 
 define Build/Compile
 	$(call Build/Compile/Default,all)
@@ -197,6 +204,11 @@ endef
 define Package/olsrd-mod-arprefresh/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lib/arprefresh/olsrd_arprefresh.so.* $(1)/usr/lib/
+endef
+
+define Package/olsrd-mod-filtergw/install
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lib/filtergw/olsrd_filtergw.so.* $(1)/usr/lib/
 endef
 
 define Package/olsrd-mod-dot-draw/install
@@ -300,6 +312,7 @@ endef
 $(eval $(call BuildPackage,olsrd))
 $(eval $(call BuildPackage,olsrd-mod-arprefresh))
 $(eval $(call BuildPackage,olsrd-mod-dot-draw))
+$(eval $(call BuildPackage,olsrd-mod-filtergw))
 $(eval $(call BuildPackage,olsrd-mod-bmf))
 $(eval $(call BuildPackage,olsrd-mod-dyn-gw))
 $(eval $(call BuildPackage,olsrd-mod-dyn-gw-plain))

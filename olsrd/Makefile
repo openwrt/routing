@@ -36,7 +36,7 @@ endef
 define Package/olsrd
   $(call Package/olsrd/template)
   MENU:=1
-  DEPENDS:=+libpthread +libgps
+  DEPENDS:=+libpthread
 endef
 
 define Package/olsrd/conffiles
@@ -125,7 +125,7 @@ endef
 
 define Package/olsrd-mod-pud
   $(call Package/olsrd/template)
-  DEPENDS:=olsrd
+  DEPENDS:=olsrd +libgps
   TITLE:=Position Update Distribution plugin
 endef
 

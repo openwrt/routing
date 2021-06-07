@@ -170,11 +170,7 @@ MAKE_FLAGS+= \
 	DESTDIR="$(PKG_INSTALL_DIR)" \
 	STRIP="true" \
 	INSTALL_LIB="true" \
-<<<<<<< HEAD
 	SUBDIRS="arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo netjson mdns nameservice p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog"
-=======
-	SUBDIRS="arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo filtergw jsoninfo netjson mdns nameservice p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog"
->>>>>>> 4f7791a (olsrd: update to 2021-06-07)
 
 define Build/Compile
 	$(call Build/Compile/Default,all)

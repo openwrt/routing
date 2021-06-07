@@ -8,13 +8,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=olsrd
-PKG_SOURCE_DATE:=2021-06-01
+PKG_SOURCE_DATE:=2021-06-07
 PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/OLSR/olsrd.git
-PKG_SOURCE_VERSION:=4e86a40b06ea84885e5903ef5349cd6b24e4a7fe
-PKG_MIRROR_HASH:=9fe818d59da7a9ea846d8b52c3f099c663b2c9daa0c3aaf5d27be0825ee20f92
+PKG_SOURCE_VERSION:=ed22e72a6233d53385fd99742ca5cb24150c2bb8
+PKG_MIRROR_HASH:=f2ea166ad98acb7baf7fb3b544a35046a8e83d08c9723e9642e0d0d40f5b41d4
 
 PKG_MAINTAINER:=Nick Hainke <vincent@systemli.org>
 PKG_BUILD_PARALLEL:=0
@@ -177,7 +177,7 @@ MAKE_FLAGS+= \
 	DESTDIR="$(PKG_INSTALL_DIR)" \
 	STRIP="true" \
 	INSTALL_LIB="true" \
-	SUBDIRS="arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo filtergw jsoninfo netjson mdns nameservice p2pd pgraph quagga secure sgwdynspeed txtinfo watchdog $(if $(CONFIG_USE_MUSL),pud)"
+	SUBDIRS="arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo filtergw jsoninfo netjson mdns nameservice p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog"
 
 define Build/Compile
 	$(call Build/Compile/Default,all)
@@ -316,9 +316,7 @@ $(eval $(call BuildPackage,olsrd-mod-mdns))
 $(eval $(call BuildPackage,olsrd-mod-nameservice))
 $(eval $(call BuildPackage,olsrd-mod-p2pd))
 $(eval $(call BuildPackage,olsrd-mod-pgraph))
-ifeq ($(CONFIG_USE_MUSL),y)
 $(eval $(call BuildPackage,olsrd-mod-pud))
-endif
 $(eval $(call BuildPackage,olsrd-mod-quagga))
 $(eval $(call BuildPackage,olsrd-mod-secure))
 $(eval $(call BuildPackage,olsrd-mod-sgwdynspeed))

@@ -1,0 +1,11 @@
+--- a/lib/pud/nmealib/Makefile.inc
++++ b/lib/pud/nmealib/Makefile.inc
+@@ -68,7 +68,7 @@ COMMONCFLAGS += -Wall -Wextra -Wold-styl
+                 -Wunused-parameter
+ 
+ GCCCFLAGS    += $(COMMONCFLAGS) -fearly-inlining -finline-functions-called-once -finline-limit=350 -Wtrampolines \
+-                -Wsync-nand -Wlogical-op -Wjump-misses-init -Werror
++                -Wsync-nand -Wlogical-op -Wjump-misses-init
+ 
+ ifeq "$(GCCVERSIONGTEQ6)" "1"
+ GCCCFLAGS   += -Wnull-dereference -Wshift-negative-value -Wshift-overflow -Wtautological-compare

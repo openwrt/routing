@@ -179,7 +179,7 @@ endef
 
 define Package/olsrd/install
 	$(INSTALL_DIR) $(1)/lib/functions
-	$(INSTALL_DATA) ./files/olsrd.init $(1)/lib/functions/olsrd.sh
+	$(INSTALL_DATA) ./files/olsrd.sh $(1)/lib/functions/olsrd.sh
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/olsrd.config $(1)/etc/config/olsrd
 	$(INSTALL_DATA) ./files/olsrd6.config $(1)/etc/config/olsrd6
@@ -188,8 +188,6 @@ define Package/olsrd/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/olsrd4.init $(1)/etc/init.d/olsrd
 	$(INSTALL_BIN) ./files/olsrd6.init $(1)/etc/init.d/olsrd6
-	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
-	$(INSTALL_BIN) ./files/olsrd.hotplug.sh $(1)/etc/hotplug.d/iface/50-olsrd
 endef
 
 define Package/olsrd-mod-arprefresh/install

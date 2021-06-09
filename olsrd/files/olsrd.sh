@@ -1,11 +1,6 @@
 #!/bin/sh /etc/rc.common
 # Copyright (C) 2008-2017 OpenWrt.org
 
-START=65
-
-SERVICE_DAEMONIZE=1
-SERVICE_WRITE_PID=1
-
 OLSRD_OLSRD_SCHEMA='ignore:internal config_file:internal DebugLevel=0 AllowNoInt=yes'
 OLSRD_IPCCONNECT_SCHEMA='ignore:internal Host:list Net:list2'
 OLSRD_LOADPLUGIN_SCHEMA='ignore:internal library:internal Host4:list Net4:list2 Host:list Net:list2 Host6:list Net6:list2 Ping:list redistribute:list NonOlsrIf:list name:list lat lon latlon_infile HNA:list2 hosts:list2 ipv6only:bool'
@@ -32,6 +27,54 @@ validate_varname() {
 	local varname="$1"
 	[ -z "$varname" -o "$varname" != "${varname%%[!A-Za-z0-9_]*}" ] && return 1
 	return 0
+}
+
+olsrd_list_configured_interfaces()
+{
+	local i=0
+	local interface
+
+	while interface="$( uci -q get $OLSRD.@Interface[$i].interface )"; do {
+		case "$( uci -q get $OLSRD.@Interface[$i].ignore )" in
+			1|on|true|enabled|yes)
+				# is disabled
+			;;
+			*)
+				echo "$interface"	# e.g. 'lan'
+			;;
+		esac
+
+		i=$(( i + 1 ))
+	} done
+}
+
+olsrd_interface_already_in_config()
+{
+	# e.g.: 'Interface "eth0.1" "eth0.2" "wlan0"'
+	if grep -s ^'Interface ' "/var/etc/$OLSRD.conf" | grep -q "\"$DEVICE\""; then
+		logger -t olsrd_hotplug -p daemon.debug "[OK] already_active: '$INTERFACE' => '$DEVICE'"
+		return 0
+	else
+		logger -t olsrd_hotplug -p daemon.info "[OK] ifup: '$INTERFACE' => '$DEVICE'"
+		return 1
+	fi
+}
+
+olsrd_interface_needs_adding()
+{
+	local interface
+
+	# likely and cheap operation:
+	olsrd_interface_already_in_config && return 1
+
+	for interface in $(olsrd_list_configured_interfaces); do {
+		[ "$interface" = "$INTERFACE" ] && {
+			olsrd_interface_already_in_config || return 0
+		}
+	} done
+
+	logger -t olsrd_hotplug -p daemon.debug "[OK] interface '$INTERFACE' => '$DEVICE' not used for $OLSRD"
+	return 1
 }
 
 validate_olsrd_option() {
@@ -769,7 +812,8 @@ olsrd_setup_smartgw_rules() {
 	fi
 }
 
-start() {
+olsrd_generate_config() {
+	UCI_CONF_NAME="$1"
 	SYSTEM_HOSTNAME=
 	SYSTEM_LAT=
 	SYSTEM_LON=
@@ -801,23 +845,4 @@ start() {
 	fi
 
 	[ -z "$OLSRD_CONFIG_FILE" ] && return 1
-
-	SERVICE_PID_FILE="$PID"
-	if service_check /usr/sbin/olsrd; then
-		error "there is already an instance of $UCI_CONF_NAME running (pid: '$(cat $PID)'), not starting."
-		return 1
-	else
-		service_start /usr/sbin/olsrd -f "$OLSRD_CONFIG_FILE" -nofork
-		sleep 1
-		service_check /usr/sbin/olsrd || {
-			log "startup-error: check via: '/usr/sbin/olsrd -f \"$OLSRD_CONFIG_FILE\" -nofork'"
-		}
-	fi
-
-	olsrd_setup_smartgw_rules
-}
-
-stop() {
-	SERVICE_PID_FILE="$PID"
-	service_stop /usr/sbin/olsrd
 }

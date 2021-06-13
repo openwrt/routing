@@ -1,6 +1,6 @@
 --- a/src-plugins/nhdp/nhdp/nhdp.c
 +++ b/src-plugins/nhdp/nhdp/nhdp.c
-@@ -187,9 +187,9 @@ static struct oonf_rfc5444_protocol *_protocol;
+@@ -187,9 +187,9 @@ static struct oonf_rfc5444_protocol *_pr
  static struct netaddr _originator_v4, _originator_v6;
  
  /* logging sources for NHDP subsystem */

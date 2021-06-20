@@ -157,6 +157,12 @@ define Package/olsrd-mod-watchdog
   TITLE:=Watchdog plugin
 endef
 
+define Package/olsrd-utils
+  $(call Package/olsrd/template)
+  DEPENDS:=olsrd
+  TITLE:=Utils for OLSRD
+endef
+
 define Package/olsrd-mod-pud/conffiles
 /etc/olsrd.d/olsrd.pud.position.conf
 endef
@@ -298,6 +304,11 @@ define Package/olsrd-mod-watchdog/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lib/watchdog/olsrd_watchdog.so.* $(1)/usr/lib/
 endef
 
+define Package/olsrd-utils/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) ./files/olsrd-neigh.sh $(1)/usr/bin/olsrd-neigh
+endef
+
 $(eval $(call BuildPackage,olsrd))
 $(eval $(call BuildPackage,olsrd-mod-arprefresh))
 $(eval $(call BuildPackage,olsrd-mod-dot-draw))
@@ -318,3 +329,4 @@ $(eval $(call BuildPackage,olsrd-mod-secure))
 $(eval $(call BuildPackage,olsrd-mod-sgwdynspeed))
 $(eval $(call BuildPackage,olsrd-mod-txtinfo))
 $(eval $(call BuildPackage,olsrd-mod-watchdog))
+$(eval $(call BuildPackage,olsrd-utils))

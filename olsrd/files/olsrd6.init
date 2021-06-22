@@ -34,6 +34,9 @@ start_service() {
 }
 
 service_triggers() {
+	# reload if config changed via uci
+	procd_add_reload_trigger "olsrd6"
+
 	# restart on ifup interface events
 	for n in $(olsrd_list_configured_interfaces $OLSRD); do
 		procd_add_reload_interface_trigger $n /etc/init.d/$OLSRD reload

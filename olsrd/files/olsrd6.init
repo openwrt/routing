@@ -26,13 +26,21 @@ start_service() {
 	olsrd_generate_config $OLSRD
 
 	procd_open_instance
+
+	config_load olsrd6
+	local _respawn_timeout
+	local _respawn_retry
+
+	config_get _respawn_timeout general respawn_timeout	
+	config_get _respawn_retry general respawn_retry			
+
 	procd_set_param command "$BIN"
 	procd_append_param command -f ${CONF}
 	procd_append_param command -nofork
 	procd_append_param command -pidfile ${PID}
 
 	# restart if olsrd dies
-	procd_set_param respawn
+	procd_set_param respawn 3600 $_respawn_timeout $_respawn_retry
 
 	# automatically restart olsrd if generated cfg has changed
 	procd_set_param file $CONF

@@ -32,9 +32,9 @@ start_service() {
 	local _respawn_timeout
 	local _respawn_retry
 
-	config_get _respawn_threshold general _respawn_threshold 3600
-	config_get _respawn_timeout general respawn_timeout 15
-	config_get _respawn_retry general respawn_retry 0
+	config_get _respawn_threshold procd _respawn_threshold 3600
+	config_get _respawn_timeout procd respawn_timeout 15
+	config_get _respawn_retry procd respawn_retry 0
 
 	procd_set_param command "$BIN"
 	procd_append_param command -f ${CONF}

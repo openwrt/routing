@@ -23,17 +23,10 @@ EOF
   fi
 
   # enable auto-peering on ethernet interface lan, if existing
-  uci get network.lan | grep interface >/dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    uci get network.lan.type | grep bridge >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
-      # most routers will set up an ethernet bridge for the lan
-      ifname="br-lan"
-    else
-      # docker containers don't have permission to create bridges by default,
-      # so we bind to the underlying interface instead (likely eth0)
-      ifname=`uci get network.lan.ifname`
-    fi
+  ifname=$(uci -q get network.lan.device || \
+           ([ "$(uci -q get network.lan.type)" == "bridge" ] && echo br-lan) || \
+           uci -q get network.lan.ifname)
+  if [ -n "$ifname" ]; then
     uci -q batch <<-EOF >/dev/null
       add cjdns eth_interface
       set cjdns.@eth_interface[-1].beacon=2
@@ -46,7 +39,7 @@ EOF
   # create the network interface
   uci -q batch <<-EOF >/dev/null
     set network.cjdns=interface
-    set network.cjdns.ifname=tuncjdns
+    set network.cjdns.device=tuncjdns
     set network.cjdns.proto=none
 EOF
 

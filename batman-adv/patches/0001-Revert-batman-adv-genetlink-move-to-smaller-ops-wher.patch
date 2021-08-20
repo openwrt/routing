@@ -12,11 +12,9 @@ or newer - otherwise it will not work as expected.
 
 This reverts commit 725b4ef5be840cfcd0ca33b9393c14dee40c10f7.
 
-diff --git a/compat-include/net/genetlink.h b/compat-include/net/genetlink.h
-index 56a9ab22c062b1d0d01ef9d09ce796075d3d6df7..8f542bef10dc0f2682ab2d428c90df9ab97977ce 100644
 --- a/compat-include/net/genetlink.h
 +++ b/compat-include/net/genetlink.h
-@@ -31,17 +31,15 @@ void batadv_genl_dump_check_consistent(struct netlink_callback *cb,
+@@ -31,17 +31,15 @@ void batadv_genl_dump_check_consistent(s
  #endif /* LINUX_VERSION_IS_LESS(4, 15, 0) */
  
  
@@ -48,7 +46,7 @@ index 56a9ab22c062b1d0d01ef9d09ce796075d3d6df7..8f542bef10dc0f2682ab2d428c90df9a
  	unsigned int n_mcgrps;
  	struct module *module;
  
-@@ -96,32 +94,24 @@ static inline int batadv_genl_register_family(struct batadv_genl_family *family)
+@@ -96,32 +94,24 @@ static inline int batadv_genl_register_f
  	family->family.pre_doit = family->pre_doit;
  	family->family.post_doit = family->post_doit;
  	family->family.mcgrps = family->mcgrps;
@@ -89,7 +87,7 @@ index 56a9ab22c062b1d0d01ef9d09ce796075d3d6df7..8f542bef10dc0f2682ab2d428c90df9a
  	family->family.ops = ops;
  	family->copy_ops = ops;
  
-@@ -136,7 +126,7 @@ typedef struct genl_ops batadv_genl_ops_old;
+@@ -136,7 +126,7 @@ typedef struct genl_ops batadv_genl_ops_
  #define batadv_post_doit(__x, __y, __z) \
  	batadv_post_doit(const batadv_genl_ops_old *ops, __y, __z)
  
@@ -98,7 +96,7 @@ index 56a9ab22c062b1d0d01ef9d09ce796075d3d6df7..8f542bef10dc0f2682ab2d428c90df9a
  #define genl_family batadv_genl_family
  
  #define genl_register_family(family) \
-@@ -160,6 +150,6 @@ batadv_genl_unregister_family(struct batadv_genl_family *family)
+@@ -160,6 +150,6 @@ batadv_genl_unregister_family(struct bat
  	genlmsg_multicast_netns(&(_family)->family, _net, _skb, _portid, \
  				_group, _flags)
  
@@ -106,11 +104,9 @@ index 56a9ab22c062b1d0d01ef9d09ce796075d3d6df7..8f542bef10dc0f2682ab2d428c90df9a
 +#endif /* LINUX_VERSION_IS_LESS(5, 2, 0) */
  
  #endif /* _NET_BATMAN_ADV_COMPAT_NET_GENETLINK_H_ */
-diff --git a/net/batman-adv/netlink.c b/net/batman-adv/netlink.c
-index f317d206b411d87b4da2f57e35c3fb78cedfb160..bdac5dbd899a9540d58052fd32c8c89520927390 100644
 --- a/net/batman-adv/netlink.c
 +++ b/net/batman-adv/netlink.c
-@@ -1351,7 +1351,7 @@ static void batadv_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
+@@ -1359,7 +1359,7 @@ static void batadv_post_doit(const struc
  	}
  }
  
@@ -119,7 +115,7 @@ index f317d206b411d87b4da2f57e35c3fb78cedfb160..bdac5dbd899a9540d58052fd32c8c895
  	{
  		.cmd = BATADV_CMD_GET_MESH,
  		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
-@@ -1485,8 +1485,8 @@ struct genl_family batadv_netlink_family __ro_after_init = {
+@@ -1493,8 +1493,8 @@ struct genl_family batadv_netlink_family
  	.pre_doit = batadv_pre_doit,
  	.post_doit = batadv_post_doit,
  	.module = THIS_MODULE,

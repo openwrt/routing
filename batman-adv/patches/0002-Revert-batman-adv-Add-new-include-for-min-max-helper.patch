@@ -36,7 +36,7 @@ index 9b7269e8a760361c1650b947c77702f0bdcd73d9..00000000000000000000000000000000
 -
 -#endif /* _NET_BATMAN_ADV_COMPAT_LINUX_MINMAX_H_ */
 diff --git a/net/batman-adv/bat_v.c b/net/batman-adv/bat_v.c
-index e1ca2b8c315235f234c9061fc73cde2c1b76aa46..eeb3f6d00d8541b377c9703837ef76b05e8d061e 100644
+index b98aea958e3d6999d7eaf065230182d539384c3b..fd7f30f5f3033fd1a9e21518a71e66b557212374 100644
 --- a/net/batman-adv/bat_v.c
 +++ b/net/batman-adv/bat_v.c
 @@ -15,7 +15,6 @@
@@ -86,10 +86,10 @@ index a5d9d800082bade3a1d52cc040557e41f963fac3..96873d47fac5cb9b4fbfa217eedf1f92
  #include <linux/skbuff.h>
  #include <linux/slab.h>
 diff --git a/net/batman-adv/hard-interface.c b/net/batman-adv/hard-interface.c
-index 4a6a25d551a83b1723e80a349e1a655a2152b0ac..eabde547d308438257622879e77d84c24daa2199 100644
+index 55d97e18aa4a9540692618c458d0ae2a743be6bb..3f97c1218908b7ba16a0707d7e54c589ca1a36a5 100644
 --- a/net/batman-adv/hard-interface.c
 +++ b/net/batman-adv/hard-interface.c
-@@ -18,7 +18,6 @@
+@@ -17,7 +17,6 @@
  #include <linux/kref.h>
  #include <linux/limits.h>
  #include <linux/list.h>
@@ -110,7 +110,7 @@ index 3ddd66e4c29ef532de33c7182cc0cc470b33fd4f..c552bc4168d0abd7bf6d23e570d58380
  #include <linux/netdevice.h>
  #include <linux/printk.h>
 diff --git a/net/batman-adv/netlink.c b/net/batman-adv/netlink.c
-index bdac5dbd899a9540d58052fd32c8c89520927390..b6a703ddd8e97e6a02e8d73c5728802f090ab419 100644
+index e7822d72fe2ccf7d50dc0351fb8530db8e740afd..27f78f0c4aea025b964301e20f972031ab8ad478 100644
 --- a/net/batman-adv/netlink.c
 +++ b/net/batman-adv/netlink.c
 @@ -23,7 +23,6 @@

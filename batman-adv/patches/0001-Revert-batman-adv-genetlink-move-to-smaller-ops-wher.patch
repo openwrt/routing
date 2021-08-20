@@ -107,10 +107,10 @@ index 56a9ab22c062b1d0d01ef9d09ce796075d3d6df7..8f542bef10dc0f2682ab2d428c90df9a
  
  #endif /* _NET_BATMAN_ADV_COMPAT_NET_GENETLINK_H_ */
 diff --git a/net/batman-adv/netlink.c b/net/batman-adv/netlink.c
-index f317d206b411d87b4da2f57e35c3fb78cedfb160..bdac5dbd899a9540d58052fd32c8c89520927390 100644
+index b6cc746e01a641bfb75eba219ffa0c29b1b20dd5..e7822d72fe2ccf7d50dc0351fb8530db8e740afd 100644
 --- a/net/batman-adv/netlink.c
 +++ b/net/batman-adv/netlink.c
-@@ -1351,7 +1351,7 @@ static void batadv_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
+@@ -1359,7 +1359,7 @@ static void batadv_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
  	}
  }
  
@@ -119,7 +119,7 @@ index f317d206b411d87b4da2f57e35c3fb78cedfb160..bdac5dbd899a9540d58052fd32c8c895
  	{
  		.cmd = BATADV_CMD_GET_MESH,
  		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
-@@ -1485,8 +1485,8 @@ struct genl_family batadv_netlink_family __ro_after_init = {
+@@ -1493,8 +1493,8 @@ struct genl_family batadv_netlink_family __ro_after_init = {
  	.pre_doit = batadv_pre_doit,
  	.post_doit = batadv_post_doit,
  	.module = THIS_MODULE,

@@ -6,8 +6,6 @@ Subject: Allow one to disable forking to background in debug_mode 0
  posix/init.c | 19 ++++++++++++++-----
  1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/posix/init.c b/posix/init.c
-index afd409f..901c65a 100644
 --- a/posix/init.c
 +++ b/posix/init.c
 @@ -44,6 +44,7 @@
@@ -18,7 +16,7 @@ index afd409f..901c65a 100644
  
  
  
-@@ -159,6 +160,7 @@ void apply_init_args( int argc, char *argv[] ) {
+@@ -159,6 +160,7 @@ void apply_init_args( int argc, char *ar
  		{"purge-timeout",     required_argument,       0, 'q'},
  		{"disable-aggregation",     no_argument,       0, 'x'},
  		{"disable-client-nat",     no_argument,       0, 'z'},
@@ -26,16 +24,16 @@ index afd409f..901c65a 100644
  		{0, 0, 0, 0}
  	};
  
-@@ -166,7 +168,7 @@ void apply_init_args( int argc, char *argv[] ) {
- 	stop = 0;
- 	prog_name = argv[0];
+@@ -169,7 +171,7 @@ void apply_init_args( int argc, char *ar
+ 	if ( strstr( SOURCE_VERSION, "-" ) != NULL )
+ 		printf( "WARNING: You are using the unstable batman branch. If you are interested in *using* batman get the latest stable release !\n" );
  
 -	while ( ( optchar = getopt_long( argc, argv, "a:A:bcd:hHio:g:p:r:s:vV", long_options, &option_index ) ) != -1 ) {
 +	while ( ( optchar = getopt_long( argc, argv, "a:A:bcd:hHio:g:p:r:s:vVD", long_options, &option_index ) ) != -1 ) {
  
  		switch ( optchar ) {
  
-@@ -378,6 +380,11 @@ void apply_init_args( int argc, char *argv[] ) {
+@@ -381,6 +383,11 @@ void apply_init_args( int argc, char *ar
  				found_args++;
  				break;
  
@@ -47,7 +45,7 @@ index afd409f..901c65a 100644
  			case 'h':
  			default:
  				usage();
-@@ -536,12 +543,14 @@ void apply_init_args( int argc, char *argv[] ) {
+@@ -539,12 +546,14 @@ void apply_init_args( int argc, char *ar
  		/* daemonize */
  		if (debug_level == 0) {
  

@@ -1,0 +1,31 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Tue, 18 May 2021 21:00:27 +0200
+Subject: batman-adv: Avoid WARN_ON timing related checks
+
+The soft/batadv interface for a queued OGM can be changed during the time
+the OGM was queued for transmission and when the OGM is actually
+transmitted by the worker.
+
+But WARN_ON must be used to denote kernel bugs and not to print simple
+warnings. A warning can simply be printed using pr_warn.
+
+Reported-by: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Reported-by: syzbot+c0b807de416427ff3dd1@syzkaller.appspotmail.com
+Fixes: 29b9256e6631 ("batman-adv: consider outgoing interface in OGM sending")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/5061f9c502d7101912089d8f4a7866e0a926a49a
+
+--- a/net/batman-adv/bat_iv_ogm.c
++++ b/net/batman-adv/bat_iv_ogm.c
+@@ -409,8 +409,10 @@ static void batadv_iv_ogm_emit(struct ba
+ 	if (WARN_ON(!forw_packet->if_outgoing))
+ 		return;
+ 
+-	if (WARN_ON(forw_packet->if_outgoing->soft_iface != soft_iface))
++	if (forw_packet->if_outgoing->soft_iface != soft_iface) {
++		pr_warn("%s: soft interface switch for queued OGM\n", __func__);
+ 		return;
++	}
+ 
+ 	if (forw_packet->if_incoming->if_status != BATADV_IF_ACTIVE)
+ 		return;

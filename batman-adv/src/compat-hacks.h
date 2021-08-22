@@ -51,6 +51,7 @@ inline void __batadv_br_ip_list_check(void)
 
 #if LINUX_VERSION_IS_LESS(5, 14, 0)
 
+#include <linux/if_bridge.h>
 #include <net/addrconf.h>
 
 #if IS_ENABLED(CONFIG_IPV6)

@@ -106,7 +106,7 @@ This reverts commit 725b4ef5be840cfcd0ca33b9393c14dee40c10f7.
  #endif /* _NET_BATMAN_ADV_COMPAT_NET_GENETLINK_H_ */
 --- a/net/batman-adv/netlink.c
 +++ b/net/batman-adv/netlink.c
-@@ -1359,7 +1359,7 @@ static void batadv_post_doit(const struc
+@@ -1357,7 +1357,7 @@ static void batadv_post_doit(const struc
  	}
  }
  
@@ -115,7 +115,7 @@ This reverts commit 725b4ef5be840cfcd0ca33b9393c14dee40c10f7.
  	{
  		.cmd = BATADV_CMD_GET_MESH,
  		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
-@@ -1493,8 +1493,8 @@ struct genl_family batadv_netlink_family
+@@ -1491,8 +1491,8 @@ struct genl_family batadv_netlink_family
  	.pre_doit = batadv_pre_doit,
  	.post_doit = batadv_post_doit,
  	.module = THIS_MODULE,

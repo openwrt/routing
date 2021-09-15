@@ -92,6 +92,28 @@ br_multicast_has_router_adjacent(struct net_device *dev, int proto)
 
 #endif /* LINUX_VERSION_IS_LESS(5, 14, 0) */
 
+#if LINUX_VERSION_IS_LESS(5, 15, 0)
+
+static inline void batadv_dev_put(struct net_device *dev)
+{
+	if (!dev)
+		return;
+
+	dev_put(dev);
+}
+#define dev_put batadv_dev_put
+
+static inline void batadv_dev_hold(struct net_device *dev)
+{
+	if (!dev)
+		return;
+
+	dev_hold(dev);
+}
+#define dev_hold batadv_dev_hold
+
+#endif /* LINUX_VERSION_IS_LESS(5, 15, 0) */
+
 /* <DECLARE_EWMA> */
 
 #include <linux/version.h>

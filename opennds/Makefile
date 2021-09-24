@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=opennds
 PKG_FIXUP:=autoreconf
-PKG_VERSION:=9.3.0
+PKG_VERSION:=9.4.0
 PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/opennds/tar.gz/v$(PKG_VERSION)?
 PKG_SOURCE:=opennds-$(PKG_VERSION).tar.gz
-PKG_HASH:=719e128c4f08af4ad1924f8f1b1b63262c16e10f63b390a4c5c394cfc232aa20
+PKG_HASH:=fc2fa2e810ade5b281885f6ca3c2bb7ceb8d87176f2072e8ef9d75aa816e21e9
 PKG_BUILD_DIR:=$(BUILD_DIR)/openNDS-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -34,7 +34,8 @@ endef
 define Package/opennds/description
 	openNDS is a Captive Portal solution that offers an instant way to provide restricted access to the Internet.
 	With little or no configuration, a dynamically generated and adaptive splash page sequence is automatically served.
-	Internet access is granted by either a click to continue button, or after credential verification.
+	Both client driven Captive Portal Detection (CPD) and gateway driven Captive Portal Identification (CPI) are supported.
+	Internet access is granted by either a click to continue button, or after credential verification as a result of filling in a login form.
 	The package incorporates the FAS API allowing many flexible customisation options.
 	The creation of sophisticated third party authentication applications is fully supported.
 	Internet hosted https portals can be utilised to inspire maximum user confidence.

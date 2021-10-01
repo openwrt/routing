@@ -1,5 +1,7 @@
 #!/bin/sh /etc/rc.common
 
+. /usr/share/libubox/jshn.sh
+
 USE_PROCD=1
 START=95
 STOP=01
@@ -58,8 +60,30 @@ stop_service() {
     sync && wait
 }
 
+watchdog_procd_runnig() {
+	watch=$(ubus call system watchdog)
+	json_load "$watch"
+	json_get_var watchdogstatus status
+	if [[ "$watchdogstatus" == "running" ]] ; then
+        echo "1"
+        return
+	fi
+    echo "0"
+}
+
 service_stopped() {
     log "Naywatch Stopped!"
-    log "Handover Watchdog to procd again:"
-    ubus call system watchdog '{"magicclose":true,"stop":false}' > /dev/null
+    log "Try to handover watchdog to procd again."
+    for i in 1 2 3 4 5 6 7 8 9 10 ; do
+        sleep 5
+        ubus call system watchdog '{"stop":false}' > /dev/null
+        if [[ $(watchdog_procd_runnig) == "1" ]] ; then
+            break
+        fi
+    done
+    if [[ $(watchdog_procd_runnig) == "1" ]] ; then
+        log "Handover sucessfully!"
+    else
+        log "Handover to procd failed! Device can reboot!"
+    fi
 }

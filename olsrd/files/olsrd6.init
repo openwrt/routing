@@ -15,10 +15,24 @@ wait_for_network()
 	ubus -t 15 wait_for network.interface.$1 2>/dev/null
 }
 
+wait_for_wireless()
+{
+	local count=0
+	ubus -t 15 wait_for network.wireless 2>/dev/null
+	while [ $count -lt 30 ]; do
+		if  [ "$(ubus call network.wireless status | jsonfilter -e '@[*]["pending"]' | grep true | wc -l)" == "0" ]; then
+			break
+		fi
+		count=$((count+1))
+		sleep 1
+	done
+}
+
 boot()
 {
 	config_load network
 	config_foreach wait_for_network interface
+	wait_for_wireless
 	rc_procd start_service
 }
 

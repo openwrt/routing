@@ -105,6 +105,8 @@ static int babeld_ubus_get_xroutes(struct ubus_context *ctx_local,
   LIST_HEAD(xroute_ipv4_list);
   LIST_HEAD(xroute_ipv6_list);
 
+  blob_buf_init(&b, 0);
+
   xroutes = xroute_stream();
   if (xroutes) {
     while (1) {
@@ -125,7 +127,6 @@ static int babeld_ubus_get_xroutes(struct ubus_context *ctx_local,
     xroute_stream_done(xroutes);
   }
 
-  blob_buf_init(&b, 0);
   ipv4 = blobmsg_open_table(&b, "IPv4");
   list_for_each_entry_safe(cur, tmp, &xroute_ipv4_list, list) {
     babeld_add_xroute_buf(cur->xroute, &b);
@@ -230,7 +231,6 @@ static int babeld_ubus_get_routes(struct ubus_context *ctx_local,
     route_stream_done(routes);
   }
 
-  blob_buf_init(&b, 0);
   ipv4 = blobmsg_open_table(&b, "IPv4");
   list_for_each_entry_safe(cur, tmp, &route_ipv4_list, list) {
     babeld_add_route_buf(cur->route, &b);
@@ -300,8 +300,6 @@ static int babeld_ubus_get_neighbours(struct ubus_context *ctx_local,
       list_add(&n->list, &neighbour_ipv6_list);
     }
   }
-
-  blob_buf_init(&b, 0);
 
   ipv4 = blobmsg_open_table(&b, "IPv4");
   list_for_each_entry_safe(cur, tmp, &neighbour_ipv4_list, list) {

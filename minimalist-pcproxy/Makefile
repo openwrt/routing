@@ -9,10 +9,11 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=minimalist-pcproxy
 PKG_SOURCE_VERSION:=2d6d1b0b0a3b79a9b4a9b0a7606a84600a967bcb
 PKG_VERSION:=2015-01-12-$(PKG_SOURCE_VERSION)
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/fingon/minimalist-pcproxy.git
+PKG_MIRROR_HASH:=d3e872ee6207829ef142d22d591d203e4836f6aa150167411b542e8df4af4d53
 PKG_MAINTAINER:=Markus Stenberg <fingon@iki.fi>
 PKG_LICENSE:=GPL-2.0
 

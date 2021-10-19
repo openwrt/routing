@@ -1,7 +1,5 @@
-Index: mcproxy-2017-08-24-93b5ace42268160ebbfff4c61818fb15fa2d9b99/mcproxy/src/utils/mc_socket.cpp
-===================================================================
---- mcproxy-2017-08-24-93b5ace42268160ebbfff4c61818fb15fa2d9b99.orig/mcproxy/src/utils/mc_socket.cpp
-+++ mcproxy-2017-08-24-93b5ace42268160ebbfff4c61818fb15fa2d9b99/mcproxy/src/utils/mc_socket.cpp
+--- a/mcproxy/src/utils/mc_socket.cpp
++++ b/mcproxy/src/utils/mc_socket.cpp
 @@ -37,6 +37,10 @@
  #include <numeric>
  #include <unistd.h>
@@ -13,10 +11,8 @@ Index: mcproxy-2017-08-24-93b5ace42268160ebbfff4c61818fb15fa2d9b99/mcproxy/src/u
  std::string ipAddrResolver(std::string ipAddr)
  {
      std::string str[][2] = {
-Index: mcproxy-2017-08-24-93b5ace42268160ebbfff4c61818fb15fa2d9b99/mcproxy/src/utils/sourcefilter.cpp
-===================================================================
 --- /dev/null
-+++ mcproxy-2017-08-24-93b5ace42268160ebbfff4c61818fb15fa2d9b99/mcproxy/src/utils/sourcefilter.cpp
++++ b/mcproxy/src/utils/sourcefilter.cpp
 @@ -0,0 +1,165 @@
 +/* Get source filter.  Linux version.
 +   Copyright (C) 2004-2014 Free Software Foundation, Inc.

@@ -1,7 +1,5 @@
-Index: mcproxy-2017-08-24-93b5ace42268160ebbfff4c61818fb15fa2d9b99/mcproxy/src/proxy/proxy_instance.cpp
-===================================================================
---- mcproxy-2017-08-24-93b5ace42268160ebbfff4c61818fb15fa2d9b99.orig/mcproxy/src/proxy/proxy_instance.cpp
-+++ mcproxy-2017-08-24-93b5ace42268160ebbfff4c61818fb15fa2d9b99/mcproxy/src/proxy/proxy_instance.cpp
+--- a/mcproxy/src/proxy/proxy_instance.cpp
++++ b/mcproxy/src/proxy/proxy_instance.cpp
 @@ -171,6 +171,9 @@ void proxy_instance::worker_thread()
      HC_LOG_TRACE("");
      while (m_running) {

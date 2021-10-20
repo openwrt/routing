@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=ohybridproxy
 PKG_SOURCE_VERSION:=0dfef1eb5f067250a5f24a899536879ea4fdc4c5
 PKG_SOURCE_DATE:=2020-05-22
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/sbyx/ohybridproxy.git
@@ -23,9 +23,6 @@ PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
-
-# Spammy debug builds for now
-CMAKE_OPTIONS += -DL_LEVEL=7
 
 define Package/ohybridproxy
   SECTION:=net

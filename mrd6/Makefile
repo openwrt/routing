@@ -52,7 +52,8 @@ MRD6_MAKEFLAGS:= \
 	LDFLAGS="$(TARGET_LDFLAGS) -ldl -lm" \
 	MODULE_CXX="\$$$$(CC) -shared \$$$$(CXXFLAGS) \$$$$(LDFLAGS)" \
 	DESTDIR="$(PKG_INSTALL_DIR)" \
-	PREFIX="/usr"
+	PREFIX="/usr" \
+	KERNEL=Linux
 
 define Build/Compile
 	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR)/src $(MRD6_MAKEFLAGS) all

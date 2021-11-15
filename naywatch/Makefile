@@ -23,7 +23,12 @@ define Package/naywatch
 endef
 
 define Package/naywatch/description
-Reboots or triggers watchdog if no link local neighbor is available.
+Reboots or triggers watchdog if no link-local neighbor is available.
+
+Important:
+Be careful when you do a sysupgrade. Stop naywatch first, and make
+sure procd took control again of the watchdog.
+You can do this using 'ubus call system watchdog'.  Status should be "running".
 endef
 
 define Package/naywatch/conffiles

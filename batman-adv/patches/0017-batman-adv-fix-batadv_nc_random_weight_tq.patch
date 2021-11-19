@@ -36,11 +36,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/db48c60b0edb995450ee846157364bd09bb23762
 
-diff --git a/net/batman-adv/network-coding.c b/net/batman-adv/network-coding.c
-index c5e7906045f3c62c052400c44a18bca0a38499ba..b7f3d9ef83cfcc136888cd2487dcdd88cb16d6d9 100644
 --- a/net/batman-adv/network-coding.c
 +++ b/net/batman-adv/network-coding.c
-@@ -1009,15 +1009,8 @@ static struct batadv_nc_path *batadv_nc_get_path(struct batadv_priv *bat_priv,
+@@ -1009,15 +1009,8 @@ static struct batadv_nc_path *batadv_nc_
   */
  static u8 batadv_nc_random_weight_tq(u8 tq)
  {

@@ -28,11 +28,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/22e740c5e6c9342e0f5028beb3d14b84a018d113
 
-diff --git a/net/batman-adv/routing.c b/net/batman-adv/routing.c
-index f0f864820dead3e7811a6b0d522ec84954d9aec2..708e90cb18a6e95409f50e41708d903dd8301f9c 100644
 --- a/net/batman-adv/routing.c
 +++ b/net/batman-adv/routing.c
-@@ -826,6 +826,10 @@ static bool batadv_check_unicast_ttvn(struct batadv_priv *bat_priv,
+@@ -826,6 +826,10 @@ static bool batadv_check_unicast_ttvn(st
  	vid = batadv_get_vid(skb, hdr_len);
  	ethhdr = (struct ethhdr *)(skb->data + hdr_len);
  

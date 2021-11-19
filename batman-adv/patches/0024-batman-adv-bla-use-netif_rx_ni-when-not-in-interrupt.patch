@@ -13,11 +13,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/3747f81a1380b65740fc52fc71c7a3af4c6e49de
 
-diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
-index 663a53b6d36e65508b4296d86cecdd808c653836..5f6309ade1ea19f6a0bd27e8cbc5fcfba8f7dda5 100644
 --- a/net/batman-adv/bridge_loop_avoidance.c
 +++ b/net/batman-adv/bridge_loop_avoidance.c
-@@ -437,7 +437,10 @@ static void batadv_bla_send_claim(struct batadv_priv *bat_priv, u8 *mac,
+@@ -437,7 +437,10 @@ static void batadv_bla_send_claim(struct
  	batadv_add_counter(bat_priv, BATADV_CNT_RX_BYTES,
  			   skb->len + ETH_HLEN);
  

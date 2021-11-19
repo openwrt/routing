@@ -19,11 +19,9 @@ Acked-by: Antonio Quartulli <a@unstable.cc>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/728aea06f38e0e4d70f4f7d43698187f7f7055c5
 
-diff --git a/net/batman-adv/distributed-arp-table.c b/net/batman-adv/distributed-arp-table.c
-index b0af3a11d4069cb7e44419d4494f20dd653dbca8..ec7bf5a4a9fc724b63da7bfd7ece79f32b104d99 100644
 --- a/net/batman-adv/distributed-arp-table.c
 +++ b/net/batman-adv/distributed-arp-table.c
-@@ -285,6 +285,7 @@ static u32 batadv_hash_dat(const void *data, u32 size)
+@@ -285,6 +285,7 @@ static u32 batadv_hash_dat(const void *d
  	u32 hash = 0;
  	const struct batadv_dat_entry *dat = data;
  	const unsigned char *key;
@@ -31,7 +29,7 @@ index b0af3a11d4069cb7e44419d4494f20dd653dbca8..ec7bf5a4a9fc724b63da7bfd7ece79f3
  	u32 i;
  
  	key = (const unsigned char *)&dat->ip;
-@@ -294,7 +295,8 @@ static u32 batadv_hash_dat(const void *data, u32 size)
+@@ -294,7 +295,8 @@ static u32 batadv_hash_dat(const void *d
  		hash ^= (hash >> 6);
  	}
  

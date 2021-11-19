@@ -12,8 +12,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/8069c581f9097f1f9398f2d49047a1dab8093821
 
-diff --git a/net/batman-adv/bat_v_ogm.c b/net/batman-adv/bat_v_ogm.c
-index 034bdc5e31e7b1b6f12c06da9977b3b6663da7f3..74452e9385b1a6e81be64af259dfc371cd3e9655 100644
 --- a/net/batman-adv/bat_v_ogm.c
 +++ b/net/batman-adv/bat_v_ogm.c
 @@ -17,11 +17,12 @@
@@ -30,7 +28,7 @@ index 034bdc5e31e7b1b6f12c06da9977b3b6663da7f3..74452e9385b1a6e81be64af259dfc371
  #include <linux/skbuff.h>
  #include <linux/slab.h>
  #include <linux/stddef.h>
-@@ -130,7 +131,7 @@ static void batadv_v_ogm_send_softif(struct batadv_priv *bat_priv)
+@@ -130,7 +131,7 @@ static void batadv_v_ogm_send_softif(str
  	u16 tvlv_len = 0;
  	int ret;
  
@@ -39,7 +37,7 @@ index 034bdc5e31e7b1b6f12c06da9977b3b6663da7f3..74452e9385b1a6e81be64af259dfc371
  
  	if (atomic_read(&bat_priv->mesh_state) == BATADV_MESH_DEACTIVATING)
  		goto out;
-@@ -230,11 +231,12 @@ static void batadv_v_ogm_send(struct work_struct *work)
+@@ -230,11 +231,12 @@ static void batadv_v_ogm_send(struct wor
  	struct batadv_priv_bat_v *bat_v;
  	struct batadv_priv *bat_priv;
  
@@ -54,7 +52,7 @@ index 034bdc5e31e7b1b6f12c06da9977b3b6663da7f3..74452e9385b1a6e81be64af259dfc371
  }
  
  /**
-@@ -263,13 +265,15 @@ void batadv_v_ogm_primary_iface_set(struct batadv_hard_iface *primary_iface)
+@@ -263,13 +265,15 @@ void batadv_v_ogm_primary_iface_set(stru
  	struct batadv_priv *bat_priv = netdev_priv(primary_iface->soft_iface);
  	struct batadv_ogm2_packet *ogm_packet;
  
@@ -73,7 +71,7 @@ index 034bdc5e31e7b1b6f12c06da9977b3b6663da7f3..74452e9385b1a6e81be64af259dfc371
  }
  
  /**
-@@ -873,8 +877,6 @@ int batadv_v_ogm_init(struct batadv_priv *bat_priv)
+@@ -873,8 +877,6 @@ int batadv_v_ogm_init(struct batadv_priv
  	unsigned char *ogm_buff;
  	u32 random_seqno;
  
@@ -82,7 +80,7 @@ index 034bdc5e31e7b1b6f12c06da9977b3b6663da7f3..74452e9385b1a6e81be64af259dfc371
  	bat_priv->bat_v.ogm_buff_len = BATADV_OGM2_HLEN;
  	ogm_buff = kzalloc(bat_priv->bat_v.ogm_buff_len, GFP_ATOMIC);
  	if (!ogm_buff)
-@@ -893,6 +895,8 @@ int batadv_v_ogm_init(struct batadv_priv *bat_priv)
+@@ -893,6 +895,8 @@ int batadv_v_ogm_init(struct batadv_priv
  	atomic_set(&bat_priv->bat_v.ogm_seqno, random_seqno);
  	INIT_DELAYED_WORK(&bat_priv->bat_v.ogm_wq, batadv_v_ogm_send);
  
@@ -91,7 +89,7 @@ index 034bdc5e31e7b1b6f12c06da9977b3b6663da7f3..74452e9385b1a6e81be64af259dfc371
  	return 0;
  }
  
-@@ -904,7 +908,11 @@ void batadv_v_ogm_free(struct batadv_priv *bat_priv)
+@@ -904,7 +908,11 @@ void batadv_v_ogm_free(struct batadv_pri
  {
  	cancel_delayed_work_sync(&bat_priv->bat_v.ogm_wq);
  
@@ -103,8 +101,6 @@ index 034bdc5e31e7b1b6f12c06da9977b3b6663da7f3..74452e9385b1a6e81be64af259dfc371
 +
 +	mutex_unlock(&bat_priv->bat_v.ogm_buff_mutex);
  }
-diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
-index f3084b005ed641d8ab8910df542762bc7dff450a..09f44bac693fcb3dc13c33319f4928a472a14b2e 100644
 --- a/net/batman-adv/types.h
 +++ b/net/batman-adv/types.h
 @@ -16,6 +16,7 @@

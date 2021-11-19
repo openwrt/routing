@@ -15,11 +15,9 @@ Fixes: db56e4ecf5c2 ("batman-adv: Fragment and send skbs larger than mtu")
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/3e3ff987876d3be70d928561acbefe5a48ab1654
 
-diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
-index f1d202ff396cd69949915a9e90e763f3a68255b7..0da90e73c79bffe86072f0d704f0777d76b35f4c 100644
 --- a/net/batman-adv/fragmentation.c
 +++ b/net/batman-adv/fragmentation.c
-@@ -527,13 +527,14 @@ int batadv_frag_send_packet(struct sk_buff *skb,
+@@ -527,13 +527,14 @@ int batadv_frag_send_packet(struct sk_bu
  		frag_header.no++;
  	}
  

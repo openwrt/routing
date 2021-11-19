@@ -20,11 +20,9 @@ Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/a089c55ca004b396d340baae58abe9a79f32cc0f
 
-diff --git a/net/batman-adv/bat_iv_ogm.c b/net/batman-adv/bat_iv_ogm.c
-index 5b0b20e6da956b4333b118bce1c09c5acef6d66f..d88a4de0223727d25cf36839e46d7777449f025a 100644
 --- a/net/batman-adv/bat_iv_ogm.c
 +++ b/net/batman-adv/bat_iv_ogm.c
-@@ -789,6 +789,10 @@ static void batadv_iv_ogm_schedule_buff(struct batadv_hard_iface *hard_iface)
+@@ -789,6 +789,10 @@ static void batadv_iv_ogm_schedule_buff(
  
  	lockdep_assert_held(&hard_iface->bat_iv.ogm_buff_mutex);
  

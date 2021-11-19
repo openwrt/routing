@@ -32,11 +32,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/c5cb6a670cc3070d9d5c5562f95fa75faac767ba
 
-diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
-index ffa44d7f7ee5d221e8f511a446eb079a3686844b..a6b26ca5c6973f230284eaa55ad80808593e796b 100644
 --- a/net/batman-adv/bridge_loop_avoidance.c
 +++ b/net/batman-adv/bridge_loop_avoidance.c
-@@ -1581,13 +1581,16 @@ int batadv_bla_init(struct batadv_priv *bat_priv)
+@@ -1581,13 +1581,16 @@ int batadv_bla_init(struct batadv_priv *
  }
  
  /**
@@ -44,21 +42,22 @@ index ffa44d7f7ee5d221e8f511a446eb079a3686844b..a6b26ca5c6973f230284eaa55ad80808
 + * batadv_bla_check_duplist() - Check if a frame is in the broadcast dup.
   * @bat_priv: the bat priv with all the soft interface information
 - * @skb: contains the bcast_packet to be checked
+- *
+- * check if it is on our broadcast list. Another gateway might
+- * have sent the same packet because it is connected to the same backbone,
+- * so we have to remove this duplicate.
 + * @skb: contains the multicast packet to be checked
 + * @payload_ptr: pointer to position inside the head buffer of the skb
 + *  marking the start of the data to be CRC'ed
 + * @orig: originator mac address, NULL if unknown
-  *
-- * check if it is on our broadcast list. Another gateway might
-- * have sent the same packet because it is connected to the same backbone,
-- * so we have to remove this duplicate.
++ *
 + * Check if it is on our broadcast list. Another gateway might have sent the
 + * same packet because it is connected to the same backbone, so we have to
 + * remove this duplicate.
   *
   * This is performed by checking the CRC, which will tell us
   * with a good chance that it is the same packet. If it is furthermore
-@@ -1596,19 +1599,17 @@ int batadv_bla_init(struct batadv_priv *bat_priv)
+@@ -1596,19 +1599,17 @@ int batadv_bla_init(struct batadv_priv *
   *
   * Return: true if a packet is in the duplicate list, false otherwise.
   */
@@ -84,7 +83,7 @@ index ffa44d7f7ee5d221e8f511a446eb079a3686844b..a6b26ca5c6973f230284eaa55ad80808
  
  	spin_lock_bh(&bat_priv->bla.bcast_duplist_lock);
  
-@@ -1627,8 +1628,21 @@ bool batadv_bla_check_bcast_duplist(struct batadv_priv *bat_priv,
+@@ -1627,8 +1628,21 @@ bool batadv_bla_check_bcast_duplist(stru
  		if (entry->crc != crc)
  			continue;
  
@@ -108,7 +107,7 @@ index ffa44d7f7ee5d221e8f511a446eb079a3686844b..a6b26ca5c6973f230284eaa55ad80808
  
  		/* this entry seems to match: same crc, not too old,
  		 * and from another gw. therefore return true to forbid it.
-@@ -1644,7 +1658,14 @@ bool batadv_bla_check_bcast_duplist(struct batadv_priv *bat_priv,
+@@ -1644,7 +1658,14 @@ bool batadv_bla_check_bcast_duplist(stru
  	entry = &bat_priv->bla.bcast_duplist[curr];
  	entry->crc = crc;
  	entry->entrytime = jiffies;
@@ -124,11 +123,10 @@ index ffa44d7f7ee5d221e8f511a446eb079a3686844b..a6b26ca5c6973f230284eaa55ad80808
  	bat_priv->bla.bcast_duplist_curr = curr;
  
  out:
-@@ -1653,6 +1674,48 @@ bool batadv_bla_check_bcast_duplist(struct batadv_priv *bat_priv,
- 	return ret;
+@@ -1654,6 +1675,48 @@ out:
  }
  
-+/**
+ /**
 + * batadv_bla_check_ucast_duplist() - Check if a frame is in the broadcast dup.
 + * @bat_priv: the bat priv with all the soft interface information
 + * @skb: contains the multicast packet to be checked, decapsulated from a
@@ -170,10 +168,11 @@ index ffa44d7f7ee5d221e8f511a446eb079a3686844b..a6b26ca5c6973f230284eaa55ad80808
 +					bcast_packet->orig);
 +}
 +
- /**
++/**
   * batadv_bla_is_backbone_gw_orig() - Check if the originator is a gateway for
   *  the VLAN identified by vid.
-@@ -1867,6 +1930,14 @@ bool batadv_bla_rx(struct batadv_priv *bat_priv, struct sk_buff *skb,
+  * @bat_priv: the bat priv with all the soft interface information
+@@ -1867,6 +1930,14 @@ bool batadv_bla_rx(struct batadv_priv *b
  			    packet_type == BATADV_UNICAST)
  				goto handled;
  

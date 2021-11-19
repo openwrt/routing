@@ -28,11 +28,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/d41cc7cb62c184b2fb8ab97fda45815918200001
 
-diff --git a/net/batman-adv/bat_v_ogm.c b/net/batman-adv/bat_v_ogm.c
-index 9c42152829c976a2fb6c4395ab4d17c34fe47682..330204a73a0d3d9e4083656b82ff7b9d73a48fdc 100644
 --- a/net/batman-adv/bat_v_ogm.c
 +++ b/net/batman-adv/bat_v_ogm.c
-@@ -704,6 +704,12 @@ static void batadv_v_ogm_process(const struct sk_buff *skb, int ogm_offset,
+@@ -704,6 +704,12 @@ static void batadv_v_ogm_process(const s
  		   ntohl(ogm_packet->seqno), ogm_throughput, ogm_packet->ttl,
  		   ogm_packet->version, ntohs(ogm_packet->tvlv_len));
  
@@ -45,7 +43,7 @@ index 9c42152829c976a2fb6c4395ab4d17c34fe47682..330204a73a0d3d9e4083656b82ff7b9d
  	/* If the throughput metric is 0, immediately drop the packet. No need
  	 * to create orig_node / neigh_node for an unusable route.
  	 */
-@@ -831,11 +837,6 @@ int batadv_v_ogm_packet_recv(struct sk_buff *skb,
+@@ -831,11 +837,6 @@ int batadv_v_ogm_packet_recv(struct sk_b
  	if (batadv_is_my_mac(bat_priv, ethhdr->h_source))
  		goto free_skb;
  

@@ -24,11 +24,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/4515f5e6a4ccbe1c563b05f2d487eb9eef3c9740
 
-diff --git a/net/batman-adv/bat_v_ogm.c b/net/batman-adv/bat_v_ogm.c
-index 74452e9385b1a6e81be64af259dfc371cd3e9655..9c42152829c976a2fb6c4395ab4d17c34fe47682 100644
 --- a/net/batman-adv/bat_v_ogm.c
 +++ b/net/batman-adv/bat_v_ogm.c
-@@ -723,7 +723,7 @@ static void batadv_v_ogm_process(const struct sk_buff *skb, int ogm_offset,
+@@ -723,7 +723,7 @@ static void batadv_v_ogm_process(const s
  
  	orig_node = batadv_v_ogm_orig_get(bat_priv, ogm_packet->orig);
  	if (!orig_node)

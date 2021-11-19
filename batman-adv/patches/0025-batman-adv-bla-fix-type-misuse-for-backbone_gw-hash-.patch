@@ -19,11 +19,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/398a706cd46c1fc085aef56ae8ed11f76e182bd1
 
-diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
-index 5f6309ade1ea19f6a0bd27e8cbc5fcfba8f7dda5..62d2e766dd3929e54070c13225f0f71c7f59a212 100644
 --- a/net/batman-adv/bridge_loop_avoidance.c
 +++ b/net/batman-adv/bridge_loop_avoidance.c
-@@ -83,11 +83,12 @@ static inline u32 batadv_choose_claim(const void *data, u32 size)
+@@ -83,11 +83,12 @@ static inline u32 batadv_choose_claim(co
   */
  static inline u32 batadv_choose_backbone_gw(const void *data, u32 size)
  {

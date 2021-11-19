@@ -28,8 +28,6 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/6e860b3d5e4147bafcda32bf9b3e769926f232c5
 
-diff --git a/compat-include/linux/ethtool.h b/compat-include/linux/ethtool.h
-index e1f39c3377febbd650a75206aafa9ae3e807762a..8dcbe02c3decf941e892af70a0a67653b010e65e 100644
 --- a/compat-include/linux/ethtool.h
 +++ b/compat-include/linux/ethtool.h
 @@ -21,7 +21,6 @@ struct batadv_ethtool_link_ksettings {
@@ -40,7 +38,7 @@ index e1f39c3377febbd650a75206aafa9ae3e807762a..8dcbe02c3decf941e892af70a0a67653
  	} base;
  };
  
-@@ -42,7 +41,6 @@ batadv_ethtool_get_link_ksettings(struct net_device *dev,
+@@ -42,7 +41,6 @@ batadv_ethtool_get_link_ksettings(struct
  		return ret;
  
  	link_ksettings->base.duplex = cmd.duplex;
@@ -48,11 +46,9 @@ index e1f39c3377febbd650a75206aafa9ae3e807762a..8dcbe02c3decf941e892af70a0a67653
  	link_ksettings->base.speed = ethtool_cmd_speed(&cmd);
  
  	return 0;
-diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
-index 2614a9caee008539cc489b71dabdc36ac0ae3752..a39af0eefad313101812118181ec0376b21b79bb 100644
 --- a/net/batman-adv/bat_v_elp.c
 +++ b/net/batman-adv/bat_v_elp.c
-@@ -120,20 +120,7 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
+@@ -120,20 +120,7 @@ static u32 batadv_v_elp_get_throughput(s
  	rtnl_lock();
  	ret = __ethtool_get_link_ksettings(hard_iface->net_dev, &link_settings);
  	rtnl_unlock();

@@ -23,11 +23,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/fcdf008ffd749246632d1f9423163af5dc3f8c7f
 
-diff --git a/net/batman-adv/gateway_client.c b/net/batman-adv/gateway_client.c
-index 47df4c678988613f7410acb96889558eabdf396d..89c9097007c3a575836018df9e0fe97731a19619 100644
 --- a/net/batman-adv/gateway_client.c
 +++ b/net/batman-adv/gateway_client.c
-@@ -703,8 +703,10 @@ batadv_gw_dhcp_recipient_get(struct sk_buff *skb, unsigned int *header_len,
+@@ -703,8 +703,10 @@ batadv_gw_dhcp_recipient_get(struct sk_b
  
  	chaddr_offset = *header_len + BATADV_DHCP_CHADDR_OFFSET;
  	/* store the client address if the message is going to a client */

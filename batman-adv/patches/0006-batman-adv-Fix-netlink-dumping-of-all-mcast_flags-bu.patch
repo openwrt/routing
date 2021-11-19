@@ -14,11 +14,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/d1de7f7aa316d6f7b3268f61afa88f5d2c1a5db5
 
-diff --git a/net/batman-adv/multicast.c b/net/batman-adv/multicast.c
-index ec54e236e345432496df8f55b2e00fbad92f3444..50fe9dfb088b60a911756c8c22cac1db6ef10ca4 100644
 --- a/net/batman-adv/multicast.c
 +++ b/net/batman-adv/multicast.c
-@@ -1653,7 +1653,7 @@ __batadv_mcast_flags_dump(struct sk_buff *msg, u32 portid,
+@@ -1653,7 +1653,7 @@ __batadv_mcast_flags_dump(struct sk_buff
  
  	while (bucket_tmp < hash->size) {
  		if (batadv_mcast_flags_dump_bucket(msg, portid, cb, hash,

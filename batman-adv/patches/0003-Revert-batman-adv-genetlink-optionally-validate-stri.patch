@@ -7,11 +7,9 @@ API of Linux 5.2.
 
 This reverts commit 2ee47abaeb35ca62bb909830e10b0e973393b853.
 
-diff --git a/compat-include/net/genetlink.h b/compat-include/net/genetlink.h
-index fbfdb733a3dd63c251def43cae416c7fe32cadab..7d17a705273650355f074788e9220fc4981b0db1 100644
 --- a/compat-include/net/genetlink.h
 +++ b/compat-include/net/genetlink.h
-@@ -33,25 +33,6 @@ void batadv_genl_dump_check_consistent(struct netlink_callback *cb,
+@@ -33,25 +33,6 @@ void batadv_genl_dump_check_consistent(s
  
  #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 2, 0)
  
@@ -55,7 +53,7 @@ index fbfdb733a3dd63c251def43cae416c7fe32cadab..7d17a705273650355f074788e9220fc4
  static inline int batadv_genl_register_family(struct batadv_genl_family *family)
  {
  	struct genl_ops *ops;
-@@ -99,20 +82,12 @@ static inline int batadv_genl_register_family(struct batadv_genl_family *family)
+@@ -99,20 +82,12 @@ static inline int batadv_genl_register_f
  	family->family.n_mcgrps = family->n_mcgrps;
  	family->family.module = family->module;
  
@@ -78,7 +76,7 @@ index fbfdb733a3dd63c251def43cae416c7fe32cadab..7d17a705273650355f074788e9220fc4
  
  	family->family.ops = ops;
  	family->copy_ops = ops;
-@@ -120,17 +95,6 @@ static inline int batadv_genl_register_family(struct batadv_genl_family *family)
+@@ -120,17 +95,6 @@ static inline int batadv_genl_register_f
  	return genl_register_family(&family->family);
  }
  
@@ -96,11 +94,9 @@ index fbfdb733a3dd63c251def43cae416c7fe32cadab..7d17a705273650355f074788e9220fc4
  #define genl_register_family(family) \
  	batadv_genl_register_family((family))
  
-diff --git a/net/batman-adv/netlink.c b/net/batman-adv/netlink.c
-index a67720fad46ca496c932c0306e2f7ec4ed496fc9..e7907308b331ddc3e4917ff7d648bca27a65536b 100644
 --- a/net/batman-adv/netlink.c
 +++ b/net/batman-adv/netlink.c
-@@ -1343,34 +1343,29 @@ static void batadv_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
+@@ -1343,34 +1343,29 @@ static void batadv_post_doit(const struc
  static const struct genl_ops batadv_netlink_ops[] = {
  	{
  		.cmd = BATADV_CMD_GET_MESH,
@@ -135,7 +131,7 @@ index a67720fad46ca496c932c0306e2f7ec4ed496fc9..e7907308b331ddc3e4917ff7d648bca2
  		/* can be retrieved by unprivileged users */
  		.dumpit = batadv_netlink_dump_hardif,
  		.doit = batadv_netlink_get_hardif,
-@@ -1379,68 +1374,57 @@ static const struct genl_ops batadv_netlink_ops[] = {
+@@ -1379,68 +1374,57 @@ static const struct genl_ops batadv_netl
  	},
  	{
  		.cmd = BATADV_CMD_GET_TRANSTABLE_LOCAL,
@@ -204,7 +200,7 @@ index a67720fad46ca496c932c0306e2f7ec4ed496fc9..e7907308b331ddc3e4917ff7d648bca2
  		.flags = GENL_ADMIN_PERM,
  		.doit = batadv_netlink_set_hardif,
  		.internal_flags = BATADV_FLAG_NEED_MESH |
-@@ -1448,7 +1432,6 @@ static const struct genl_ops batadv_netlink_ops[] = {
+@@ -1448,7 +1432,6 @@ static const struct genl_ops batadv_netl
  	},
  	{
  		.cmd = BATADV_CMD_GET_VLAN,
@@ -212,7 +208,7 @@ index a67720fad46ca496c932c0306e2f7ec4ed496fc9..e7907308b331ddc3e4917ff7d648bca2
  		/* can be retrieved by unprivileged users */
  		.doit = batadv_netlink_get_vlan,
  		.internal_flags = BATADV_FLAG_NEED_MESH |
-@@ -1456,7 +1439,6 @@ static const struct genl_ops batadv_netlink_ops[] = {
+@@ -1456,7 +1439,6 @@ static const struct genl_ops batadv_netl
  	},
  	{
  		.cmd = BATADV_CMD_SET_VLAN,

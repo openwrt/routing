@@ -43,11 +43,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/9b470b8a2b9ef4ce68d6e95febd3a0574be1ac14
 
-diff --git a/net/batman-adv/netlink.c b/net/batman-adv/netlink.c
-index daf56933223d478399c63360203bcf283d7686a3..e1978bc52a700e77ff881136c05ccb934f3b851d 100644
 --- a/net/batman-adv/netlink.c
 +++ b/net/batman-adv/netlink.c
-@@ -164,7 +164,7 @@ batadv_netlink_get_ifindex(const struct nlmsghdr *nlh, int attrtype)
+@@ -164,7 +164,7 @@ batadv_netlink_get_ifindex(const struct
  {
  	struct nlattr *attr = nlmsg_find_attr(nlh, GENL_HDRLEN, attrtype);
  

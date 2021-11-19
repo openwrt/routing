@@ -15,11 +15,9 @@ Fixes: db56e4ecf5c2 ("batman-adv: Fragment and send skbs larger than mtu")
 Signed-off-by: Sven Eckelmann <sven@narfation.org>
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/0966d5424bb87e863037301488519ccdd69e4d26
 
-diff --git a/net/batman-adv/fragmentation.c b/net/batman-adv/fragmentation.c
-index 385fccdcf69d05d63f59d024dfb721b1e8f1c8b9..f1d202ff396cd69949915a9e90e763f3a68255b7 100644
 --- a/net/batman-adv/fragmentation.c
 +++ b/net/batman-adv/fragmentation.c
-@@ -391,6 +391,7 @@ bool batadv_frag_skb_fwd(struct sk_buff *skb,
+@@ -391,6 +391,7 @@ out:
  
  /**
   * batadv_frag_create() - create a fragment from skb
@@ -27,7 +25,7 @@ index 385fccdcf69d05d63f59d024dfb721b1e8f1c8b9..f1d202ff396cd69949915a9e90e763f3
   * @skb: skb to create fragment from
   * @frag_head: header to use in new fragment
   * @fragment_size: size of new fragment
-@@ -401,22 +402,25 @@ bool batadv_frag_skb_fwd(struct sk_buff *skb,
+@@ -401,22 +402,25 @@ out:
   *
   * Return: the new fragment, NULL on error.
   */
@@ -56,7 +54,7 @@ index 385fccdcf69d05d63f59d024dfb721b1e8f1c8b9..f1d202ff396cd69949915a9e90e763f3
  	skb_split(skb, skb_fragment, skb->len - fragment_size);
  
  	/* Add the header */
-@@ -439,11 +443,12 @@ int batadv_frag_send_packet(struct sk_buff *skb,
+@@ -439,11 +443,12 @@ int batadv_frag_send_packet(struct sk_bu
  			    struct batadv_orig_node *orig_node,
  			    struct batadv_neigh_node *neigh_node)
  {
@@ -70,7 +68,7 @@ index 385fccdcf69d05d63f59d024dfb721b1e8f1c8b9..f1d202ff396cd69949915a9e90e763f3
  	unsigned int header_size = sizeof(frag_header);
  	unsigned int max_fragment_size, num_fragments;
  	int ret;
-@@ -503,7 +508,7 @@ int batadv_frag_send_packet(struct sk_buff *skb,
+@@ -503,7 +508,7 @@ int batadv_frag_send_packet(struct sk_bu
  			goto put_primary_if;
  		}
  

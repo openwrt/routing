@@ -18,11 +18,9 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/18f77da3761c5550f42a2d131f0fe5cac62e022d
 
-diff --git a/net/batman-adv/bat_v_ogm.c b/net/batman-adv/bat_v_ogm.c
-index fad95ef64e01a9670ed66f9a81658718a14fc716..bc06e3cdfa84f63cc003867d4453a88249d3fb18 100644
 --- a/net/batman-adv/bat_v_ogm.c
 +++ b/net/batman-adv/bat_v_ogm.c
-@@ -631,17 +631,23 @@ batadv_v_ogm_process_per_outif(struct batadv_priv *bat_priv,
+@@ -631,17 +631,23 @@ batadv_v_ogm_process_per_outif(struct ba
   * batadv_v_ogm_aggr_packet() - checks if there is another OGM aggregated
   * @buff_pos: current position in the skb
   * @packet_len: total length of the skb
@@ -51,7 +49,7 @@ index fad95ef64e01a9670ed66f9a81658718a14fc716..bc06e3cdfa84f63cc003867d4453a882
  
  	return (next_buff_pos <= packet_len) &&
  	       (next_buff_pos <= BATADV_MAX_AGGREGATION_BYTES);
-@@ -818,7 +824,7 @@ int batadv_v_ogm_packet_recv(struct sk_buff *skb,
+@@ -818,7 +824,7 @@ int batadv_v_ogm_packet_recv(struct sk_b
  	ogm_packet = (struct batadv_ogm2_packet *)skb->data;
  
  	while (batadv_v_ogm_aggr_packet(ogm_offset, skb_headlen(skb),

@@ -7,8 +7,6 @@ API of Linux 5.2.
 
 This reverts commit acfc9a214d01695d1676313ca80cfd2d9309f633.
 
-diff --git a/compat-include/linux/cache.h b/compat-include/linux/cache.h
-index 9ddda31232ed4b58efcb57dc2ee99ae82d09d6e2..efe440d11d04a1c3999649ba52058ad82e4d6bea 100644
 --- a/compat-include/linux/cache.h
 +++ b/compat-include/linux/cache.h
 @@ -13,8 +13,12 @@
@@ -25,11 +23,9 @@ index 9ddda31232ed4b58efcb57dc2ee99ae82d09d6e2..efe440d11d04a1c3999649ba52058ad8
  #define __ro_after_init
  
  #endif /* < KERNEL_VERSION(4, 6, 0) */
-diff --git a/compat-include/net/genetlink.h b/compat-include/net/genetlink.h
-index 7d17a705273650355f074788e9220fc4981b0db1..58fc24d7147a7f79c2db1976b36351d294f2aa4c 100644
 --- a/compat-include/net/genetlink.h
 +++ b/compat-include/net/genetlink.h
-@@ -30,92 +30,4 @@ void batadv_genl_dump_check_consistent(struct netlink_callback *cb,
+@@ -30,92 +30,4 @@ void batadv_genl_dump_check_consistent(s
  
  #endif /* < KERNEL_VERSION(4, 15, 0) */
  
@@ -122,11 +118,9 @@ index 7d17a705273650355f074788e9220fc4981b0db1..58fc24d7147a7f79c2db1976b36351d2
 -#endif /* < KERNEL_VERSION(5, 2, 0) */
 -
  #endif /* _NET_BATMAN_ADV_COMPAT_NET_GENETLINK_H_ */
-diff --git a/net/batman-adv/netlink.c b/net/batman-adv/netlink.c
-index e7907308b331ddc3e4917ff7d648bca27a65536b..daf56933223d478399c63360203bcf283d7686a3 100644
 --- a/net/batman-adv/netlink.c
 +++ b/net/batman-adv/netlink.c
-@@ -1344,29 +1344,34 @@ static const struct genl_ops batadv_netlink_ops[] = {
+@@ -1344,29 +1344,34 @@ static const struct genl_ops batadv_netl
  	{
  		.cmd = BATADV_CMD_GET_MESH,
  		/* can be retrieved by unprivileged users */
@@ -161,7 +155,7 @@ index e7907308b331ddc3e4917ff7d648bca27a65536b..daf56933223d478399c63360203bcf28
  		.dumpit = batadv_netlink_dump_hardif,
  		.doit = batadv_netlink_get_hardif,
  		.internal_flags = BATADV_FLAG_NEED_MESH |
-@@ -1375,57 +1380,68 @@ static const struct genl_ops batadv_netlink_ops[] = {
+@@ -1375,57 +1380,68 @@ static const struct genl_ops batadv_netl
  	{
  		.cmd = BATADV_CMD_GET_TRANSTABLE_LOCAL,
  		.flags = GENL_ADMIN_PERM,
@@ -230,7 +224,7 @@ index e7907308b331ddc3e4917ff7d648bca27a65536b..daf56933223d478399c63360203bcf28
  		.doit = batadv_netlink_set_hardif,
  		.internal_flags = BATADV_FLAG_NEED_MESH |
  				  BATADV_FLAG_NEED_HARDIF,
-@@ -1433,6 +1449,7 @@ static const struct genl_ops batadv_netlink_ops[] = {
+@@ -1433,6 +1449,7 @@ static const struct genl_ops batadv_netl
  	{
  		.cmd = BATADV_CMD_GET_VLAN,
  		/* can be retrieved by unprivileged users */
@@ -238,7 +232,7 @@ index e7907308b331ddc3e4917ff7d648bca27a65536b..daf56933223d478399c63360203bcf28
  		.doit = batadv_netlink_get_vlan,
  		.internal_flags = BATADV_FLAG_NEED_MESH |
  				  BATADV_FLAG_NEED_VLAN,
-@@ -1440,6 +1457,7 @@ static const struct genl_ops batadv_netlink_ops[] = {
+@@ -1440,6 +1457,7 @@ static const struct genl_ops batadv_netl
  	{
  		.cmd = BATADV_CMD_SET_VLAN,
  		.flags = GENL_ADMIN_PERM,
@@ -246,7 +240,7 @@ index e7907308b331ddc3e4917ff7d648bca27a65536b..daf56933223d478399c63360203bcf28
  		.doit = batadv_netlink_set_vlan,
  		.internal_flags = BATADV_FLAG_NEED_MESH |
  				  BATADV_FLAG_NEED_VLAN,
-@@ -1451,7 +1469,6 @@ struct genl_family batadv_netlink_family __ro_after_init = {
+@@ -1451,7 +1469,6 @@ struct genl_family batadv_netlink_family
  	.name = BATADV_NL_NAME,
  	.version = 1,
  	.maxattr = BATADV_ATTR_MAX,

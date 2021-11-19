@@ -112,6 +112,13 @@ static inline void batadv_dev_hold(struct net_device *dev)
 }
 #define dev_hold batadv_dev_hold
 
+static inline void batadv_eth_hw_addr_set(struct net_device *dev,
+					  const u8 *addr)
+{
+	ether_addr_copy(dev->dev_addr, addr);
+}
+#define eth_hw_addr_set batadv_eth_hw_addr_set
+
 #endif /* LINUX_VERSION_IS_LESS(5, 15, 0) */
 
 /* <DECLARE_EWMA> */

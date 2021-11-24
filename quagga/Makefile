@@ -171,6 +171,7 @@ CONFIGURE_ARGS+= \
 	--enable-user=network \
 	--enable-group=network \
 	--enable-multipath=8 \
+	--enable-vtysh \
 	--disable-ospfclient \
 	--disable-capabilities \
 	--disable-doc \

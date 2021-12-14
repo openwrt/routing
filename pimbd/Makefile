@@ -45,6 +45,8 @@ define Package/pimbd/install
 	$(INSTALL_BIN) ./files/pimbd.init $(1)/etc/init.d/pimbd
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) files/firewall-uci.sh $(1)/etc/uci-defaults/99_pimbd_firewall
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) ./files/pimb.config $(1)/etc/config/pimb
 endef
 
 $(eval $(call BuildPackage,pimbd))

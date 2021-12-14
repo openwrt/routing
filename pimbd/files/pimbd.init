@@ -4,18 +4,147 @@ START=90
 STOP=10
 USE_PROCD=1
 
+TYPE=''
+
+DEV=''
+PIM='off'
+SSBIDIR='off'
+MLD='off'
+IGMP='off'
+
+RPAADDRESS=''
+RPALIST=''
+
+reset_link_values() {
+    PIM='off'
+    SSBIDIR='off'
+    MLD='off'
+    IGMP='off'
+}
+
+apply_link() {
+    if test ! -z "$DEV"; then
+        echo "Setting pimbc link set $DEV pim $PIM ssbidir $SSBIDIR mld $MLD igmp $IGMP"
+        echo "link set $DEV pim $PIM ssbidir $SSBIDIR mld $MLD igmp $IGMP" >> /tmp/pimbd.conf
+    fi
+    reset_link_values
+}
+
+apply_rpa() {
+    if test -z "$RPAADDRESS"; then
+        echo "No RPA address is set!"
+        return
+    fi
+    for i in $RPALIST; do
+        echo "adding pimbc rpa add $RPAADDRESS $i"
+        echo "rpa add $RPAADDRESS $i" >> /tmp/pimbd.conf
+    done
+    RPAADDRESS=''
+    RPALIST=''
+}
+
+store_interface_option() {
+    local name="$1"
+    local value="$2"
+    case $name in
+    dev)
+        DEV=$value
+        ;;
+    pim)
+        PIM=$value
+        ;;
+    ssbidir)
+        SSBIDIR=$value
+        ;;
+    mld)
+        MLD=$value
+        ;;
+    igmp)
+        IGMP=$value
+        ;;
+    esac
+}
+
+store_rpa_option() {
+    local name="$1"
+    local value="$2"
+    echo "store_rpa_option $name $value"
+    case $name in
+    address)
+        RPAADDRESS="$value"
+        ;;
+    esac
+}
+
+store_rpa_list() {
+    local name="$1"
+    local value="$2"
+    echo "store rpa_list $name $value"
+    case $name in
+    prefix)
+        RPALIST="${RPALIST} $value"
+        ;;
+    esac
+}
+
 start_service() {
     . /lib/functions.sh
     . /lib/functions/network.sh
+
+    rm -f /tmp/pimbd.conf
+
+    config_cb() {
+        local name="$1"
+        local value="$2"
+        # commands to be run for every option
+        echo "config_cb $name $value"
+        case $TYPE in
+        interface)
+            apply_link
+            ;;
+        rpa)
+            apply_rpa
+            ;;
+        esac
+        TYPE=$name
+        DEV=$value
+    }
+
+    option_cb() {
+        local name="$1"
+        local value="$2"
+        # commands to be run for every option
+        echo "option_cb $name $value"
+        case $TYPE in
+        interface)
+            store_interface_option "$name" "$value"
+            ;;
+        rpa)
+            store_rpa_option "$name" "$value"
+            ;;
+        esac
+    }
+
+    list_cb() {
+        local name="$1"
+        local value="$2"
+        # commands to be run for every list item
+        echo "list_cb $name $value"
+
+        case $TYPE in
+        rpa)
+            store_rpa_list "$name" "$value"
+            ;;
+        esac
+    }
     config_load pimb
 
     procd_open_instance
     procd_set_param command /usr/sbin/pimbd
     procd_append_param command -S
     procd_append_param command -L 6
+    procd_append_param command -c /tmp/pimbd.conf
 
     procd_set_param respawn
     procd_close_instance
 }
-
-

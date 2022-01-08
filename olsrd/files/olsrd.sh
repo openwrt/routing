@@ -624,6 +624,10 @@ olsrd_write_interface() {
 					ifnames="$ifnames \"$IFNAME\""
 					ifsglobal="$ifsglobal $IFNAME"
 				fi
+			elif [[ "$(ip -details link show dev $interface)" == *"wireguard"* ]]; then
+				# wireguard interface
+				ifnames="$ifnames \"$interface\""
+				ifsglobal="$ifsglobal $interface"
 			else
 				log "$funcname() Warning: Interface '$interface' not found, skipped"
 			fi

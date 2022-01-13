@@ -71,7 +71,7 @@ no_neighbors() {
         return 0
     fi
 
-    if [ $SAVE_LOGS ]; then
+    if [ $SAVE_LOGS -eq 1 ]; then
         log "Saving Logs!"
         write_logs
     fi
@@ -85,18 +85,18 @@ log "Naywatch Started!"
 
 neighbors() {
     ACTIVE=1
-    if [ $USE_WATCHDOG ]; then
+    if [ $USE_WATCHDOG -eq 1 ]; then
         echo 1 >&3
     fi
 }
 
 not_active() {
-    if [ $USE_WATCHDOG ]; then
+    if [ $USE_WATCHDOG -eq 1 ]; then
         echo 1 >&3
     fi 
 }
 
-if [ $USE_WATCHDOG ]; then
+if [ $USE_WATCHDOG -eq 1 ]; then
     activate_watchdog
 fi
 

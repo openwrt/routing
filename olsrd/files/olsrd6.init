@@ -28,6 +28,12 @@ wait_for_wireless()
 	done
 }
 
+reload_service()
+{
+	olsrd_generate_config $OLSRD
+	killall -s SIGHUP $OLSRD
+}
+
 boot()
 {
 	config_load network

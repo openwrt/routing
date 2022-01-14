@@ -36,6 +36,12 @@ boot()
 	rc_procd start_service
 }
 
+reload_service()
+{
+	olsrd_generate_config $OLSRD
+	killall -s SIGHUP $OLSRD
+}
+
 start_service() {
 	olsrd_generate_config $OLSRD
 

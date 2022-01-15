@@ -1,0 +1,38 @@
+From fcb30aa4da732d279527feba01cacc7dc996d137 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Sun, 16 Jan 2022 00:08:56 +0100
+Subject: [PATCH] unix: fix meshing with wireguard/point-to-point interfaces
+
+Wireguard interfaces have no BROADCAST flag. We can also mesh on
+point-to-point links. That is why we mesh now also on interfaces with
+the IFF_POINTOPOINT flag enabled.
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ src/unix/ifnet.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- a/src/unix/ifnet.c
++++ b/src/unix/ifnet.c
+@@ -184,8 +184,8 @@ chk_if_changed(struct olsr_if *iface)
+ 
+   /* Check broadcast */
+   if ((olsr_cnf->ip_version == AF_INET) && !iface->cnf->ipv4_multicast.v4.s_addr &&     /* Skip if fixed bcast */
+-      (!(ifp->int_flags & IFF_BROADCAST))) {
+-    OLSR_PRINTF(3, "\tNo broadcast - removing\n");
++      ((!(ifp->int_flags & IFF_BROADCAST) && !(ifp->int_flags & IFF_POINTOPOINT)))) {
++    OLSR_PRINTF(3, "\tNo broadcast or point-to-point - removing\n");
+     goto remove_interface;
+   }
+ 
+@@ -552,8 +552,8 @@ chk_if_up(struct olsr_if *iface, int deb
+ 
+   /* Check broadcast */
+   if ((olsr_cnf->ip_version == AF_INET) && !iface->cnf->ipv4_multicast.v4.s_addr &&     /* Skip if fixed bcast */
+-      (!(ifs.int_flags & IFF_BROADCAST))) {
+-    OLSR_PRINTF(debuglvl, "\tNo broadcast - skipping\n");
++      (!(ifs.int_flags & IFF_BROADCAST) && !(ifs.int_flags & IFF_POINTOPOINT))) {
++    OLSR_PRINTF(debuglvl, "\tNo broadcast or point-to-point - skipping\n");
+     return 0;
+   }
+ 

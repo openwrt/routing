@@ -72,7 +72,6 @@ static int babeld_ubus_add_interface(struct ubus_context *ctx_local,
   struct blob_attr *tb[__INTERFACE_MAX];
   struct blob_buf b = {0};
   struct interface *ifp = NULL;
-  int ret;
   char *ifname;
 
   blobmsg_parse(interface_policy, __INTERFACE_MAX, tb, blob_data(msg),

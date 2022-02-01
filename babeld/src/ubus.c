@@ -89,6 +89,30 @@ static int babeld_ubus_add_interface(struct ubus_context *ctx_local,
   return UBUS_STATUS_OK;
 }
 
+// Remove an inteface (ubus equivalent to "interface"-function).
+static int babeld_ubus_remove_interface(struct ubus_context *ctx_local,
+                                        struct ubus_object *obj,
+                                        struct ubus_request_data *req,
+                                        const char *method,
+                                        struct blob_attr *msg) {
+  struct blob_attr *tb[__INTERFACE_MAX];
+  struct blob_buf b = {0};
+  struct interface *ifp = NULL;
+  char *ifname;
+
+  blobmsg_parse(interface_policy, __INTERFACE_MAX, tb, blob_data(msg),
+                blob_len(msg));
+
+  if (!tb[INTERFACE_IFNAME])
+    return UBUS_STATUS_INVALID_ARGUMENT;
+
+  ifname = blobmsg_get_string(tb[INTERFACE_IFNAME]);
+
+  flush_interface(ifname);
+
+  return UBUS_STATUS_OK;
+}
+
 // Sends a babel info message on ubus socket.
 static int babeld_ubus_babeld_info(struct ubus_context *ctx_local,
                                    struct ubus_object *obj,
@@ -364,6 +388,8 @@ static int babeld_ubus_get_neighbours(struct ubus_context *ctx_local,
 // List of functions we expose via the ubus bus.
 static const struct ubus_method babeld_methods[] = {
     UBUS_METHOD("add_interface", babeld_ubus_add_interface, interface_policy),
+    UBUS_METHOD("remove_interface", babeld_ubus_remove_interface,
+                interface_policy),
     UBUS_METHOD_NOARG("get_info", babeld_ubus_babeld_info),
     UBUS_METHOD_NOARG("get_xroutes", babeld_ubus_get_xroutes),
     UBUS_METHOD_NOARG("get_routes", babeld_ubus_get_routes),

@@ -13,6 +13,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
+#include "defs.h"
 #include "ifnet.h"
 #include "interfaces.h"
 #include "log.h"
@@ -62,8 +63,8 @@ static int olsrd_ubus_add_interface(struct ubus_context *ctx_local,
   }
 
   struct olsr_if *tmp_ifs = olsr_create_olsrif(ifname, false);
-  struct if_config_options *default_ifcnf = get_default_if_config();
-  tmp_ifs->cnf = default_ifcnf;
+  tmp_ifs->cnf = olsr_malloc(sizeof(struct if_config_options),"Set default config");
+  *tmp_ifs->cnf = *olsr_cnf->interface_defaults;
 
   blob_buf_init(&b, 0);
   blobmsg_add_string(&b, "adding", ifname);

@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=opennds
 PKG_FIXUP:=autoreconf
-PKG_VERSION:=9.5.1
-PKG_RELEASE:=1
+PKG_VERSION:=9.6.0
+PKG_RELEASE:=2
 
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/opennds/tar.gz/v$(PKG_VERSION)?
 PKG_SOURCE:=opennds-$(PKG_VERSION).tar.gz
-PKG_HASH:=650922ec0faa28e0eba8b0f088dd353fa2ff74318db705458b8d62159e40e377
+PKG_HASH:=90613e636c668a16eb9d6abfe19715f87cea7000383a53ad6719dec80ff966db
 PKG_BUILD_DIR:=$(BUILD_DIR)/openNDS-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -25,7 +25,7 @@ define Package/opennds
 	SUBMENU:=Captive Portals
 	SECTION:=net
 	CATEGORY:=Network
-	DEPENDS:=+libpthread +iptables-mod-ipopt +libmicrohttpd-no-ssl
+	DEPENDS:=+iptables-nft +kmod-ipt-conntrack +kmod-ipt-nat +libmicrohttpd-no-ssl
 	TITLE:=Open public network gateway daemon
 	URL:=https://github.com/opennds/opennds
 	CONFLICTS:=nodogsplash nodogsplash2
@@ -39,6 +39,7 @@ define Package/opennds/description
 	The package incorporates the FAS API allowing many flexible customisation options.
 	The creation of sophisticated third party authentication applications is fully supported.
 	Internet hosted https portals can be implemented with no security errors, to inspire maximum user confidence.
+	This version requires iptables-nft.
 endef
 
 define Package/opennds/install

@@ -16,15 +16,15 @@ Subject: Allow one to disable forking to background in debug_mode 0
  
  formats selected_formats = dot_draw;
  
-@@ -716,6 +717,7 @@ void print_usage() {
+@@ -718,6 +719,7 @@ void print_usage() {
  	printf( "Usage: vis <interface(s)> \n" );
  	printf( "\t-j output mesh topology as json on port %d\n", JSON_PORT );
  	printf( "\t-d debug level\n" );
 +	printf( "\t-D run in foreground\n" );
  	printf( "\t-h help\n" );
  	printf( "\t-v Version\n\n" );
- 	printf( "Olsrs3d / Meshs3d is an application to visualize a mesh network.\nIt is a part of s3d, have a look at s3d.berlios.de\n\n" );
-@@ -736,7 +738,7 @@ int main( int argc, char **argv ) {
+ 	printf( "Olsrs3d / Meshs3d is an application to visualize a mesh network.\nIt is a part of s3d, have a look at s3d.sourceforge.net\n\n" );
+@@ -738,7 +740,7 @@ int main( int argc, char **argv ) {
  	fd_set wait_sockets, tmp_wait_sockets;
  
  
@@ -33,7 +33,7 @@ Subject: Allow one to disable forking to background in debug_mode 0
  
  		switch( optchar ) {
  
-@@ -771,6 +773,11 @@ int main( int argc, char **argv ) {
+@@ -773,6 +775,11 @@ int main( int argc, char **argv ) {
  				selected_formats |= json;
  				found_args++;
  				break;
@@ -45,7 +45,7 @@ Subject: Allow one to disable forking to background in debug_mode 0
  
  			default:
  				print_usage();
-@@ -889,7 +896,7 @@ int main( int argc, char **argv ) {
+@@ -891,7 +898,7 @@ int main( int argc, char **argv ) {
  
  
  	/* daemonize */

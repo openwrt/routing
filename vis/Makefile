@@ -8,19 +8,16 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=vis
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE_PROTO:=git
+PKG_SOURCE_DATE:=2013-04-07
+PKG_SOURCE_VERSION:=7710cce42e8d63ea114056a4a140835d4a452933
 PKG_SOURCE_URL:=https://git.open-mesh.org/vis.git
-PKG_REV:=e141311c6a4fc824efbad536c137ed279905d825
-PKG_VERSION:=1440
-PKG_RELEASE:=2
-PKG_LICENSE:=GPL-2.0
+PKG_MIRROR_HASH:=0ed79822a694f220ea44fc81d91ccdacae6ab8ef599810ecfd39acd34d68ae53
 
-PKG_SOURCE_VERSION:=$(PKG_REV)
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
-PKG_MIRROR_HASH:=fd4b337a56993eec9a03ad8e7918bccc7691aa8b2e5ab6dd7863350f07503285
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
+PKG_MAINTAINER:=Corinna "Elektra" Aichele <onelektra@gmx.net>
+PKG_LICENSE:=GPL-2.0-only
 
 PKG_BUILD_PARALLEL:=1
 
@@ -33,7 +30,6 @@ define Package/vis
   DEPENDS:=+libpthread
   TITLE:=visualization server for B.A.T.M.A.N. layer 3
   URL:=https://www.open-mesh.org/
-  MAINTAINER:=Corinna "Elektra" Aichele <onelektra@gmx.net>
 endef
 
 define Package/vis/description

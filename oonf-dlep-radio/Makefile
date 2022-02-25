@@ -10,6 +10,8 @@ PKG_SOURCE_DATE:=2018-03-19
 PKG_SOURCE_VERSION:=bffb88b040659b237c4c91b6b42dbbb47431750e
 PKG_MIRROR_HASH:=c85bf1e38483979f44486b6ad90800535fc7039a162c536c239d897b7c68ef70
 
+PKG_MAINTAINER:=Henning Rogge <hrogge@gmail.com>
+
 CMAKE_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
@@ -28,19 +30,13 @@ CMAKE_OPTIONS+=-D OONF_NO_WERROR:Bool=true \
                -D INSTALL_CMAKE_DIR:Path=lib/oonf \
                -D CMAKE_PREFIX_PATH=$(STAGING_DIR)/usr
 
-define Package/oonf-git/template
-	SECTION:=net
-	CATEGORY:=Network
-	MAINTAINER:=Henning Rogge <hrogge@gmail.com>
-	SUBMENU:=OLSR.org network framework
-	URL:=http://www.olsr.org/
-endef
-
 define Package/oonf-dlep-radio
-	$(call Package/oonf-git/template)
-	TITLE:= Build DLEP Radio Agent
-	DEPENDS:=+librt +libnl-tiny +libuci +oonf-init-scripts
-	VERSION:=$(PKG_VERSION)
+  SECTION:=net
+  CATEGORY:=Network
+  SUBMENU:=OLSR.org network framework
+  URL:=http://www.olsr.org/
+  TITLE:=Build DLEP Radio Agent
+  DEPENDS:=+librt +libnl-tiny +libuci +oonf-init-scripts
 endef
 
 Build/Compile=$(call Build/Compile/Default,dlep_radio_static)

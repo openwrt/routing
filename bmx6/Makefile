@@ -25,21 +25,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bmx6
+PKG_VERSION:=0.1-alpha
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE_PROTO:=git
-
 PKG_SOURCE_URL:=https://github.com/bmx-routing/bmx6.git
+PKG_SOURCE_DATE:=2020-06-08
+PKG_SOURCE_VERSION:=65cb0d542f16a4b4689f5ad2542c9f24215a6616
+PKG_MIRROR_HASH:=45501cfe9f82e08e8082147f90b94ba5b6bd11771a9140412bfbf5523a796177
 
-PKG_REV:=d8869ec69797be0ca2da06abb344e60198a8a275
-PKG_MIRROR_HASH:=4aae08158666f5976c952e195b3a1369a5f7bba26fedd5d5ea33b35956e24ec6
-PKG_VERSION:=r2018051214
-PKG_RELEASE:=2
-PKG_LICENSE:=GPL-2.0
-
-PKG_SOURCE_VERSION:=$(PKG_REV)
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
+PKG_MAINTAINER:=Axel Neumann <neumann@cgws.de>
+PKG_LICENSE:=GPL-2.0-or-later
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -59,8 +55,7 @@ define Package/bmx6/Default
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
   TITLE:=BMX6 layer 3 routing daemon
-  URL:=http://bmx6.net/
-  MAINTAINER:=Axel Neumann <neumann@cgws.de>
+  URL:=https://bmx6.net/projects/bmx6
   DEPENDS:=+kmod-ip6-tunnel +kmod-iptunnel6 +kmod-tun
 endef
 

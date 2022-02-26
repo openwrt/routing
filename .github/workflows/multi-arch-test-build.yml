@@ -39,10 +39,6 @@ jobs:
             target: armvirt-32
             runtime_test: true
 
-          - arch: i386_pentium-mmx
-            target: x86-geode
-            runtime_test: true
-
           - arch: x86_64
             target: x86-64
             runtime_test: true

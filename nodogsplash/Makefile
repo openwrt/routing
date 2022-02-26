@@ -6,38 +6,38 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodogsplash
-PKG_FIXUP:=autoreconf
 PKG_VERSION:=5.0.0
 PKG_RELEASE:=1
 
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/nodogsplash/nodogsplash/tar.gz/v$(PKG_VERSION)?
-PKG_SOURCE:=nodogsplash-$(PKG_VERSION).tar.gz
 PKG_HASH:=a7665f4a42997746a31e9217f2f54e360aa7fc4bc72bd89faa08f1ccf7875b5e
-PKG_BUILD_DIR:=$(BUILD_DIR)/nodogsplash-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Moritz Warning <moritzwarning@web.de>
+PKG_LICENSE:=GPL-2.0-or-later
+PKG_LICENSE_FILES:=COPYING
+
+PKG_FIXUP:=autoreconf
 PKG_BUILD_PARALLEL:=1
-PKG_LICENSE:=GPL-2.0+
 
 include $(INCLUDE_DIR)/package.mk
 
-
 define Package/nodogsplash
-	SUBMENU:=Captive Portals
-	SECTION:=net
-	CATEGORY:=Network
-	DEPENDS:=+libpthread +iptables-mod-ipopt +libmicrohttpd-no-ssl
-	TITLE:=Open public network gateway daemon
-	URL:=https://github.com/nodogsplash/nodogsplash
-	CONFLICTS:=nodogsplash2
+  SUBMENU:=Captive Portals
+  SECTION:=net
+  CATEGORY:=Network
+  DEPENDS:=+libpthread +iptables-mod-ipopt +libmicrohttpd-no-ssl
+  TITLE:=Open public network gateway daemon
+  URL:=https://github.com/nodogsplash/nodogsplash
+  CONFLICTS:=nodogsplash2
 endef
 
 define Package/nodogsplash/description
-	Nodogsplash is a Captive Portal that offers a simple way to
-	provide restricted access to the Internet by showing a splash
-	page to the user before Internet access is granted.
-	It also incorporates an API that allows the creation of
-	sophisticated authentication applications.
+  Nodogsplash is a Captive Portal that offers a simple way to
+  provide restricted access to the Internet by showing a splash
+  page to the user before Internet access is granted.
+  It also incorporates an API that allows the creation of
+  sophisticated authentication applications.
 endef
 
 define Package/nodogsplash/install

@@ -1,18 +1,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=pimbd
-PKG_SOURCE_VERSION:=dbf4e5913b06e3160f506df15e6a047a403a5f21
-PKG_VERSION:=2018-06-19-$(PKG_SOURCE_VERSION)
-PKG_RELEASE:=2
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/Oryon/pimbd.git
-PKG_MIRROR_HASH:=a08e474d7c210b084a28afe8f85e1b356a067b2f9ec643d26402680782933ae7
+PKG_SOURCE_DATE:=2018-06-19
+PKG_SOURCE_VERSION:=dbf4e5913b06e3160f506df15e6a047a403a5f21
+PKG_MIRROR_HASH:=943afce4f10036cbb479385a6ff48535da61d83c48512a10db8784677f492c1c
+
 PKG_MAINTAINER:=Pierre Pfister <pierre.pfister@darou.fr>
 PKG_LICENSE:=Apache-2.0
-
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_LICENSE_FILES:=LICENSE
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
@@ -31,9 +30,9 @@ define Package/pimbd
 endef
 
 define Package/pimbd/description
-This package provides a daemon which implements the Protocol Independent
-Multicast BIDIR routing protocol. Note that a routing protocol must be 
-installed and running in order for PIM to function.
+  This package provides a daemon which implements the Protocol Independent
+  Multicast BIDIR routing protocol. Note that a routing protocol must be
+  installed and running in order for PIM to function.
 endef
 
 define Package/pimbd/install

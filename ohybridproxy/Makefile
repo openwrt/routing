@@ -13,6 +13,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/sbyx/ohybridproxy.git
+PKG_MIRROR_HASH:=bddd7554300b41cc82d24363bfb5f552c1e5ea51b34daeea242c0e5e1522785b
 PKG_MAINTAINER:=Steven Barth <cyrus@openwrt.org>
 PKG_LICENSE:=GPL-2.0
 

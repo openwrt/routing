@@ -14,6 +14,7 @@ PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/hugosantos/mrd6.git
+PKG_MIRROR_HASH:=d338549549c1e7b3f8a292c76e04cbfad1c7c6c9c77cbce6afbaa99bee9b8460
 PKG_MAINTAINER:=Steven Barth <cyrus@openwrt.org>
 PKG_LICENSE:=GPL-2.0+
 

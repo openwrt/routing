@@ -13,6 +13,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/fingon/minimalist-pcproxy.git
+PKG_MIRROR_HASH:=d3e872ee6207829ef142d22d591d203e4836f6aa150167411b542e8df4af4d53
 PKG_MAINTAINER:=Markus Stenberg <fingon@iki.fi>
 PKG_LICENSE:=GPL-2.0
 

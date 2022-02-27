@@ -34,7 +34,7 @@ endef
 define Package/olsrd
   $(call Package/olsrd/template)
   MENU:=1
-  DEPENDS:=+libpthread +libubus
+  DEPENDS:=+libpthread +libubus +iptables +ip6tables
 endef
 
 define Package/olsrd/conffiles

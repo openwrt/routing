@@ -2,7 +2,7 @@
     IPC integration of babeld with OpenWrt.
 
     The ubus interface offers following functions:
-    - add_interface '{"ifname":"eth0"}'
+    - add_interface '{"ifname":"eth0", "rxcost":1024}'
     - get_info
     - get_neighbours
     - get_xroutes

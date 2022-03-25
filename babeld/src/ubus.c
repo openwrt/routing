@@ -56,11 +56,12 @@ struct neighbour_list_entry {
 
 // Definition of interface function enums (to be used with ubox's blobmsg
 // helpers).
-enum { INTERFACE_IFNAME, __INTERFACE_MAX };
+enum { INTERFACE_IFNAME, INTERFACE_RXCOST, __INTERFACE_MAX };
 
 // Definition of interface parsing (to be used with ubox's blobmsg helpers).
 static const struct blobmsg_policy interface_policy[__INTERFACE_MAX] = {
     [INTERFACE_IFNAME] = {"ifname", BLOBMSG_TYPE_STRING},
+    [INTERFACE_RXCOST] = {"rxcost", BLOBMSG_TYPE_INT32},
 };
 
 // Adds an inteface (ubus equivalent to "interface"-function).
@@ -72,6 +73,7 @@ static int babeld_ubus_add_interface(struct ubus_context *ctx_local,
   struct blob_attr *tb[__INTERFACE_MAX];
   struct blob_buf b = {0};
   struct interface *ifp = NULL;
+  struct interface_conf *if_conf = NULL;
   char *ifname;
 
   blobmsg_parse(interface_policy, __INTERFACE_MAX, tb, blob_data(msg),
@@ -80,9 +82,19 @@ static int babeld_ubus_add_interface(struct ubus_context *ctx_local,
   if (!tb[INTERFACE_IFNAME])
     return UBUS_STATUS_INVALID_ARGUMENT;
 
+  if (tb[INTERFACE_RXCOST]) {
+    int cost = blobmsg_get_u32(tb[INTERFACE_RXCOST]);
+    if_conf = calloc(1, sizeof(struct interface_conf));
+    if (if_conf == NULL)
+      return UBUS_STATUS_UNKNOWN_ERROR;
+    if_conf->cost = cost;
+    //merge_ifconf(if_conf, if_conf, default_interface_conf);
+    //add_ifconf(if_conf, &interface_confs);
+  }
+
   ifname = blobmsg_get_string(tb[INTERFACE_IFNAME]);
 
-  ifp = add_interface(ifname, NULL);
+  ifp = add_interface(ifname, if_conf);
   if (ifp == NULL)
     return UBUS_STATUS_UNKNOWN_ERROR;
 

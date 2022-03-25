@@ -1,0 +1,50 @@
+From 23d4e0d8fdd69caa1644c88dc8e6518edb7fb5b5 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Fri, 25 Mar 2022 14:08:58 +0100
+Subject: [PATCH] Put add_ifcon to configuration.h
+
+If you want to add an interface with a different config you need to call
+add_interface with an interface_conf as an argument. add_interface is
+already located in the configuration.h. However, add_ifconf is not
+available. The commit puts add_ifcon into the header. Further, it also
+adds interface_confs to the header. The add_ifconf requires as a
+parameter the interface_confs list.
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ configuration.c | 4 ++--
+ configuration.h | 2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+--- a/configuration.c
++++ b/configuration.c
+@@ -46,7 +46,7 @@ static struct filter *output_filters = N
+ static struct filter *redistribute_filters = NULL;
+ static struct filter *install_filters = NULL;
+ struct interface_conf *default_interface_conf = NULL;
+-static struct interface_conf *interface_confs = NULL;
++struct interface_conf *interface_confs = NULL;
+ 
+ /* This indicates whether initial configuration is done.  See
+    finalize_config below. */
+@@ -742,7 +742,7 @@ merge_ifconf(struct interface_conf *dest
+ #undef MERGE
+ }
+ 
+-static void
++void
+ add_ifconf(struct interface_conf *if_conf, struct interface_conf **if_confs)
+ {
+     if(*if_confs == NULL) {
+--- a/configuration.h
++++ b/configuration.h
+@@ -55,7 +55,9 @@ struct filter {
+ };
+ 
+ extern struct interface_conf *default_interface_conf;
++extern struct interface_conf *interface_confs;
+ 
++void add_ifconf(struct interface_conf *if_conf, struct interface_conf **if_confs);
+ void flush_ifconf(struct interface_conf *if_conf);
+ 
+ int parse_config_from_file(const char *filename, int *line_return);

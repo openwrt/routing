@@ -1,0 +1,39 @@
+From 34b67764fd57ce63b9bbe313553471cf5539abe4 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Fri, 25 Mar 2022 14:25:14 +0100
+Subject: [PATCH] Put merge_ifconf to configuration.h
+
+You want to use default_interface_conf as a basis to write an interface
+config. To do so, you write an empty interface config and use
+merge_ifconf to merge the default settings into your interface config.
+This commit puts merge_ifconf into the header.
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ configuration.c | 2 +-
+ configuration.h | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+--- a/configuration.c
++++ b/configuration.c
+@@ -709,7 +709,7 @@ add_filter(struct filter *filter, struct
+     }
+ }
+ 
+-static void
++void
+ merge_ifconf(struct interface_conf *dest,
+              const struct interface_conf *src1,
+              const struct interface_conf *src2)
+--- a/configuration.h
++++ b/configuration.h
+@@ -59,6 +59,9 @@ extern struct interface_conf *interface_
+ 
+ void add_ifconf(struct interface_conf *if_conf, struct interface_conf **if_confs);
+ void flush_ifconf(struct interface_conf *if_conf);
++void merge_ifconf(struct interface_conf *dest,
++                  const struct interface_conf *src1,
++                  const struct interface_conf *src2);
+ 
+ int parse_config_from_file(const char *filename, int *line_return);
+ int parse_config_from_string(char *string, int n, const char **message_return);

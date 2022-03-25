@@ -2,7 +2,7 @@
     IPC integration of olsrd with OpenWrt.
 
     The ubus interface offers following functions:
-    - add_inteface '{"ifname":"wg_51820"}'
+    - add_inteface '{"ifname":"wg_51820", "lqm": "0.5"}'
     - del_inteface '{"ifname":"wg_51820"}'
 */
 

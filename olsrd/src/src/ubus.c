@@ -16,6 +16,7 @@
 #include "defs.h"
 #include "ifnet.h"
 #include "interfaces.h"
+#include "link_set.h"
 #include "log.h"
 #include "olsr.h"
 #include "olsr_cfg.h"
@@ -28,10 +29,11 @@
 // Shared state maintained throughout calls to handle ubus messages.
 static struct ubus_context *shared_ctx;
 
-enum { INTERFACE_IFNAME, __INTERFACE_MAX };
+enum { INTERFACE_IFNAME, INTERFACE_LQM, __INTERFACE_MAX };
 
 static const struct blobmsg_policy interface_policy[__INTERFACE_MAX] = {
     [INTERFACE_IFNAME] = {"ifname", BLOBMSG_TYPE_STRING},
+    [INTERFACE_LQM] = {"lqm", BLOBMSG_TYPE_STRING},
 };
 
 static int olsrd_ubus_add_interface(struct ubus_context *ctx_local,
@@ -40,8 +42,9 @@ static int olsrd_ubus_add_interface(struct ubus_context *ctx_local,
                                     const char *method, struct blob_attr *msg) {
   struct blob_attr *tb[__INTERFACE_MAX];
   struct blob_buf b = {0};
+  union olsr_ip_addr addr;
   int ret;
-  char *ifname;
+  char *ifname, *lqm;
 
   blobmsg_parse(interface_policy, __INTERFACE_MAX, tb, blob_data(msg),
                 blob_len(msg));
@@ -63,16 +66,33 @@ static int olsrd_ubus_add_interface(struct ubus_context *ctx_local,
   }
 
   struct olsr_if *tmp_ifs = olsr_create_olsrif(ifname, false);
-  tmp_ifs->cnf = olsr_malloc(sizeof(struct if_config_options),"Set default config");
+  tmp_ifs->cnf =
+      olsr_malloc(sizeof(struct if_config_options), "Set default config");
   *tmp_ifs->cnf = *olsr_cnf->interface_defaults;
+
+  if (tb[INTERFACE_LQM]) { // add interface lqm
+    lqm = blobmsg_get_string(tb[INTERFACE_LQM]);
+    memset(&addr, 0, sizeof(addr));
+
+    struct olsr_lq_mult *mult = malloc(sizeof(*mult));
+    if (mult == NULL) {
+      olsr_syslog(OLSR_LOG_ERR, "Out of memory (LQ multiplier).\n");
+      return UBUS_STATUS_UNKNOWN_ERROR;
+    }
+
+    double lqm_value = atof(lqm);
+    mult->addr = addr;
+    mult->value = (uint32_t)(lqm_value * LINK_LOSS_MULTIPLIER);
+    tmp_ifs->cnf->lq_mult = mult;
+    tmp_ifs->cnf->orig_lq_mult_cnt++;
+  }
 
   blob_buf_init(&b, 0);
   blobmsg_add_string(&b, "adding", ifname);
 
   ret = ubus_send_reply(ctx_local, req, b.head);
   if (ret)
-    olsr_syslog(OLSR_LOG_ERR, "Failed to send reply: %s\n",
-                ubus_strerror(ret));
+    olsr_syslog(OLSR_LOG_ERR, "Failed to send reply: %s\n", ubus_strerror(ret));
 
   blob_buf_free(&b);
 
@@ -130,8 +150,7 @@ send_reply:
 
   ret = ubus_send_reply(ctx_local, req, b.head);
   if (ret)
-    olsr_syslog(OLSR_LOG_ERR, "Failed to send reply: %s\n",
-                ubus_strerror(ret));
+    olsr_syslog(OLSR_LOG_ERR, "Failed to send reply: %s\n", ubus_strerror(ret));
 
   blob_buf_free(&b);
 
@@ -162,8 +181,7 @@ static bool ubus_init_object() {
 
   ret = ubus_add_object(shared_ctx, &olsrd_object);
   if (ret) {
-    olsr_syslog(OLSR_LOG_ERR, "Failed to add object: %s\n",
-                ubus_strerror(ret));
+    olsr_syslog(OLSR_LOG_ERR, "Failed to add object: %s\n", ubus_strerror(ret));
     return false;
   }
 

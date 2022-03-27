@@ -2,6 +2,12 @@
     IPC integration of babeld with OpenWrt.
 
     The ubus interface offers following functions:
+    - add_filter '{"ifname":"eth0", "type":0, "metric":5000}'
+        type:
+            0: FILTER_TYPE_INPUT
+            1: FILTER_TYPE_OUTPUT
+            2: FILTER_TYPE_REDISTRIBUTE
+            3: FILTER_TYPE_INSTALL
     - add_interface '{"ifname":"eth0"}'
     - get_info
     - get_neighbours

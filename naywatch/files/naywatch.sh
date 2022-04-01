@@ -81,7 +81,7 @@ no_neighbors() {
     fi
 
     if [ $USE_WATCHDOG -eq 0 ] && [ $NO_NEIGHBORS_COUNT -gt $MIN_KICK ]; then
-        reboot_now
+        reboot_now 10
     fi
 }
 

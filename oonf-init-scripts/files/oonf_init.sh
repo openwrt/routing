@@ -118,3 +118,20 @@ reload()
   oonf_add_devices_to_configuration
   oonf_reread_config
 }
+
+running()
+{
+  # check if we have a pidfile and then check if that pid still exists.
+  # since we don't use -e this has to be explicitly returned. exit would stop the process.
+  test -e "/tmp/run/olsrd2.pid" && test -e "/proc/$(cat "/tmp/run/olsrd2.pid")" && return 0
+  return 1
+}
+
+status()
+{
+  if running; then
+    echo "running"
+  else
+    echo "stopped"
+  fi
+}

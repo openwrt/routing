@@ -30,7 +30,7 @@ define Package/opennds
   DEPENDS:=+iptables-nft +kmod-ipt-conntrack +kmod-ipt-nat +libmicrohttpd-no-ssl
   TITLE:=Open public network gateway daemon
   URL:=https://github.com/opennds/opennds
-  CONFLICTS:=nodogsplash nodogsplash2 iptables-legacy
+  CONFLICTS:=nodogsplash nodogsplash2
 endef
 
 define Package/opennds/description

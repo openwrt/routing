@@ -3,6 +3,7 @@
 
 USE_PROCD=1
 START=70
+STOP=10
 
 BIRD_BIN="/usr/sbin/bird"
 BIRD_CONF="/etc/bird.conf"

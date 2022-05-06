@@ -1,0 +1,46 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 2 Mar 2022 19:49:45 +0100
+Subject: batman-adv: Request iflink once in batadv_get_real_netdevice
+
+There is no need to call dev_get_iflink multiple times for the same
+net_device in batadv_get_real_netdevice. And since some of the
+ndo_get_iflink callbacks are dynamic (for example via RCUs like in
+vxcan_get_iflink), it could easily happen that the returned values are not
+stable. The pre-checks before __dev_get_by_index are then of course bogus.
+
+Fixes: 2b45bb6c3aad ("batman-adv: additional checks for virtual interfaces on top of WiFi")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/445f477ec3e805425186f5fbe8ed0fe89cc226b6
+
+--- a/net/batman-adv/hard-interface.c
++++ b/net/batman-adv/hard-interface.c
+@@ -214,14 +214,16 @@ static struct net_device *batadv_get_rea
+ 	struct net_device *real_netdev = NULL;
+ 	struct net *real_net;
+ 	struct net *net;
+-	int ifindex;
++	int iflink;
+ 
+ 	ASSERT_RTNL();
+ 
+ 	if (!netdev)
+ 		return NULL;
+ 
+-	if (netdev->ifindex == dev_get_iflink(netdev)) {
++	iflink = dev_get_iflink(netdev);
++
++	if (netdev->ifindex == iflink) {
+ 		dev_hold(netdev);
+ 		return netdev;
+ 	}
+@@ -231,9 +233,8 @@ static struct net_device *batadv_get_rea
+ 		goto out;
+ 
+ 	net = dev_net(hard_iface->soft_iface);
+-	ifindex = dev_get_iflink(netdev);
+ 	real_net = batadv_getlink_net(netdev, net);
+-	real_netdev = dev_get_by_index(real_net, ifindex);
++	real_netdev = dev_get_by_index(real_net, iflink);
+ 
+ out:
+ 	batadv_hardif_put(hard_iface);

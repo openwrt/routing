@@ -1,0 +1,29 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 22 Apr 2022 11:14:08 +0200
+Subject: batctl: ping: Skip sleep after last packet
+
+The -i option for ping is documented as interval between ping requests. But
+the sleep was also applied after all the requested pings already sent out.
+As result, the user had to wait additional time until the statistics for
+the (limited) ping test was printed.
+
+Just skip the last sleep in case there will be no next ping packet to avoid
+this problem.
+
+Reported-by: Roman Le bg <roman@romanlebg.fr>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/47d063213d5843d1ca33c557bd4a874db3e90e9e)
+
+--- a/ping.c
++++ b/ping.c
+@@ -282,6 +282,10 @@ read_packet:
+ 		}
+ 
+ sleep:
++		/* skip last sleep in case no more packets will be sent out */
++		if (loop_count == 0)
++			continue;
++
+ 		if (loop_interval > 0)
+ 			sleep(loop_interval);
+ 		else if ((tv.tv_sec != 0) || (tv.tv_usec != 0))

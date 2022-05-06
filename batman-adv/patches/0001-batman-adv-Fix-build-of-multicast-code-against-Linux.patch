@@ -7,7 +7,7 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
 --- a/net/batman-adv/multicast.c
 +++ b/net/batman-adv/multicast.c
-@@ -422,9 +422,14 @@ batadv_mcast_mla_softif_get_ipv6(struct
+@@ -431,9 +431,14 @@ batadv_mcast_mla_softif_get_ipv6(struct
  		return 0;
  	}
  
@@ -22,7 +22,7 @@ Signed-off-by: Sven Eckelmann <sven@narfation.org>
  		if (IPV6_ADDR_MC_SCOPE(&pmc6->mca_addr) <
  		    IPV6_ADDR_SCOPE_LINKLOCAL)
  			continue;
-@@ -453,6 +458,9 @@ batadv_mcast_mla_softif_get_ipv6(struct
+@@ -462,6 +467,9 @@ batadv_mcast_mla_softif_get_ipv6(struct
  		hlist_add_head(&new->list, mcast_list);
  		ret++;
  	}

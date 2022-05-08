@@ -9,7 +9,7 @@
  struct timeval now;
  
  unsigned char myid[8];
-@@ -518,6 +520,9 @@ main(int argc, char **argv)
+@@ -521,6 +523,9 @@ main(int argc, char **argv)
          }
      }
  
@@ -19,7 +19,7 @@
      init_signals();
      rc = resize_receive_buffer(1500);
      if(rc < 0)
-@@ -613,6 +618,8 @@ main(int argc, char **argv)
+@@ -616,6 +621,8 @@ main(int argc, char **argv)
                  FD_SET(local_sockets[i].fd, &readfds);
                  maxfd = MAX(maxfd, local_sockets[i].fd);
              }
@@ -28,7 +28,7 @@
              rc = select(maxfd + 1, &readfds, NULL, NULL, &tv);
              if(rc < 0) {
                  if(errno != EINTR) {
-@@ -681,6 +688,9 @@ main(int argc, char **argv)
+@@ -684,6 +691,9 @@ main(int argc, char **argv)
              i++;
          }
  
@@ -57,7 +57,7 @@
  static struct filter *input_filters = NULL;
  static struct filter *output_filters = NULL;
  static struct filter *redistribute_filters = NULL;
-@@ -1029,7 +1031,8 @@ parse_option(int c, gnc_t gnc, void *clo
+@@ -1036,7 +1038,8 @@ parse_option(int c, gnc_t gnc, void *clo
                strcmp(token, "daemonise") == 0 ||
                strcmp(token, "skip-kernel-setup") == 0 ||
                strcmp(token, "ipv6-subtrees") == 0 ||
@@ -67,7 +67,7 @@
          int b;
          c = getbool(c, &b, gnc, closure);
          if(c < -1)
-@@ -1047,6 +1050,8 @@ parse_option(int c, gnc_t gnc, void *clo
+@@ -1054,6 +1057,8 @@ parse_option(int c, gnc_t gnc, void *clo
              has_ipv6_subtrees = b;
          else if(strcmp(token, "reflect-kernel-metric") == 0)
              reflect_kernel_metric = b;

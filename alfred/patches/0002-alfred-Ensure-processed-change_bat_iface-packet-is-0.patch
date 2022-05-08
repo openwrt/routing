@@ -1,0 +1,22 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 19 Feb 2022 08:51:28 +0100
+Subject: alfred: Ensure processed change_bat_iface packet is 0-terminated
+
+A client sending a alfred_change_bat_iface_v0 packet to the alfred server
+might have forgotten to 0-terminate the string. In this case, strdup in
+alfred_change_bat_iface_v0 might read outside of the available buffer.
+
+Fixes: b96cc742ef3e ("alfred: introduce 'change batman-adv interface' IPC call")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/alfred.git/commit/6beca03bdafd24cc46b4aa7ff2b87612471bdab0
+
+--- a/unix_sock.c
++++ b/unix_sock.c
+@@ -360,6 +360,7 @@ unix_sock_change_bat_iface(struct global
+ 		goto err;
+ 
+ 	free(globals->mesh_iface);
++	change_bat_iface->bat_iface[sizeof(change_bat_iface->bat_iface) - 1] = '\0';
+ 	globals->mesh_iface = strdup(change_bat_iface->bat_iface);
+ 
+ 	ret = 0;

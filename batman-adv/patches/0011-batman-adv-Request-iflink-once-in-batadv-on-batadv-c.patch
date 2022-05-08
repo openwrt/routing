@@ -1,0 +1,44 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 2 Mar 2022 19:49:44 +0100
+Subject: batman-adv: Request iflink once in batadv-on-batadv check
+
+There is no need to call dev_get_iflink multiple times for the same
+net_device in batadv_is_on_batman_iface. And since some of the
+.ndo_get_iflink callbacks are dynamic (for example via RCUs like in
+vxcan_get_iflink), it could easily happen that the returned values are not
+stable. The pre-checks before __dev_get_by_index are then of course bogus.
+
+Fixes: 3d48811b27f5 ("batman-adv: prevent using any virtual device created on batman-adv as hard-interface")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/f6c0c45356fe3ab9c5e01b81d060f8a436658037
+
+--- a/net/batman-adv/hard-interface.c
++++ b/net/batman-adv/hard-interface.c
+@@ -149,22 +149,23 @@ static bool batadv_is_on_batman_iface(co
+ 	struct net *net = dev_net(net_dev);
+ 	struct net_device *parent_dev;
+ 	struct net *parent_net;
++	int iflink;
+ 	bool ret;
+ 
+ 	/* check if this is a batman-adv mesh interface */
+ 	if (batadv_softif_is_valid(net_dev))
+ 		return true;
+ 
++	iflink = dev_get_iflink(net_dev);
++
+ 	/* no more parents..stop recursion */
+-	if (dev_get_iflink(net_dev) == 0 ||
+-	    dev_get_iflink(net_dev) == net_dev->ifindex)
++	if (iflink == 0 || iflink == net_dev->ifindex)
+ 		return false;
+ 
+ 	parent_net = batadv_getlink_net(net_dev, net);
+ 
+ 	/* recurse over the parent device */
+-	parent_dev = __dev_get_by_index((struct net *)parent_net,
+-					dev_get_iflink(net_dev));
++	parent_dev = __dev_get_by_index((struct net *)parent_net, iflink);
+ 	/* if we got a NULL parent_dev there is something broken.. */
+ 	if (!parent_dev) {
+ 		pr_err("Cannot find parent device\n");

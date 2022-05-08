@@ -1,0 +1,22 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 19 Feb 2022 08:51:28 +0100
+Subject: alfred: Ensure processed change_iface packet is 0-terminated
+
+A client sending a alfred_change_interface_v0 packet to the alfred server
+might have forgotten to 0-terminate the string. In this case, strstr in
+unix_sock_change_iface might read outside of the available buffer.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/alfred.git/commit/d2d27e4b9d697928d21dfa5c79908618ef8b56ac
+
+--- a/unix_sock.c
++++ b/unix_sock.c
+@@ -329,6 +329,8 @@ unix_sock_change_iface(struct globals *g
+ 	if (len < (int)(sizeof(*change_iface) - sizeof(change_iface->header)))
+ 		goto err;
+ 
++	change_iface->ifaces[sizeof(change_iface->ifaces) - 1] = '\0';
++
+ 	if (globals->opmode == OPMODE_SECONDARY) {
+ 		if (strstr(change_iface->ifaces, ",") != NULL) {
+ 			ret = -EINVAL;

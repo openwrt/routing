@@ -61,6 +61,8 @@ static inline void batadv_eth_hw_addr_set(struct net_device *dev,
 
 #if LINUX_VERSION_IS_LESS(5, 18, 0)
 
+#include <linux/netdevice.h>
+
 static inline int batadv_netif_rx(struct sk_buff *skb)
 {
 	if (in_interrupt())

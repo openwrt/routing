@@ -35,7 +35,7 @@ define Package/babeld/description
   with fast convergence properties. It is based on the ideas in DSDV, AODV and
   Cisco's EIGRP, but is designed to work well not only in wired networks but
   also in wireless mesh networks, and has been extended with support for
-  overlay networks. Babel is in the process of becoming an IETF Standard.
+  overlay networks. Babel is an IETF standard protocol (RFC 8966).
 endef
 
 define Package/babeld/conffiles

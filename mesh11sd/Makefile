@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mesh11sd
-PKG_VERSION:=1.0.0
+PKG_VERSION:=1.1.1
 PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -17,7 +17,7 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/mesh11sd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=a9f2ac4e1cdf5c4fe933ad68adf7c62d6d4a5e20a7f61f79dfa26a309f97049e
+PKG_HASH:=61af46481facadf626bb1cc09c3bf2f2a9e1e9468145647ba5f5931b5f04ee98
 PKG_BUILD_DIR:=$(BUILD_DIR)/mesh11sd-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
@@ -48,9 +48,9 @@ define Package/mesh11sd/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(CP) $(PKG_BUILD_DIR)/src/mesh11sd $(1)/usr/sbin
-	$(CP) $(PKG_BUILD_DIR)/linux_openwrt/mesh11sd/files/etc/config/mesh11sd $(1)/etc/config/
-	$(CP) $(PKG_BUILD_DIR)/linux_openwrt/mesh11sd/files/etc/init.d/mesh11sd $(1)/etc/init.d/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/mesh11sd $(1)/usr/sbin
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/linux_openwrt/mesh11sd/files/etc/config/mesh11sd $(1)/etc/config/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/linux_openwrt/mesh11sd/files/etc/init.d/mesh11sd $(1)/etc/init.d/
 endef
 
 define Package/mesh11sd/conffiles

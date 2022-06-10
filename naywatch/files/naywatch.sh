@@ -88,6 +88,9 @@ no_neighbors() {
 log "Naywatch Started!"
 
 neighbors() {
+    if [ $ACTIVE -eq 0 ]; then
+        log "Naywatch Activated!"
+    fi
     ACTIVE=1
     NO_NEIGHBORS_COUNT=0
     if [ $USE_WATCHDOG -eq 1 ]; then

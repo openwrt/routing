@@ -1,6 +1,6 @@
 --- a/node_build/builder.js
 +++ b/node_build/builder.js
-@@ -277,8 +277,8 @@ const execJs = function (js, ctx, file, fileName, callback, thisObj) {
+@@ -277,8 +277,8 @@ const execJs = function (js, ctx, file,
      js = '"use strict";' + qs.join("'");
  
      const to = setTimeout(function () {

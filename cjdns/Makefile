@@ -17,12 +17,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cjdns
-PKG_VERSION:=v21
-PKG_RELEASE:=3
+PKG_VERSION:=v21.1
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/cjdelisle/cjdns/tar.gz/$(PKG_NAME)-$(PKG_VERSION)?
-PKG_HASH:=6dfb1fe18c9689324f36c8d33e660972aac5af4579fcaa9c4730179bc8d67c69
+PKG_HASH:=a6158ce7847159aa44e86f74ccc7b6ded6910a230ed8f3830db53cda5838f0b0
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_MAINTAINER:=William Fleurant <meshnet@protonmail.com>

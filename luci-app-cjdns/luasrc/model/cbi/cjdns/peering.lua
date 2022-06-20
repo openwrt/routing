@@ -70,4 +70,13 @@ eth_peers:option(Value, "address", translate("MAC address")).datatype = "macaddr
 eth_peers:option(Value, "public_key", translate("Public key"))
 eth_peers:option(Value, "password", translate("Password"))
 
+-- Supernodes
+supernodes = m:section(TypedSection, "supernodes", translate("List of Supernodes"),
+  translate("If none are specified they'll be taken from your peers"))
+supernodes.anonymous = true
+supernodes.addremove = true
+supernodes.template  = "cbi/tblsection"
+
+supernodes:option(Value, "public_key", translate("Public Key")).size = 55
+
 return m

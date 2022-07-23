@@ -84,7 +84,7 @@ define Package/$(luci)
   SUBMENU:=3. Applications
   MAINTAINER:=Eloi Carbo <eloicaso@openmailbox.org>
   URL:=https://github.com/eloicaso/bird-openwrt/
-  DEPENDS:=+$(BIRD_PKG)-uci +luci-base
+  DEPENDS:=+$(BIRD_PKG)-uci +luci-base +luci-compat
 endef
 
 define Package/$(luci)/description

@@ -6,12 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=opennds
-PKG_VERSION:=9.7.0
-PKG_RELEASE:=1
+PKG_VERSION:=9.8.0
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/opennds/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=3059911743edeec7b89c289d40382696273646a632e2e7cdcb43067d0396b347
+PKG_HASH:=11f4a48ef62007f56376c32a028f19183452c62eee6fddcb11aafe822e5ff1b4
 PKG_BUILD_DIR:=$(BUILD_DIR)/openNDS-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -27,10 +27,10 @@ define Package/opennds
   SUBMENU:=Captive Portals
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libpthread +iptables-mod-ipopt +libmicrohttpd-no-ssl
+  DEPENDS:=+kmod-ipt-conntrack +kmod-ipt-nat +libmicrohttpd-no-ssl
   TITLE:=Open public network gateway daemon
   URL:=https://github.com/opennds/opennds
-  CONFLICTS:=nodogsplash nodogsplash2
+  CONFLICTS:=nodogsplash
 endef
 
 define Package/opennds/description
@@ -41,7 +41,7 @@ define Package/opennds/description
   The package incorporates the FAS API allowing many flexible customisation options.
   The creation of sophisticated third party authentication applications is fully supported.
   Internet hosted https portals can be implemented with no security errors, to inspire maximum user confidence.
-  This release requires iptables(legacy)
+  This version requires iptables-legacy.
 endef
 
 define Package/opennds/install
@@ -71,6 +71,7 @@ define Package/opennds/install
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/unescape.sh $(1)/usr/lib/opennds/
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/authmon.sh $(1)/usr/lib/opennds/
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/dnsconfig.sh $(1)/usr/lib/opennds/
+	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/download_resources.sh $(1)/usr/lib/opennds/
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/libs/post-request.php $(1)/usr/lib/opennds/
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/fas-aes/fas-aes.php $(1)/etc/opennds/
 	$(CP) $(PKG_BUILD_DIR)/forward_authentication_service/fas-hid/fas-hid.php $(1)/etc/opennds/

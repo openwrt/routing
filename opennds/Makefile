@@ -6,12 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=opennds
-PKG_VERSION:=9.8.0
+PKG_VERSION:=9.9.0
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/opennds/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=11f4a48ef62007f56376c32a028f19183452c62eee6fddcb11aafe822e5ff1b4
+PKG_HASH:=fd32ffce4a082ac0c40d4627fc1219b5c8cfcb5d73e70166bf3cf82cda91ac8e
 PKG_BUILD_DIR:=$(BUILD_DIR)/openNDS-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -34,13 +34,10 @@ define Package/opennds
 endef
 
 define Package/opennds/description
-  openNDS is a Captive Portal solution that offers an instant way to provide restricted access to the Internet.
-  With little or no configuration, a dynamically generated and adaptive splash page sequence is automatically served.
-  Both client driven Captive Portal Detection (CPD) and gateway driven Captive Portal Identification (CPI - RFC 8910 and RFC 8908) are supported.
-  Internet access is granted by either a click to continue button, or after credential verification as a result of filling in a login form.
-  The package incorporates the FAS API allowing many flexible customisation options.
-  The creation of sophisticated third party authentication applications is fully supported.
-  Internet hosted https portals can be implemented with no security errors, to inspire maximum user confidence.
+  openNDS (open Network Demarcation Service) is a high performance, small footprint, Captive Portal.
+  It provides a border control gateway between a public local area network and the Internet.
+  It supports all ranges between small stand alone venues through to large mesh networks with multiple portal entry points.
+  Both the client driven Captive Portal Detection (CPD) method and gateway driven Captive Portal Identification method (CPI - RFC 8910 and RFC 8908) are supported.
   This version requires iptables-nft.
 endef
 

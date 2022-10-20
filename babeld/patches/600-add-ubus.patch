@@ -57,7 +57,7 @@
  static struct filter *input_filters = NULL;
  static struct filter *output_filters = NULL;
  static struct filter *redistribute_filters = NULL;
-@@ -1036,7 +1038,8 @@ parse_option(int c, gnc_t gnc, void *clo
+@@ -1078,7 +1080,8 @@ parse_option(int c, gnc_t gnc, void *clo
                strcmp(token, "daemonise") == 0 ||
                strcmp(token, "skip-kernel-setup") == 0 ||
                strcmp(token, "ipv6-subtrees") == 0 ||
@@ -67,7 +67,7 @@
          int b;
          c = getbool(c, &b, gnc, closure);
          if(c < -1)
-@@ -1054,6 +1057,8 @@ parse_option(int c, gnc_t gnc, void *clo
+@@ -1096,6 +1099,8 @@ parse_option(int c, gnc_t gnc, void *clo
              has_ipv6_subtrees = b;
          else if(strcmp(token, "reflect-kernel-metric") == 0)
              reflect_kernel_metric = b;

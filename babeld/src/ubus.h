@@ -9,6 +9,7 @@
             2: FILTER_TYPE_REDISTRIBUTE
             3: FILTER_TYPE_INSTALL
     - add_interface '{"ifname":"eth0"}'
+    - del_filters '{"ifname":"eth0"}'
     - get_info
     - get_neighbours
     - get_xroutes

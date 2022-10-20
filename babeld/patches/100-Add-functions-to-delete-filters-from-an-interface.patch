@@ -1,0 +1,65 @@
+From 7dc87f39dc5d1db7654f6ad89eca77766812affd Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Tue, 18 Oct 2022 21:34:03 +0200
+Subject: [PATCH] Add functions to delete filters from an interface
+
+Adding a delete function at runtime allows the babeld ipc to add and
+remove interfaces with filters. Further, it also allows more dynamic
+routing selection.
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ configuration.c | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+--- a/configuration.c
++++ b/configuration.c
+@@ -859,6 +859,48 @@ parse_key(int c, gnc_t gnc, void *closur
+     return -2;
+ }
+ 
++void
++delete_filters_from_interface(char* ifname, struct filter **filters)
++{
++    struct filter *f;
++
++    while(*filters && (*filters)->ifname && strcmp(ifname, (*filters)->ifname) == 0)
++    {
++        f = *filters;
++        *filters = f->next;
++        free(f);
++    }
++    
++    f = *filters;
++    while(f && f->next)
++    {
++        if(!f->next->ifname)
++        {
++            f = f->next;
++            continue;
++        }
++
++        if(strcmp(ifname, f->next->ifname) == 0)
++        {
++            struct filter *tmp;
++            tmp = f->next;
++            f->next = f->next->next;
++            free(tmp);
++        } else {
++            f = f->next;
++        }
++    }
++}
++
++void
++delete_all_filters_from_interface(char* ifname)
++{
++    delete_filters_from_interface(ifname, &input_filters);
++    delete_filters_from_interface(ifname, &output_filters);
++    delete_filters_from_interface(ifname, &redistribute_filters);
++    delete_filters_from_interface(ifname, &install_filters);
++}
++
+ int
+ add_filter(struct filter *filter, int type)
+ {

@@ -117,6 +117,30 @@ static int babeld_ubus_add_filter(struct ubus_context *ctx_local,
   return UBUS_STATUS_OK;
 }
 
+// Deletes filters for a given interface.
+static int babeld_ubus_del_filters(struct ubus_context *ctx_local,
+                                     struct ubus_object *obj,
+                                     struct ubus_request_data *req,
+                                     const char *method,
+                                     struct blob_attr *msg) {
+  struct blob_attr *tb[__INTERFACE_MAX];
+  struct blob_buf b = {0};
+  struct interface *ifp = NULL;
+  char *ifname;
+
+  blobmsg_parse(interface_policy, __INTERFACE_MAX, tb, blob_data(msg),
+                blob_len(msg));
+
+  if (!tb[INTERFACE_IFNAME])
+    return UBUS_STATUS_INVALID_ARGUMENT;
+
+  ifname = blobmsg_get_string(tb[INTERFACE_IFNAME]);
+
+  delete_all_filters_from_interface(ifname);
+
+  return UBUS_STATUS_OK;
+}
+
 // Adds an inteface (ubus equivalent to "interface"-function).
 static int babeld_ubus_add_interface(struct ubus_context *ctx_local,
                                      struct ubus_object *obj,
@@ -419,6 +443,7 @@ static int babeld_ubus_get_neighbours(struct ubus_context *ctx_local,
 static const struct ubus_method babeld_methods[] = {
     UBUS_METHOD("add_interface", babeld_ubus_add_interface, interface_policy),
     UBUS_METHOD("add_filter", babeld_ubus_add_filter, filter_policy),
+    UBUS_METHOD("del_filters", babeld_ubus_del_filters, interface_policy),
     UBUS_METHOD_NOARG("get_info", babeld_ubus_babeld_info),
     UBUS_METHOD_NOARG("get_xroutes", babeld_ubus_get_xroutes),
     UBUS_METHOD_NOARG("get_routes", babeld_ubus_get_routes),

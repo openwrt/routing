@@ -100,7 +100,7 @@ endef
 define Package/olsrd-mod-mdns
   $(call Package/olsrd/template)
   DEPENDS:=olsrd
-  TITLE:=MDNS/Zeroconf/Bonjour packet distribution 
+  TITLE:=MDNS/Zeroconf/Bonjour packet distribution
 endef
 
 define Package/olsrd-mod-nameservice

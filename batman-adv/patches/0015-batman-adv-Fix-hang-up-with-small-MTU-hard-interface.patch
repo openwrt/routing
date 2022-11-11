@@ -1,0 +1,43 @@
+From: Shigeru Yoshida <syoshida@redhat.com>
+Date: Sat, 20 Aug 2022 12:25:16 +0900
+Subject: batman-adv: Fix hang up with small MTU hard-interface
+
+The system hangs up when batman-adv soft-interface is created on
+hard-interface with small MTU.  For example, the following commands
+create batman-adv soft-interface on dummy interface with zero MTU:
+
+  # ip link add name dummy0 type dummy
+  # ip link set mtu 0 dev dummy0
+  # ip link set up dev dummy0
+  # ip link add name bat0 type batadv
+  # ip link set dev dummy0 master bat0
+
+These commands cause the system hang up with the following messages:
+
+  [   90.578925][ T6689] batman_adv: bat0: Adding interface: dummy0
+  [   90.580884][ T6689] batman_adv: bat0: The MTU of interface dummy0 is too small (0) to handle the transport of batman-adv packets. Packets going over this interface will be fragmented on layer2 which could impact the performance. Setting the MTU to 1560 would solve the problem.
+  [   90.586264][ T6689] batman_adv: bat0: Interface activated: dummy0
+  [   90.590061][ T6689] batman_adv: bat0: Forced to purge local tt entries to fit new maximum fragment MTU (-320)
+  [   90.595517][ T6689] batman_adv: bat0: Forced to purge local tt entries to fit new maximum fragment MTU (-320)
+  [   90.598499][ T6689] batman_adv: bat0: Forced to purge local tt entries to fit new maximum fragment MTU (-320)
+
+This patch fixes this issue by returning error when enabling
+hard-interface with small MTU size.
+
+Fixes: 29a2a3dc52f4 ("hard interface rewrite")
+Signed-off-by: Shigeru Yoshida <syoshida@redhat.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/a124b52ebab91ac416cf7ba05e671cbb860f30e8
+
+--- a/net/batman-adv/hard-interface.c
++++ b/net/batman-adv/hard-interface.c
+@@ -729,6 +729,9 @@ int batadv_hardif_enable_interface(struc
+ 	int max_header_len = batadv_max_header_len();
+ 	int ret;
+ 
++	if (hard_iface->net_dev->mtu < ETH_MIN_MTU + max_header_len)
++		return -EINVAL;
++
+ 	if (hard_iface->if_status != BATADV_IF_NOT_IN_USE)
+ 		goto out;
+ 

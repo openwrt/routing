@@ -117,11 +117,12 @@ This reverts commit 043ae5634bdfd4c4dd8b95a22890752495080bb5.
  #include <linux/gfp.h>
 --- a/net/batman-adv/hard-interface.c
 +++ b/net/batman-adv/hard-interface.c
-@@ -9,11 +9,11 @@
+@@ -9,12 +9,12 @@
  
  #include <linux/atomic.h>
  #include <linux/byteorder/generic.h>
 -#include <linux/container_of.h>
+ #include <linux/errno.h>
  #include <linux/gfp.h>
  #include <linux/if.h>
  #include <linux/if_arp.h>

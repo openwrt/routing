@@ -74,6 +74,14 @@ static inline int batadv_netif_rx(struct sk_buff *skb)
 
 #endif /* LINUX_VERSION_IS_LESS(5, 18, 0) */
 
+#if LINUX_VERSION_IS_LESS(6, 0, 0)
+
+#define __vstring(item, fmt, ap) __dynamic_array(char, item, 256)
+#define __assign_vstr(dst, fmt, va) \
+	WARN_ON_ONCE(vsnprintf(__get_dynamic_array(dst), 256, fmt, *va) >= 256)
+
+#endif /* LINUX_VERSION_IS_LESS(6, 0, 0) */
+
 /* <DECLARE_EWMA> */
 
 #include <linux/version.h>

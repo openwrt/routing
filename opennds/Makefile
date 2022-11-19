@@ -6,12 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=opennds
-PKG_VERSION:=9.9.0
+PKG_VERSION:=9.9.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/opennds/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=fd32ffce4a082ac0c40d4627fc1219b5c8cfcb5d73e70166bf3cf82cda91ac8e
+PKG_HASH:=039c2228c83f9340e73c8b9410259a278d2880b442f2361f6d630e534baf7621
 PKG_BUILD_DIR:=$(BUILD_DIR)/openNDS-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -36,8 +36,8 @@ endef
 define Package/opennds/description
   openNDS (open Network Demarcation Service) is a high performance, small footprint, Captive Portal.
   It provides a border control gateway between a public local area network and the Internet.
-  It supports all ranges between small stand alone venues through to large mesh networks with multiple portal entry points.
-  Both the client driven Captive Portal Detection (CPD) method and gateway driven Captive Portal Identification method (CPI - RFC 8910 and RFC 8908) are supported.
+  It supports all scenarios ranging from small stand alone venues through to large mesh networks with multiple portal entry points.
+  Both the client driven Captive Portal Detection method (CPD) and gateway driven Captive Portal Identification method (CPI - RFC 8910 and RFC 8908) are supported.
   This version requires iptables-nft.
 endef
 

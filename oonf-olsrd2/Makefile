@@ -27,6 +27,8 @@ CMAKE_OPTIONAL_PLUGINS:= $(subst $(SPACE),;,$(strip \
         $(if $(filter y,$(CONFIG_OONF_GENERIC_REMOTECONTROL)),remotecontrol,) \
         $(if $(filter y,$(CONFIG_OONF_OLSRV2_MPR)),mpr,) \
         $(if $(filter y,$(CONFIG_OONF_GENERIC_HTTP)),http,) \
+        $(if $(filter y,$(CONFIG_OONF_OLSRV2_LAN)),olsrv2_lan,) \
+        $(if $(filter y,$(CONFIG_OONF_OLSRV2_OLD_LAN)),olsrv2_old_lan,) \
     ))
 
 BUILD_TYPE:= $(if $(filter y,$(CONFIG_DEBUG)),Debug,Release)

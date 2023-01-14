@@ -3,4 +3,6 @@
 START=82
 DAEMON='dlep_proxy'
 
-. /lib/functions/oonf_init.sh
+[ -n "$IPKG_INSTROOT" ] || {
+        . /lib/functions/oonf_init.sh
+}

@@ -1,0 +1,91 @@
+#!/bin/sh
+# Copyright (C) 2016 OpenWrt.org
+
+. /lib/functions.sh
+. /usr/share/libubox/jshn.sh
+. /lib/functions/olsrd2.sh
+
+case "$1" in
+	list)
+		json_init
+
+		json_add_object "getVersion"
+		json_close_object
+		json_add_object "getLan"
+		json_close_object
+		json_add_object "getNode"
+		json_close_object
+		json_add_object "getNeighbors"
+		json_close_object
+		json_add_object "getAttached_network"
+		json_close_object
+		json_add_object "getRoute"
+		json_close_object
+		json_add_object "getGraph"
+		json_close_object
+		json_add_object "getDomain"
+		json_close_object
+
+		json_dump
+	;;
+	call)
+		case "$2" in
+			getVersion)
+				echo '/systeminfo json version /quit' | nc ::1 2009 2>/dev/null
+			;;
+			getLan)
+				echo '/olsrv2info json lan /quit' | nc ::1 2009 2>/dev/null
+			;;
+			getNode)
+				echo '/olsrv2info json node /quit' | nc ::1 2009 2>/dev/null
+			;;
+			getNeighbors)
+				domain="$(uci_get luci_olsr2 general domain)"
+				[ -z "$domain" ] || domain=".$domain"
+				json_init
+				json_add_array "neighbors"
+				OLDIFS="$IFS"
+				IFS=$'\n'
+				neighbor_status="$(echo '/nhdpinfo neighbor /quit' | nc ::1 2009 | cut -f 1,9,10,11,12)"
+				for neighbor in $neighbor_status; do
+					json_add_object 0
+					IFS="$OLDIFS"
+					i=1
+					for value in $neighbor ; do
+						case $i in
+							1) json_add_string "originator" "${value}"
+								network_get_neighbour_by_ip "${value}"
+								json_add_string "lladdr" "${lladdr}"
+								json_add_string "hostname" "${hostname}${domain}"
+								network_get_name_by_device interface $dev
+								json_add_string "interface" "${interface}"
+								;;
+							2) json_add_string "metric_in" "${value}";;
+							3) json_add_string "metric_in_raw" "${value}";;
+							4) json_add_string "metric_out" "${value}";;
+							5) json_add_string "metric_out_raw" "${value}";;
+						esac
+						i=$(( i + 1 ))
+					done
+					IFS=$'\n'
+					json_close_object
+				done
+				IFS="$OLDIFS"
+				json_close_array
+				json_dump
+			;;
+			getAttached_network)
+				echo '/olsrv2info json attached_network /quit' | nc ::1 2009 2>/dev/null
+			;;
+			getRoute)
+				echo '/netjsoninfo filter route ipv6_0' | nc ::1 2009 2>/dev/null
+			;;
+			getGraph)
+				echo '/netjsoninfo filter graph ipv6_0' | nc ::1 2009 2>/dev/null
+			;;
+			getDomain)
+				echo '/netjsoninfo domain' | nc ::1 2009 2>/dev/null
+			;;
+		esac
+	;;
+esac

@@ -1,0 +1,27 @@
+{
+	"unauthenticated": {
+		"description": "Allow system feature probing",
+		"read": {
+			"file": {
+				"/www/luci-static/resources/view/olsrd2": [ "list" ]
+			},
+			"ubus": {
+				"status.olsrd2": [ "getVersion", "getLan", "getNode", "getNeighbors", "getAttached_network" ],
+				"file": [ "list" ]
+
+			}
+		}
+	},
+	"luci-app-olsrd2": {
+		"description": "Grant UCI access for luci-app-olsrd2",
+		"read": {
+			"uci": [ "olsrd2" ],
+			"ubus": {
+				"status.olsrd2": [ "getVersion", "getLan", "getNode", "getNeighbors", "getAttached_network" ]
+			}
+		},
+		"write": {
+			"uci": [ "olsrd2" ]
+		}
+	}
+}

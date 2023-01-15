@@ -1,0 +1,3 @@
+config 'olsrd2' 'general'
+	option 'resolve' '1'
+	option 'domain' 'olsr'

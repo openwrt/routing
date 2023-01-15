@@ -1,0 +1,171 @@
+{
+	"admin/services/olsrd2": {
+		"title": "OLSRD2",
+		"action": {
+			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-olsrd2" ]
+		}
+	},
+	"admin/services/olsrd2/global": {
+		"title": "Global",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/global"
+		}
+	},
+	"admin/services/olsrd2/log": {
+		"title": "Logging",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/log"
+		}
+	},
+	"admin/services/olsrd2/olsrv2": {
+		"title": "Daemon",
+		"order": 3,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/olsrv2"
+		}
+	},
+	"admin/services/olsrd2/olsrv2_lan": {
+		"title": "Prefix",
+		"order": 4,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/olsrv2_lan"
+		}
+	},
+	"admin/services/olsrd2/domain": {
+		"title": "Domain",
+		"order": 5,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/domain"
+		}
+	},
+	"admin/services/olsrd2/mesh": {
+		"title": "Mesh",
+		"order": 6,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/mesh"
+		}
+	},
+	"admin/services/olsrd2/lan_import": {
+		"title": "LAN Import",
+		"order": 7,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/lan_import"
+		}
+	},
+	"admin/services/olsrd2/interface": {
+		"title": "Interface",
+		"order": 8,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/interface"
+		}
+	},
+	"admin/services/olsrd2/luci": {
+		"title": "LUCI",
+		"order": 8,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/luci"
+		}
+	},
+	"admin/status/olsrd2": {
+		"title": "OLSRD2",
+		"action": {
+			"type": "firstchild"
+		}
+	},
+	"admin/status/olsrd2/overview": {
+		"title": "Overview",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/overview"
+		}
+	},
+	"admin/status/olsrd2/node": {
+		"title": "Nodes",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/node"
+		}
+	},
+	"admin/status/olsrd2/attachednetwork": {
+		"title": "Attachednetwork",
+		"order": 3,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/attachednetwork"
+		}
+	},
+	"admin/status/olsrd2/neighbors": {
+		"title": "Neighbors",
+		"order": 4,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/neighbors"
+		}
+	},
+	"public/status": {
+		"title": "Status",
+		"order": 10,
+		"action": {
+			"type": "firstchild",
+			"recurse": true
+		},
+		"auth": {}
+	},
+	"public/status/olsrd2": {
+		"title": "OLSRD2",
+		"order": 20,
+		"action": {
+			"type": "firstchild",
+			"recurse": true
+		},
+		"auth": {}
+	},
+	"public/status/olsrd2/overview": {
+		"title": "Overview",
+		"order": 4,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/overview"
+		}
+	},
+	"public/status/olsrd2/node": {
+		"title": "Nodes",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/node"
+		}
+	},
+	"public/status/olsrd2/attachednetwork": {
+		"title": "Attachednetwork",
+		"order": 3,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/attachednetwork"
+		}
+	},
+	"public/status/olsrd2/neighbors": {
+		"title": "Neighbors",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "olsrd2/neighbors"
+		}
+	}
+}

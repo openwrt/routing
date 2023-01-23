@@ -6,12 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=opennds
-PKG_VERSION:=9.9.1
+PKG_VERSION:=9.10.0
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/opennds/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=039c2228c83f9340e73c8b9410259a278d2880b442f2361f6d630e534baf7621
+PKG_HASH:=0508a52ea6b2a18365ae071c623f923680bb926605f7b0678f14ea58bbfb2aba
 PKG_BUILD_DIR:=$(BUILD_DIR)/openNDS-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>

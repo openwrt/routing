@@ -1,16 +1,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=oonf-olsrd2
-PKG_VERSION:=v0.15.1
-PKG_REV:=bffb88b040659b237c4c91b6b42dbbb47431750e
-PKG_RELEASE:=$(PKG_REV)
+PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_URL:=https://github.com/OLSR/OONF.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_VERSION:=$(PKG_REV)
-PKG_MIRROR_HASH:=2e38140e804e7fc0138d0893416c4f19b1ca43bd9de066e8b028bd0d59ac9255
+PKG_SOURCE_URL:=https://github.com/OLSR/OONF.git
+PKG_SOURCE_DATE:=2022-08-25
+PKG_SOURCE_VERSION:=fb15d54d6a7a087cb0c5ec37c49804f6ce432396
+PKG_MIRROR_HASH:=e8b2e7890f7315694649bb26c22be09554cba3724bae5419ea047101a4f5d03d
 
 CMAKE_INSTALL:=1
 
@@ -40,8 +37,8 @@ CMAKE_OPTIONS+=-D CMAKE_BUILD_TYPE:String=$(BUILD_TYPE) \
                -D UCI:Bool=true \
                -D OONF_APP_DEFAULT_CFG_HANDLER:String=uci \
                -D OONF_STATIC_PLUGINS:String="class;clock;duplicate_set;layer2;packet_socket;rfc5444;socket;stream_socket;telnet;timer;viewer;os_clock;os_fd;os_interface;os_routing;os_system;nhdp;olsrv2;ff_dat_metric;neighbor_probing;nl80211_listener;link_config;layer2info;systeminfo;cfg_uciloader;cfg_compact;nhdpinfo;olsrv2info;netjsoninfo;${CMAKE_OPTIONAL_PLUGINS}" \
-               -D OONF_LIB_GIT:String=v$(PKG_VERSION)-archive \
-               -D OONF_VERSION:String=$(PKG_VERSION) \
+               -D OONF_LIB_GIT:String=$(PKG_SOURCE_VERSION) \
+               -D VERSION_SUB_TAG:String=$(PKG_SOURCE_DATE) \
                -D INSTALL_LIB_DIR:Path=lib/oonf \
                -D INSTALL_INCLUDE_DIR:Path=include/oonf \
                -D INSTALL_CMAKE_DIR:Path=lib/oonf \

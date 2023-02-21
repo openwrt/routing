@@ -6,12 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=babeld
-PKG_VERSION:=1.12.1
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=1.12.2
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://www.irif.fr/~jch/software/files/
-PKG_HASH:=9ab59d7ac741f3630df23f9c3b67c60294d8b34ab622398f9b89773a878ecb1e
+PKG_HASH:=1db22b6193070ea2450a1ab51196fd72f58a1329f780cb0388e2e4b2e7768cbb
 
 PKG_MAINTAINER:=Gabriel Kerneis <gabriel@kerneis.info>, \
 	Baptiste Jonglez <openwrt-pkg@bitsofnetworks.org>, \

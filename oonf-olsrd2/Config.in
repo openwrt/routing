@@ -44,4 +44,16 @@
 			The MPR plugin reduce the routing graph to limit the overhead of the OLSRv2 protocol
 		default y
 
+	config OONF_OLSRV2_LAN
+		bool "New config option for Locally attached entries"
+		help
+			Adds the 'lan' section to the config to configure LANs without setting multiple settings in a single key/value pair
+		default y
+
+	config OONF_OLSRV2_OLD_LAN
+		bool "Legacy option for Locally attached entries"
+		help
+			Adds the olsr 'lan' config key in the olsrv2 section
+		default n
+
 	endmenu

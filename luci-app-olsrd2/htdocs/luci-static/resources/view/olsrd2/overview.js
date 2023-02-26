@@ -15,33 +15,31 @@ var callgetLan = rpc.declare({
 
 function createTable(data) {
     let tableData = [];
-	if ( data && data[0] && data[0].version && data[0].version[0] ) {
-		if ( data[0].version[0].version_text != undefined ) {
-			tableData.push([_('Version'),data[0].version[0].version_text]);
+	if ( data && data.version && data.version[0] ) {
+		if ( data.version[0].version_text != undefined ) {
+			tableData.push([_('OLSRd2 Version'),data.version[0].version_text]);
 		}
-		if ( data[0].version[0].version_commit != undefined) {
-			tableData.push([_('GIT commit'),data[0].version[0].version_commit]);
+		if ( data.version[0].version_commit != undefined) {
+			tableData.push([_('OLSRd2 GIT commit'),data.version[0].version_commit]);
 		}
 	}
-	if ( data && data[1] && data[1].lan && data[1].lan[0] ) {
-		if ( data[1].lan[0].lan != undefined ) {
-			tableData.push([_('LAN IP'),data[1].lan[0].lan]);
-		}
-		if ( data[1].lan[0].domain != undefined) {
-			tableData.push([_('Domain'),data[1].lan[0].domain]);
-		}
-		if ( data[1].lan[0].domain_metric != undefined) {
-			tableData.push([_('Domain metric'),data[1].lan[0].domain_metric]);
-		}
-		if ( data[1].lan[0].domain_metric_out != undefined) {
-			tableData.push([_('Domain metric outgoing'),data[1].lan[0].domain_metric_out]);
-		}
-		if ( data[1].lan[0].domain_metric_out_raw != undefined) {
-			tableData.push([_('domain_metric_out_raw'),data[1].lan[0].domain_metric_out_raw]);
-		}
-		if ( data[1].lan[0].domain_distance != undefined) {
-			tableData.push([_('Domain distance'),data[1].lan[0].domain_distance]);
-		}
+	tableData.push(['']);
+    return tableData;
+}
+
+function createTableDomain(data) {
+    let tableData = [];
+	if ( data && data.lan && data.lan[0] ) {
+		data.lan.forEach(row => {
+			tableData.push([
+				row.lan,
+				row.domain,
+				row.domain_metric,
+				row.domain_metric_out,
+				row.domain_metric_out_raw,
+				row.domain_distance
+			])
+		});
 	}
     return tableData;
 }
@@ -59,16 +57,26 @@ return view.extend({
 			E('th', { 'class': 'th left' }),
 			E('th', { 'class': 'th left' })
 		]));
+		var trd = E('table', { 'class': 'table' });
+		trd.appendChild(E('trd', { 'class': 'tr cbi-section-table-titles' }, [
+			E('th', { 'class': 'th left' }, [ 'LAN IP' ]),
+			E('th', { 'class': 'th left' }, [ 'Domain' ]),
+			E('th', { 'class': 'th left' }, [ 'Domain Metric' ]),
+			E('th', { 'class': 'th left' }, [ 'Domain Metric out' ]),
+			E('th', { 'class': 'th left' }, [ 'Domain Metric out' ]),
+			E('th', { 'class': 'th left' }, [ 'Domain distance' ])
+		]));
         poll.add(() => {
             Promise.all([
 				callgetVersion(),
 				callgetLan()
             ]).then((results) => {
-                cbi_update_table(tr, createTable(results));
+                cbi_update_table(tr, createTable(results[0]));
+                cbi_update_table(trd, createTableDomain(results[1]));
             })
         }, 30);
 
-		return tr;
+		return [tr,trd];
 	}
 
 });

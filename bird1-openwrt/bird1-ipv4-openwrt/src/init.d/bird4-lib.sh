@@ -56,12 +56,15 @@ get() {
 }
 
 
-# Function: get_bool $1 $2
+# Function: get_a_bool $1 $2
 # $1 boolean. $2 string
 # This function uses the external UCI function "config_get_bool $result $section $option" to obtain a boolean value from UCI config file.
 # To use this function, use the same name of the UCI option for the variable $1.
 # Example: UCI (option use_ipv6 '1'); local use_ipv6; get use_ipv6 $section
-get_bool() {
+# Note: this function was originally called get_bool(), but it collided with
+#       the get_bool() function provided by /lib/functions.sh. Read more at
+#       https://github.com/openwrt/routing/issues/920.
+get_a_bool() {
     config_get_bool $1 $2 $1
 }
 
@@ -201,7 +204,7 @@ prepare_kernel() {
     local disabled; local table; local kernel_table; local import; local export
     local scan_time; local persist; local learn
 
-    get_bool disabled ${section}
+    get_a_bool disabled ${section}
     get table ${section}
     get import ${section}
     get export ${section}
@@ -328,7 +331,7 @@ prepare_bgp_template() {
     local import_limit; local import_limit_action; local export_limit; local export_limit_action
     local receive_limit; local receive_limit_action; local igp_table
 
-    get_bool disabled ${section}
+    get_a_bool disabled ${section}
     get table ${section}
     get import ${section}
     get export ${section}
@@ -338,8 +341,8 @@ prepare_bgp_template() {
     get neighbor_address ${section}
     get neighbor_as ${section}
 
-    get_bool next_hop_self ${section}
-    get_bool next_hop_keep ${section}
+    get_a_bool next_hop_self ${section}
+    get_a_bool next_hop_keep ${section}
     get rr_client ${section}
     get rr_cluster_id ${section}
 
@@ -417,8 +420,8 @@ prepare_bgp() {
 
     get receive_limit ${section}
     get receive_limit_action ${section}
-    get_bool next_hop_self ${section}
-    get_bool next_hop_keep ${section}
+    get_a_bool next_hop_self ${section}
+    get_a_bool next_hop_keep ${section}
     get rr_client ${section}
     get rr_cluster_id ${section}
 

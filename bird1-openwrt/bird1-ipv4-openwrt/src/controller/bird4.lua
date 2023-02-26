@@ -23,7 +23,7 @@ function index()
             _("Bird4"), 0)
 
         entry({"admin", "network", "bird4", "status"},
-            cbi("bird4/status"),
+            form("bird4/status"),
             _("Status"), 0).leaf = true
 
         entry({"admin","network","bird4","log"},
@@ -43,10 +43,10 @@ function index()
             _("BGP Protocol"), 4).leaf = true
 
         entry({"admin","network","bird4","filters"},
-            cbi("bird4/filters"),
+            form("bird4/filters"),
             _("Filters"), 5).leaf = true
 
         entry({"admin","network","bird4","functions"},
-            cbi("bird4/functions"),
+            form("bird4/functions"),
             _("Functions"), 6).leaf = true
 end

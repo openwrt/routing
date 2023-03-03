@@ -1,18 +1,7 @@
-# Copyright (C) 2014-2017  Eloi Carbo <eloicaso@openmailbox.org>
-# Copyright (C) 2022       Roger Pueyo Centelles <roger.pueyo@guifi.net>
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Copyright (C) 2014-2017 Eloi Carbó <eloicaso@openmailbox.org>
+# Copyright (C) 2022-2023 Roger Pueyo Centelles <roger.pueyo@guifi.net>
 #
 
 include $(TOPDIR)/rules.mk
@@ -27,9 +16,9 @@ PKG_NAME := $(BIRD1_PKG)-openwrt
 PKG_IPV4_NAME := $(BIRD1_IPV4_PKG)-openwrt
 PKG_IPV6_NAME := $(BIRD1_IPV6_PKG)-openwrt
 PKG_VERSION := 0.3
-PKG_RELEASE := 2
+PKG_RELEASE := 3
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
-PKG_LICENSE := GPL-3.0+
+PKG_LICENSE := GPL-3.0-or-later
 
 PKG_UCI_NAME := $(BIRD1_PKG)-uci
 PKG_LUCI_NAME := $(BIRD1_PKG)-luci
@@ -99,11 +88,11 @@ $(call Package/$(PKG_LUCI_NAME)/Default)
 endef
 
 define Package/$(PKG_IPV4_UCI_NAME)/conffiles
-	/etc/config/$(BIRD4)
+/etc/config/$(BIRD4)
 endef
 
 define Package/$(PKG_IPV6_UCI_NAME)/conffiles
-	/etc/config/$(BIRD6)
+/etc/config/$(BIRD6)
 endef
 
 define Package/$(PKG_IPV4_UCI_NAME)/install
@@ -128,28 +117,28 @@ endef
 
 define Package/$(PKG_IPV4_UCI_NAME)/postinst
 #!/bin/sh
-    if [ -z "$${IPKG_INSTROOT}" ]; then
-        ( . /etc/$(BIRD4)/init.d/bird-uci-install-init.d $(BIRD4) ) && rm -f /etc/$(BIRD4)/init.d/bird-uci-install-init.d
-        ( . /etc/$(BIRD4)/init.d/99-relocate-filters $(BIRD4) ) && rm -f /etc/$(BIRD4)/init.d/99-relocate-filters
-        if [ -f /etc/sysupgrade.conf ] && ! grep $(BIRD4) /etc/sysupgrade.conf; then
-            echo /etc/config/$(BIRD4) >> /etc/sysupgrade.conf
-            echo /etc/$(BIRD4)/filters/ >> /etc/sysupgrade.conf
-            echo /etc/$(BIRD4)/functions/ >> /etc/sysupgrade.conf
-        fi
+if [ -z "$${IPKG_INSTROOT}" ]; then
+    ( . /etc/$(BIRD4)/init.d/bird-uci-install-init.d $(BIRD4) ) && rm -f /etc/$(BIRD4)/init.d/bird-uci-install-init.d
+    ( . /etc/$(BIRD4)/init.d/99-relocate-filters $(BIRD4) ) && rm -f /etc/$(BIRD4)/init.d/99-relocate-filters
+    if [ -f /etc/sysupgrade.conf ] && ! grep $(BIRD4) /etc/sysupgrade.conf; then
+        echo /etc/config/$(BIRD4) >> /etc/sysupgrade.conf
+        echo /etc/$(BIRD4)/filters/ >> /etc/sysupgrade.conf
+        echo /etc/$(BIRD4)/functions/ >> /etc/sysupgrade.conf
     fi
+fi
 endef
 
 define Package/$(PKG_IPV6_UCI_NAME)/postinst
 #!/bin/sh
-    if [ -z "$${IPKG_INSTROOT}" ]; then
-        ( . /etc/$(BIRD6)/init.d/bird-uci-install-init.d $(BIRD6) ) && rm -f /etc/$(BIRD6)/init.d/bird-uci-install-init.d
-        ( . /etc/$(BIRD6)/init.d/99-relocate-filters $(BIRD6) ) && rm -f /etc/$(BIRD6)/init.d/99-relocate-filters
-        if [ -f /etc/sysupgrade.conf ] && ! grep $(BIRD6) /etc/sysupgrade.conf; then
-            echo /etc/config/$(BIRD6) >> /etc/sysupgrade.conf
-            echo /etc/$(BIRD6)/filters/ >> /etc/sysupgrade.conf
-            echo /etc/$(BIRD6)/functions/ >> /etc/sysupgrade.conf
-        fi
+if [ -z "$${IPKG_INSTROOT}" ]; then
+    ( . /etc/$(BIRD6)/init.d/bird-uci-install-init.d $(BIRD6) ) && rm -f /etc/$(BIRD6)/init.d/bird-uci-install-init.d
+    ( . /etc/$(BIRD6)/init.d/99-relocate-filters $(BIRD6) ) && rm -f /etc/$(BIRD6)/init.d/99-relocate-filters
+    if [ -f /etc/sysupgrade.conf ] && ! grep $(BIRD6) /etc/sysupgrade.conf; then
+        echo /etc/config/$(BIRD6) >> /etc/sysupgrade.conf
+        echo /etc/$(BIRD6)/filters/ >> /etc/sysupgrade.conf
+        echo /etc/$(BIRD6)/functions/ >> /etc/sysupgrade.conf
     fi
+fi
 endef
 
 $(eval $(call BuildPackage,$(PKG_IPV4_UCI_NAME)))

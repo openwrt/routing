@@ -6,8 +6,8 @@ PKG_RELEASE:=1
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/OLSR/OONF.git
 PKG_SOURCE_DATE:=2022-08-25
-PKG_SOURCE_VERSION:=fb15d54d6a7a087cb0c5ec37c49804f6ce432396
-PKG_MIRROR_HASH:=e8b2e7890f7315694649bb26c22be09554cba3724bae5419ea047101a4f5d03d
+PKG_SOURCE_VERSION:=1cec9b21086fb52ab4262c69aabd087e4d2d3a44
+PKG_MIRROR_HASH:=e9065af0a7103e84b9084683bb1db87c3361c1d97d8ad8a48a021b904b35ed56
 
 CMAKE_INSTALL:=1
 
@@ -20,7 +20,7 @@ CMAKE_OPTIONAL_PLUGINS:= $(subst $(SPACE),;,$(strip \
         $(if $(filter y,$(CONFIG_OONF_NHDP_AUTOLL4)),auto_ll4,) \
         $(if $(filter y,$(CONFIG_OONF_OLSRV2_LAN_IMPORT)),lan_import,) \
         $(if $(filter y,$(CONFIG_OONF_OLSRV2_ROUTE_MODIFIER)),route_modifier,) \
-        $(if $(filter y,$(CONFIG_OONF_GENERIC_DLEP_ROUTER)),dlep_router,) \
+        $(if $(filter y,$(CONFIG_OONF_GENERIC_DLEP_ROUTER)),dlep,) \
         $(if $(filter y,$(CONFIG_OONF_GENERIC_REMOTECONTROL)),remotecontrol,) \
         $(if $(filter y,$(CONFIG_OONF_OLSRV2_MPR)),mpr,) \
         $(if $(filter y,$(CONFIG_OONF_GENERIC_HTTP)),http,) \
@@ -36,13 +36,14 @@ CMAKE_OPTIONS+=-D CMAKE_BUILD_TYPE:String=$(BUILD_TYPE) \
                -D OONF_NO_TESTING:Bool=true \
                -D UCI:Bool=true \
                -D OONF_APP_DEFAULT_CFG_HANDLER:String=uci \
-               -D OONF_STATIC_PLUGINS:String="class;clock;duplicate_set;layer2;packet_socket;rfc5444;socket;stream_socket;telnet;timer;viewer;os_clock;os_fd;os_interface;os_routing;os_system;nhdp;olsrv2;ff_dat_metric;neighbor_probing;nl80211_listener;link_config;layer2info;systeminfo;cfg_uciloader;cfg_compact;nhdpinfo;olsrv2info;netjsoninfo;${CMAKE_OPTIONAL_PLUGINS}" \
+               -D OONF_STATIC_PLUGINS:String="class;callback;clock;duplicate_set;layer2;packet_socket;rfc5444;socket;stream_socket;telnet;timer;viewer;os_clock;os_fd;os_interface;os_routing;os_system;nhdp;olsrv2;ff_dat_metric;neighbor_probing;nl80211_listener;link_config;layer2info;systeminfo;cfg_uciloader;cfg_compact;nhdpinfo;olsrv2info;netjsoninfo;${CMAKE_OPTIONAL_PLUGINS}" \
                -D OONF_LIB_GIT:String=$(PKG_SOURCE_VERSION) \
                -D VERSION_SUB_TAG:String=$(PKG_SOURCE_DATE) \
                -D INSTALL_LIB_DIR:Path=lib/oonf \
                -D INSTALL_INCLUDE_DIR:Path=include/oonf \
                -D INSTALL_CMAKE_DIR:Path=lib/oonf \
-               -D CMAKE_PREFIX_PATH=$(STAGING_DIR)/usr
+               -D CMAKE_PREFIX_PATH=$(STAGING_DIR)/usr \
+               -D CMAKE_GENERATOR=Ninja
 
 define Package/oonf-git/template
 	SECTION:=net

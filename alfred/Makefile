@@ -15,7 +15,7 @@ PKG_LICENSE:=GPL-2.0-only MIT
 PKG_LICENSE_FILES:=LICENSES/preferred/GPL-2.0 LICENSES/preferred/MIT
 
 PKG_BUILD_PARALLEL:=1
-PKG_BUILD_FLAGS:=gc-sections
+PKG_BUILD_FLAGS:=gc-sections lto
 
 PKG_CONFIG_DEPENDS += \
 	CONFIG_ALFRED_NEEDS_lua \
@@ -67,9 +67,6 @@ MAKE_FLAGS += \
         LIBNL_NAME="libnl-tiny" \
         LIBNL_GENL_NAME="libnl-tiny" \
         REVISION="$(PKG_VERSION)-openwrt-$(PKG_RELEASE)"
-
-TARGET_CFLAGS  += -flto
-TARGET_LDFLAGS += -fuse-linker-plugin
 
 define Package/alfred/install
 	$(INSTALL_DIR) $(1)/usr/sbin

@@ -16,7 +16,7 @@ PKG_LICENSE:=GPL-2.0-only ISC MIT
 PKG_LICENSE_FILES:=LICENSES/preferred/GPL-2.0 LICENSES/preferred/MIT LICENSES/deprecated/ISC
 
 PKG_BUILD_PARALLEL:=1
-PKG_BUILD_FLAGS:=gc-sections
+PKG_BUILD_FLAGS:=gc-sections lto
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -70,13 +70,6 @@ define Package/batctl-full/description
 $(Package/batctl/description)
   Subcommands for configuration, online and offline debugging are enabled.
 endef
-
-# Link-time optimization allows to move parts of the optimization from the single
-# source file to the global source view. This is done by emitting the GIMPLE
-# representation in each object file and analyzing it again during the link step.
-
-TARGET_CFLAGS  += -flto
-TARGET_LDFLAGS += -fuse-linker-plugin
 
 MAKE_VARS += \
         LIBNL_NAME="libnl-tiny" \

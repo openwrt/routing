@@ -16,6 +16,7 @@ PKG_LICENSE:=GPL-2.0-only ISC MIT
 PKG_LICENSE_FILES:=LICENSES/preferred/GPL-2.0 LICENSES/preferred/MIT LICENSES/deprecated/ISC
 
 PKG_BUILD_PARALLEL:=1
+PKG_BUILD_FLAGS:=gc-sections
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -69,13 +70,6 @@ define Package/batctl-full/description
 $(Package/batctl/description)
   Subcommands for configuration, online and offline debugging are enabled.
 endef
-
-# The linker can identify unused sections of a binary when each symbol is stored
-# in a separate section. This mostly removes unused linker sections and reduces
-# the size by ~3% on mipsel.
-
-TARGET_CFLAGS  += -ffunction-sections -fdata-sections
-TARGET_LDFLAGS += -Wl,--gc-sections
 
 # Link-time optimization allows to move parts of the optimization from the single
 # source file to the global source view. This is done by emitting the GIMPLE

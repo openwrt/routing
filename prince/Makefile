@@ -19,7 +19,7 @@ PKG_MAINTAINER:=Gabriele Gemmi <gabriel@autistici.org>
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
 
-PKG_USE_MIPS16:=0
+PKG_BUILD_FLAGS:=no-mips16
 
 # out of source build
 CMAKE_BINARY_SUBDIR:=build

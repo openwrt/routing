@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mesh11sd
 PKG_VERSION:=1.2.0
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_RELEASE:=3
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
 PKG_LICENSE:=GPL-2.0-or-later

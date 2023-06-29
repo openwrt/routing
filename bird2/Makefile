@@ -7,12 +7,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird2
-PKG_VERSION:=2.13
+PKG_VERSION:=2.13.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=ftp://bird.network.cz/pub/bird
-PKG_HASH:=8d895e3e311880e9efb888b4386cbec2f7e18bfb8334e8d4c8ca7c4341092638
+PKG_HASH:=97bb8d57be9bc5083e2b566416d27e314162856a12ca7c77e202e467d20d4080
 
 PKG_MAINTAINER:=Toke Høiland-Jørgensen <toke@toke.dk>
 PKG_LICENSE:=GPL-2.0-or-later

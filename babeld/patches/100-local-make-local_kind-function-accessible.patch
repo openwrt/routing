@@ -1,0 +1,39 @@
+From b29cb705c3b717a7d5c61719936464438b9a48f0 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Fri, 15 Jan 2021 15:01:31 +0100
+Subject: [PATCH] local: make local_kind function accessible
+
+The kind-definitions are contained in the header file:
+  LOCAL_FLUSH 0
+  LOCAL_ADD 1
+  LOCAL_CHANGE 2
+
+The function (local_kind) that converts them into strings again
+is private. New addons (for example openwrt ubus bindings) that make
+use of babeld should also use the same function to convert the kind
+to string format. This allows to ensure uniformity over all addons.
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ local.c | 2 +-
+ local.h | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+--- a/local.c
++++ b/local.c
+@@ -80,7 +80,7 @@ write_timeout(int fd, const void *buf, i
+     }
+ }
+ 
+-static const char *
++const char *
+ local_kind(int kind)
+ {
+     switch(kind) {
+--- a/local.h
++++ b/local.h
+@@ -55,3 +55,4 @@ int local_read(struct local_socket *s);
+ int local_header(struct local_socket *s);
+ struct local_socket *local_socket_create(int fd);
+ void local_socket_destroy(int i);
++const char *local_kind(int kind);

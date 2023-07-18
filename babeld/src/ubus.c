@@ -245,23 +245,6 @@ static int babeld_ubus_get_xroutes(struct ubus_context *ctx_local,
 static void babeld_add_route_buf(struct babel_route *route,
                                  struct blob_buf *b) {
   void *prefix;
-  char channels[100];
-
-  if (route->channels_len == 0) {
-    channels[0] = '\0';
-  } else {
-    int i, j = 0;
-    snprintf(channels, sizeof(channels), " chan (");
-    j = strlen(channels);
-    for (i = 0; i < route->channels_len; i++) {
-      if (i > 0)
-        channels[j++] = ',';
-      snprintf(channels + j, sizeof(channels) - j, "%u",
-               (unsigned)route->channels[i]);
-      j = strlen(channels);
-    }
-    snprintf(channels + j, sizeof(channels) - j, ")");
-  }
 
   prefix = blobmsg_open_table(
       b, format_prefix(route->src->prefix, route->src->plen));
@@ -274,7 +257,6 @@ static void babeld_add_route_buf(struct babel_route *route,
   blobmsg_add_u32(b, "refmetric", route->refmetric);
   blobmsg_add_string(b, "id", format_eui64(route->src->id));
   blobmsg_add_u32(b, "seqno", (uint32_t)route->seqno);
-  blobmsg_add_string(b, "channels", channels);
   blobmsg_add_u32(b, "age", (int)(now.tv_sec - route->time));
   blobmsg_add_string(b, "via", format_address(route->neigh->address));
   if (memcmp(route->nexthop, route->neigh->address, 16) != 0)
@@ -357,7 +339,6 @@ static void babeld_add_neighbour_buf(struct neighbour *neigh,
   blobmsg_add_u32(b, "rxcost", neighbour_rxcost(neigh));
   blobmsg_add_u32(b, "txcost", neigh->txcost);
   blobmsg_add_string(b, "rtt", format_thousands(neigh->rtt));
-  blobmsg_add_u32(b, "channel", neigh->ifp->channel);
   blobmsg_add_u8(b, "if_up", if_up(neigh->ifp));
   blobmsg_close_table(b, neighbour);
 }

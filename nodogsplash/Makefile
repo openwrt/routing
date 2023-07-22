@@ -6,12 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodogsplash
-PKG_VERSION:=5.0.0
+PKG_VERSION:=5.0.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/nodogsplash/nodogsplash/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=a7665f4a42997746a31e9217f2f54e360aa7fc4bc72bd89faa08f1ccf7875b5e
+PKG_HASH:=a5ffa27a69389c6a538418022573ecb56a42bf91f576a97208eaafe89cb0a152
 
 PKG_MAINTAINER:=Moritz Warning <moritzwarning@web.de>
 PKG_LICENSE:=GPL-2.0-or-later
@@ -26,26 +26,24 @@ define Package/nodogsplash
   SUBMENU:=Captive Portals
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libpthread +iptables-mod-ipopt +libmicrohttpd-no-ssl
+  DEPENDS:=+libpthread +libmicrohttpd-no-ssl +iptables-nft \
+           +iptables-mod-nat-extra +iptables-mod-ipopt \
+           +iptables-mod-conntrack-extra
   TITLE:=Open public network gateway daemon
   URL:=https://github.com/nodogsplash/nodogsplash
-  CONFLICTS:=nodogsplash2
+  CONFLICTS:=opennds
 endef
 
 define Package/nodogsplash/description
   Nodogsplash is a Captive Portal that offers a simple way to
   provide restricted access to the Internet by showing a splash
   page to the user before Internet access is granted.
-  It also incorporates an API that allows the creation of
-  sophisticated authentication applications.
 endef
 
 define Package/nodogsplash/install
-
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/nodogsplash $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ndsctl $(1)/usr/bin/
-
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/etc/init.d

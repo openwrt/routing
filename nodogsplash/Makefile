@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nodogsplash
 PKG_VERSION:=5.0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/nodogsplash/nodogsplash/tar.gz/v$(PKG_VERSION)?
@@ -31,7 +31,6 @@ define Package/nodogsplash
            +iptables-mod-conntrack-extra
   TITLE:=Open public network gateway daemon
   URL:=https://github.com/nodogsplash/nodogsplash
-  CONFLICTS:=opennds
 endef
 
 define Package/nodogsplash/description

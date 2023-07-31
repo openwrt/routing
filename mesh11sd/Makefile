@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mesh11sd
-PKG_VERSION:=1.2.0
-PKG_RELEASE:=3
+PKG_VERSION:=2.0.0
+PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
 PKG_LICENSE:=GPL-2.0-or-later
@@ -17,7 +17,7 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/mesh11sd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=b719eaacf63eb3684d0cd6a026f4357a4f400f2339f5d5a6cf74ba3744fe30d8
+PKG_HASH:=741d219ea9c6fcb5e58771130c319c5b983274caf08f5c1cd5a458864e928649
 PKG_BUILD_DIR:=$(BUILD_DIR)/mesh11sd-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
@@ -41,6 +41,9 @@ define Package/mesh11sd/description
   Without mesh11sd, many mesh parameters cannot be set in the uci wireless config file as the mesh interface must be up before the parameters can be set.
   Some of those that are supported, would fail to be implemented when the network is (re)started resulting in errors or dropped nodes.
   The mesh11sd daemon dynamically checks configured parameters and sets them as required.
+  Upstream wan connectivity is checked (eg Internet feed) and when not present, layer 2 peer mode is autonomously enabled,
+  and when it is present, layer 3 portal mode is enabled. This allows the same simple router configuration to be used on all meshnodes in the layer 2 mesh.
+  Remote terminal sessions and remote file transfers are supported using the meshnode mac address as an identifier.
   This version does not require a Captive Portal to be running.
 endef
 

@@ -1,0 +1,71 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 19 Jul 2023 10:15:06 +0200
+Subject: batman-adv: Don't increase MTU when set by user
+
+If the user set an MTU value, it usually means that there are special
+requirements for the MTU. But if an interface gots activated, the MTU was
+always recalculated and then the user set value was overwritten.
+
+The only reason why this user set value has to be overwritten, is when the
+MTU has to be decreased because batman-adv is not able to transfer packets
+with the user specified size.
+
+Fixes: 88861ea9acb7 ("[batman-adv] replacing if up/down timer with kernel notifications")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/2745af592150b758ee96abf9329dd5f42cf22c25
+
+--- a/net/batman-adv/hard-interface.c
++++ b/net/batman-adv/hard-interface.c
+@@ -629,7 +629,19 @@ out:
+  */
+ void batadv_update_min_mtu(struct net_device *soft_iface)
+ {
+-	dev_set_mtu(soft_iface, batadv_hardif_min_mtu(soft_iface));
++	struct batadv_priv *bat_priv = netdev_priv(soft_iface);
++	int limit_mtu;
++	int mtu;
++
++	mtu = batadv_hardif_min_mtu(soft_iface);
++
++	if (bat_priv->mtu_set_by_user)
++		limit_mtu = bat_priv->mtu_set_by_user;
++	else
++		limit_mtu = ETH_DATA_LEN;
++
++	mtu = min(mtu, limit_mtu);
++	dev_set_mtu(soft_iface, mtu);
+ 
+ 	/* Check if the local translate table should be cleaned up to match a
+ 	 * new (and smaller) MTU.
+--- a/net/batman-adv/soft-interface.c
++++ b/net/batman-adv/soft-interface.c
+@@ -153,11 +153,14 @@ static int batadv_interface_set_mac_addr
+ 
+ static int batadv_interface_change_mtu(struct net_device *dev, int new_mtu)
+ {
++	struct batadv_priv *bat_priv = netdev_priv(dev);
++
+ 	/* check ranges */
+ 	if (new_mtu < 68 || new_mtu > batadv_hardif_min_mtu(dev))
+ 		return -EINVAL;
+ 
+ 	dev->mtu = new_mtu;
++	bat_priv->mtu_set_by_user = new_mtu;
+ 
+ 	return 0;
+ }
+--- a/net/batman-adv/types.h
++++ b/net/batman-adv/types.h
+@@ -1547,6 +1547,12 @@ struct batadv_priv {
+ 	struct net_device *soft_iface;
+ 
+ 	/**
++	 * @mtu_set_by_user: MTU was set once by user
++	 * protected by rtnl_lock
++	 */
++	int mtu_set_by_user;
++
++	/**
+ 	 * @bat_counters: mesh internal traffic statistic counters (see
+ 	 *  batadv_counters)
+ 	 */

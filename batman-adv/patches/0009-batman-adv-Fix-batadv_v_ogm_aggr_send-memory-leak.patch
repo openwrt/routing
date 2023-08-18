@@ -1,0 +1,47 @@
+From: Remi Pommarel <repk@triplefau.lt>
+Date: Wed, 9 Aug 2023 17:29:13 +0200
+Subject: batman-adv: Fix batadv_v_ogm_aggr_send memory leak
+
+When batadv_v_ogm_aggr_send is called for an inactive interface, the skb
+is silently dropped by batadv_v_ogm_send_to_if() but never freed causing
+the following memory leak:
+
+  unreferenced object 0xffff00000c164800 (size 512):
+    comm "kworker/u8:1", pid 2648, jiffies 4295122303 (age 97.656s)
+    hex dump (first 32 bytes):
+      00 80 af 09 00 00 ff ff e1 09 00 00 75 01 60 83  ............u.`.
+      1f 00 00 00 b8 00 00 00 15 00 05 00 da e3 d3 64  ...............d
+    backtrace:
+      [<0000000007ad20f6>] __kmalloc_track_caller+0x1a8/0x310
+      [<00000000d1029e55>] kmalloc_reserve.constprop.0+0x70/0x13c
+      [<000000008b9d4183>] __alloc_skb+0xec/0x1fc
+      [<00000000c7af5051>] __netdev_alloc_skb+0x48/0x23c
+      [<00000000642ee5f5>] batadv_v_ogm_aggr_send+0x50/0x36c
+      [<0000000088660bd7>] batadv_v_ogm_aggr_work+0x24/0x40
+      [<0000000042fc2606>] process_one_work+0x3b0/0x610
+      [<000000002f2a0b1c>] worker_thread+0xa0/0x690
+      [<0000000059fae5d4>] kthread+0x1fc/0x210
+      [<000000000c587d3a>] ret_from_fork+0x10/0x20
+
+Free the skb in that case to fix this leak.
+
+Cc: stable@vger.kernel.org
+Fixes: 632835348e65 ("batman-adv: OGMv2 - add basic infrastructure")
+Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/9024db261180f73fc687a9ecc7e79e3b0ccf50dc
+
+--- a/net/batman-adv/bat_v_ogm.c
++++ b/net/batman-adv/bat_v_ogm.c
+@@ -123,8 +123,10 @@ static void batadv_v_ogm_send_to_if(stru
+ {
+ 	struct batadv_priv *bat_priv = netdev_priv(hard_iface->soft_iface);
+ 
+-	if (hard_iface->if_status != BATADV_IF_ACTIVE)
++	if (hard_iface->if_status != BATADV_IF_ACTIVE) {
++		kfree_skb(skb);
+ 		return;
++	}
+ 
+ 	batadv_inc_counter(bat_priv, BATADV_CNT_MGMT_TX);
+ 	batadv_add_counter(bat_priv, BATADV_CNT_MGMT_TX_BYTES,

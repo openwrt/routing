@@ -1,0 +1,28 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 19 Jul 2023 10:15:05 +0200
+Subject: batman-adv: Trigger events for auto adjusted MTU
+
+If an interface changes the MTU, it is expected that an NETDEV_PRECHANGEMTU
+and NETDEV_CHANGEMTU notification events is triggered. This worked fine for
+.ndo_change_mtu based changes because core networking code took care of it.
+But for auto-adjustments after hard-interfaces changes, these events were
+simply missing.
+
+Due to this problem, non-batman-adv components weren't aware of MTU changes
+and thus couldn't perform their own tasks correctly.
+
+Fixes: 8009e9f7ac4f ("set bat0 MTU according to the MTUs of the hard interfaces")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/27c4d7c1c7fa39d71ea6ccf1c23bcb4773243800
+
+--- a/net/batman-adv/hard-interface.c
++++ b/net/batman-adv/hard-interface.c
+@@ -629,7 +629,7 @@ out:
+  */
+ void batadv_update_min_mtu(struct net_device *soft_iface)
+ {
+-	soft_iface->mtu = batadv_hardif_min_mtu(soft_iface);
++	dev_set_mtu(soft_iface, batadv_hardif_min_mtu(soft_iface));
+ 
+ 	/* Check if the local translate table should be cleaned up to match a
+ 	 * new (and smaller) MTU.

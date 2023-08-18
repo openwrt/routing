@@ -1,0 +1,29 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Tue, 11 Jul 2023 11:46:30 +0200
+Subject: batman-adv: compat: Use native kstrtox.h for 5.10.185
+
+Upstream stable commit 6e2e551e39fd ("kernel.h: split out kstrtox() and
+simple_strtox() to a separate header") backported the support for
+linux/kstrtox.h. Unfortunately, the compat support via linux/kernel.h was
+dropped and thus references to kstrtou64 caused build errors
+
+  batman-adv/net/batman-adv/gateway_common.c: In function ‘batadv_parse_throughput’:
+  batman-adv/net/batman-adv/gateway_common.c:55:15: error: implicit declaration of function ‘kstrtou64’ [-Werror=implicit-function-declaration]
+     55 |         ret = kstrtou64(buff, 10, &lthroughput);
+        |               ^~~~~~~~~
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/8924adbdf993cd0521f9d0024b43e3b23af5114f
+
+--- a/compat-include/linux/kstrtox.h
++++ b/compat-include/linux/kstrtox.h
+@@ -11,7 +11,8 @@
+ #define _NET_BATMAN_ADV_COMPAT_LINUX_KSTRTOX_H_
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_IS_GEQ(5, 14, 0)
++#if (LINUX_VERSION_IS_GEQ(5, 10, 185) && LINUX_VERSION_IS_LESS(5, 11, 0)) || \
++    LINUX_VERSION_IS_GEQ(5, 14, 0)
+ #include_next <linux/kstrtox.h>
+ #else
+ #include <linux/kernel.h>

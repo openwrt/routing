@@ -1,0 +1,48 @@
+From: Vladislav Efanov <VEfanov@ispras.ru>
+Date: Fri, 26 May 2023 19:16:32 +0300
+Subject: batman-adv: Broken sync while rescheduling delayed work
+
+Syzkaller got a lot of crashes like:
+KASAN: use-after-free Write in *_timers*
+
+All of these crashes point to the same memory area:
+
+The buggy address belongs to the object at ffff88801f870000
+ which belongs to the cache kmalloc-8k of size 8192
+The buggy address is located 5320 bytes inside of
+ 8192-byte region [ffff88801f870000, ffff88801f872000)
+
+This area belongs to :
+        batadv_priv->batadv_priv_dat->delayed_work->timer_list
+
+The reason for these issues is the lack of synchronization. Delayed
+work (batadv_dat_purge) schedules new timer/work while the device
+is being deleted. As the result new timer/delayed work is set after
+cancel_delayed_work_sync() was called. So after the device is freed
+the timer list contains pointer to already freed memory.
+
+Found by Linux Verification Center (linuxtesting.org) with syzkaller.
+
+Fixes: f6badf9eb582 ("batman-adv: Distributed ARP Table - implement local storage")
+Signed-off-by: Vladislav Efanov <VEfanov@ispras.ru>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/177ba85fb2d4ca2ecd30ca16803560e80e916fac
+
+--- a/net/batman-adv/distributed-arp-table.c
++++ b/net/batman-adv/distributed-arp-table.c
+@@ -101,7 +101,6 @@ static void batadv_dat_purge(struct work
+  */
+ static void batadv_dat_start_timer(struct batadv_priv *bat_priv)
+ {
+-	INIT_DELAYED_WORK(&bat_priv->dat.work, batadv_dat_purge);
+ 	queue_delayed_work(batadv_event_workqueue, &bat_priv->dat.work,
+ 			   msecs_to_jiffies(10000));
+ }
+@@ -819,6 +818,7 @@ int batadv_dat_init(struct batadv_priv *
+ 	if (!bat_priv->dat.hash)
+ 		return -ENOMEM;
+ 
++	INIT_DELAYED_WORK(&bat_priv->dat.work, batadv_dat_purge);
+ 	batadv_dat_start_timer(bat_priv);
+ 
+ 	batadv_tvlv_handler_register(bat_priv, batadv_dat_tvlv_ogm_handler_v1,

@@ -1,0 +1,35 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Mon, 21 Aug 2023 21:48:48 +0200
+Subject: batman-adv: Hold rtnl lock during MTU update via netlink
+
+The automatic recalculation of the maximum allowed MTU is usually triggered
+by code sections which are already rtnl lock protected by callers outside
+of batman-adv. But when the fragmentation setting is changed via
+batman-adv's own batadv genl family, then the rtnl lock is not yet taken.
+
+But dev_set_mtu requires that the caller holds the rtnl lock because it
+uses netdevice notifiers. And this code will then fail the check for this
+lock:
+
+  RTNL: assertion failed at net/core/dev.c (1953)
+
+Cc: stable@vger.kernel.org
+Reported-by: syzbot+f8812454d9b3ac00d282@syzkaller.appspotmail.com
+Fixes: 27c4d7c1c7fa ("batman-adv: Trigger events for auto adjusted MTU")
+Reviewed-by: Simon Horman <horms@kernel.org>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/aeb35331aa9a17f9affd84c1a5b020aeb4a976f4
+
+--- a/net/batman-adv/netlink.c
++++ b/net/batman-adv/netlink.c
+@@ -495,7 +495,10 @@ static int batadv_netlink_set_mesh(struc
+ 		attr = info->attrs[BATADV_ATTR_FRAGMENTATION_ENABLED];
+ 
+ 		atomic_set(&bat_priv->fragmentation, !!nla_get_u8(attr));
++
++		rtnl_lock();
+ 		batadv_update_min_mtu(bat_priv->soft_iface);
++		rtnl_unlock();
+ 	}
+ 
+ 	if (info->attrs[BATADV_ATTR_GW_BANDWIDTH_DOWN]) {

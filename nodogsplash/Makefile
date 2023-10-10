@@ -40,19 +40,23 @@ define Package/nodogsplash/description
 endef
 
 define Package/nodogsplash/install
-	$(CP) ./files/* $(1)/
+	$(INSTALL_DIR) $(1)/usr/lib/nodogsplash
+	$(INSTALL_BIN) ./files/usr/lib/nodogsplash/restart.sh $(1)/usr/lib/nodogsplash/
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/nodogsplash $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ndsctl $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/resources/splash.html $(1)/etc/nodogsplash/htdocs/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/resources/splash.css $(1)/etc/nodogsplash/htdocs/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/resources/status.html $(1)/etc/nodogsplash/htdocs/
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/resources/splash.jpg $(1)/etc/nodogsplash/htdocs/images/
 	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) ./files/etc/config/nodogsplash $(1)/etc/config/
 	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/etc/init.d/nodogsplash $(1)/etc/init.d/
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_DIR) $(1)/usr/lib/nodogsplash
-	$(CP) $(PKG_BUILD_DIR)/resources/splash.html $(1)/etc/nodogsplash/htdocs/
-	$(CP) $(PKG_BUILD_DIR)/resources/splash.css $(1)/etc/nodogsplash/htdocs/
-	$(CP) $(PKG_BUILD_DIR)/resources/status.html $(1)/etc/nodogsplash/htdocs/
-	$(CP) $(PKG_BUILD_DIR)/resources/splash.jpg $(1)/etc/nodogsplash/htdocs/images/
+	$(INSTALL_BIN) ./files/etc/uci-defaults/40_nodogsplash $(1)/etc/uci-defaults/
 endef
 
 define Package/nodogsplash/postrm

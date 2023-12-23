@@ -28,20 +28,6 @@ static inline u32 batadv_get_random_u32_below(u32 ep_ro)
 
 #endif /* LINUX_VERSION_IS_LESS(6, 2, 0) */
 
-#if LINUX_VERSION_IS_LESS(6, 4, 0)
-
-#include <linux/if_vlan.h>
-
-/* Prefer this version in TX path, instead of
- * skb_reset_mac_header() + vlan_eth_hdr()
- */
-static inline struct vlan_ethhdr *skb_vlan_eth_hdr(const struct sk_buff *skb)
-{
-	return (struct vlan_ethhdr *)skb->data;
-}
-
-#endif /* LINUX_VERSION_IS_LESS(6, 4, 0) */
-
 /* <DECLARE_EWMA> */
 
 #include <linux/version.h>

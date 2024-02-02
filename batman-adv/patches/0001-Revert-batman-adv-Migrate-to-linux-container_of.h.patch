@@ -2,6 +2,10 @@ From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 6 May 2022 22:03:29 +0200
 Subject: Revert "batman-adv: Migrate to linux/container_of.h"
 
+The original patch requires Linux 5.16.0 or a mac80211 compat header with this
+name. But the mac80211 package is currently not providing this header and
+OpenWrt main is still using older Linux kernel versions for some targets.
+
 This reverts commit 043ae5634bdfd4c4dd8b95a22890752495080bb5.
 
 --- a/compat-include/linux/container_of.h
@@ -133,7 +137,7 @@ This reverts commit 043ae5634bdfd4c4dd8b95a22890752495080bb5.
  #include <linux/list.h>
 --- a/net/batman-adv/main.c
 +++ b/net/batman-adv/main.c
-@@ -9,7 +9,6 @@
+@@ -10,7 +10,6 @@
  #include <linux/atomic.h>
  #include <linux/build_bug.h>
  #include <linux/byteorder/generic.h>

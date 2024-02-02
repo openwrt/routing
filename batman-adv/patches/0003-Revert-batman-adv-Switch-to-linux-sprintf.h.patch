@@ -1,0 +1,97 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 2 Feb 2024 22:49:00 +0100
+Subject: Revert "batman-adv: Switch to linux/sprintf.h"
+
+The original patch requires Linux 6.6.0 or a mac80211 compat header with this
+name. But the mac80211 package is currently not providing this header and
+OpenWrt main is still using older Linux kernel versions for some targets.
+
+This reverts commit f0fb49c5ab70dfa064f0aa8d1c5d84f65e8cbc86.
+
+--- a/compat-include/linux/sprintf.h
++++ /dev/null
+@@ -1,20 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-/* Copyright (C) B.A.T.M.A.N. contributors:
+- *
+- * Marek Lindner, Simon Wunderlich
+- *
+- * This file contains macros for maintaining compatibility with older versions
+- * of the Linux kernel.
+- */
+-
+-#ifndef _NET_BATMAN_ADV_COMPAT_LINUX_SPRINTF_H_
+-#define _NET_BATMAN_ADV_COMPAT_LINUX_SPRINTF_H_
+-
+-#include <linux/version.h>
+-#if LINUX_VERSION_IS_GEQ(6, 6, 0)
+-#include_next <linux/sprintf.h>
+-#else
+-#include <linux/kernel.h>
+-#endif
+-
+-#endif /* _NET_BATMAN_ADV_COMPAT_LINUX_SPRINTF_H_ */
+--- a/net/batman-adv/bridge_loop_avoidance.c
++++ b/net/batman-adv/bridge_loop_avoidance.c
+@@ -19,6 +19,7 @@
+ #include <linux/if_vlan.h>
+ #include <linux/jhash.h>
+ #include <linux/jiffies.h>
++#include <linux/kernel.h>
+ #include <linux/kref.h>
+ #include <linux/list.h>
+ #include <linux/lockdep.h>
+@@ -29,7 +30,6 @@
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+-#include <linux/sprintf.h>
+ #include <linux/stddef.h>
+ #include <linux/string.h>
+ #include <linux/workqueue.h>
+--- a/net/batman-adv/gateway_client.c
++++ b/net/batman-adv/gateway_client.c
+@@ -17,6 +17,7 @@
+ #include <linux/in.h>
+ #include <linux/ip.h>
+ #include <linux/ipv6.h>
++#include <linux/kernel.h>
+ #include <linux/kref.h>
+ #include <linux/list.h>
+ #include <linux/lockdep.h>
+@@ -27,7 +28,6 @@
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+-#include <linux/sprintf.h>
+ #include <linux/stddef.h>
+ #include <linux/udp.h>
+ #include <net/sock.h>
+--- a/net/batman-adv/main.c
++++ b/net/batman-adv/main.c
+@@ -32,7 +32,6 @@
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+-#include <linux/sprintf.h>
+ #include <linux/stddef.h>
+ #include <linux/string.h>
+ #include <linux/workqueue.h>
+--- a/net/batman-adv/multicast.c
++++ b/net/batman-adv/multicast.c
+@@ -24,6 +24,7 @@
+ #include <linux/ip.h>
+ #include <linux/ipv6.h>
+ #include <linux/jiffies.h>
++#include <linux/kernel.h>
+ #include <linux/list.h>
+ #include <linux/lockdep.h>
+ #include <linux/netdevice.h>
+@@ -34,7 +35,6 @@
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+-#include <linux/sprintf.h>
+ #include <linux/stddef.h>
+ #include <linux/string.h>
+ #include <linux/types.h>

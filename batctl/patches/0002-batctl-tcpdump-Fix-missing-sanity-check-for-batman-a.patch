@@ -1,0 +1,26 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 27 Jan 2024 13:48:59 +0100
+Subject: batctl: tcpdump: Fix missing sanity check for batman-adv header
+
+parse_eth_hdr() is assuming that every ETH_P_BATMAN ethernet packet has a
+valid, minimal batman-adv header (packet_type, version, ttl) attached. But
+it doesn't actually check if the received buffer has enough bytes to access
+the two bytes packet_type + version. So it is possible that it tries to
+read outside of the received data.
+
+Fixes: 3bdfc388e74b ("implement simple tcpdump, first only batman packets")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/7ae3bdb59a7501197e12d3a7ab0d9924341e9ca8
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1068,6 +1068,9 @@ static void parse_eth_hdr(unsigned char
+ 			dump_vlan(packet_buff, buff_len, read_opt, time_printed);
+ 		break;
+ 	case ETH_P_BATMAN:
++		/* check for batman-adv packet_type + version */
++		LEN_CHECK(buff_len, sizeof(*eth_hdr) + 2, "BAT HEADER")
++
+ 		batman_ogm_packet = (struct batadv_ogm_packet *)(packet_buff + ETH_HLEN);
+ 
+ 		if ((read_opt & COMPAT_FILTER) &&

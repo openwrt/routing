@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=naywatch
 PKG_VERSION:=1
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_RELEASE:=7
 
 PKG_MAINTAINER:=Nick Hainke <vincent@systemli.org>
 PKG_LICENSE:=GPL-2.0-only

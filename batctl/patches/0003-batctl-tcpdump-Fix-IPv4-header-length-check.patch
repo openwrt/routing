@@ -1,0 +1,27 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 27 Jan 2024 13:49:01 +0100
+Subject: batctl: tcpdump: Fix IPv4 header length check
+
+dump_ip() is directly accessing the header in the header length check and
+assumes that ihl can be trusted. But when when ihl is set to something less
+than 5 then it would not even be possible to store the basic IPv4 header in
+it. But dump_ip would have still accepted it because it didn't check if
+there are at least enough bytes available to read the basic IPv4 header. So
+it is possible that it tries to read outside of the received data.
+
+Fixes: 75d68356f3fa ("[batctl] tcpdump - add basic IPv4 support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/ddb254bd51aa43d216159f3be9c575369b041d35
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -646,7 +646,9 @@ static void dump_ip(unsigned char *packe
+ 	struct icmphdr *icmphdr;
+ 
+ 	iphdr = (struct iphdr *)packet_buff;
++	LEN_CHECK((size_t)buff_len, sizeof(*iphdr), ip_string);
+ 	LEN_CHECK((size_t)buff_len, (size_t)(iphdr->ihl * 4), ip_string);
++	LEN_CHECK((size_t)(iphdr->ihl * 4), sizeof(*iphdr), ip_string);
+ 
+ 	if (!time_printed)
+ 		print_time();

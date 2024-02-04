@@ -1,0 +1,41 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 27 Jan 2024 13:49:04 +0100
+Subject: batctl: tcpdump: Fix ICMPv4 inner IPv4 header length check
+
+dump_ip() is doing a length check for the inner (inside ICMP) IPv4 header
+length. But it is just assuming that the inner ICMPv4 header has ihl set to
+5 - without actually checking for this. The more complex IPv4 header length
+check for the outer IPv4 header is missing before it tries to access the
+UDP header using the inner ihl IPv4 header length information. So it is
+possible that it tries to read outside of the received data.
+
+Fixes: 75d68356f3fa ("[batctl] tcpdump - add basic IPv4 support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/fb7a51466bf46a4914a32edd8e1be6ba0733cd49
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -682,12 +682,20 @@ static void dump_ip(unsigned char *packe
+ 				(size_t)buff_len - (iphdr->ihl * 4));
+ 			break;
+ 		case ICMP_DEST_UNREACH:
+-			LEN_CHECK((size_t)buff_len - (iphdr->ihl * 4) - sizeof(struct icmphdr),
+-				sizeof(struct iphdr) + 8, "ICMP DEST_UNREACH");
+-
+ 			switch (icmphdr->code) {
+ 			case ICMP_PORT_UNREACH:
++				LEN_CHECK((size_t)buff_len - (iphdr->ihl * 4) - sizeof(struct icmphdr),
++					  sizeof(struct iphdr), "ICMP DEST_UNREACH");
++
++				/* validate inner IP header information */
+ 				tmp_iphdr = (struct iphdr *)(((char *)icmphdr) + sizeof(struct icmphdr));
++				LEN_CHECK((size_t)buff_len - (iphdr->ihl * 4) - sizeof(struct icmphdr),
++					  (size_t)(tmp_iphdr->ihl * 4), "ICMP DEST_UNREACH");
++				LEN_CHECK((size_t)(tmp_iphdr->ihl * 4), sizeof(*iphdr), "ICMP DEST_UNREACH");
++
++				LEN_CHECK((size_t)buff_len - (iphdr->ihl * 4) - sizeof(struct icmphdr) - (tmp_iphdr->ihl * 4),
++					  sizeof(*tmp_udphdr), "ICMP DEST_UNREACH");
++
+ 				tmp_udphdr = (struct udphdr *)(((char *)tmp_iphdr) + (tmp_iphdr->ihl * 4));
+ 
+ 				printf("%s: ICMP ", ipdst);

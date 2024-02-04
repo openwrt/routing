@@ -1,0 +1,34 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 27 Jan 2024 13:49:00 +0100
+Subject: batctl: tcpdump: Add missing throughput header length check
+
+dump_batman_icmp() is only doing a length check for the original ICMP
+packet length. But the throughput packet (which is also handled by this
+function) is accessed without doing an additional length check. So it is
+possible that it tries to read outside of the received data.
+
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/189b66496309bc1a54b4821292da2428de8ceb1c
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -863,7 +863,6 @@ static void dump_batman_icmp(unsigned ch
+ 	LEN_CHECK((size_t)buff_len - sizeof(struct ether_header), sizeof(struct batadv_icmp_packet), "BAT ICMP");
+ 
+ 	icmp_packet = (struct batadv_icmp_packet *)(packet_buff + sizeof(struct ether_header));
+-	tp = (struct batadv_icmp_tp_packet *)icmp_packet;
+ 
+ 	if (!time_printed)
+ 		print_time();
+@@ -894,6 +893,10 @@ static void dump_batman_icmp(unsigned ch
+ 			(size_t)buff_len - sizeof(struct ether_header));
+ 		break;
+ 	case BATADV_TP:
++		LEN_CHECK((size_t)buff_len - sizeof(struct ether_header), sizeof(*tp), "BAT TP");
++
++		tp = (struct batadv_icmp_tp_packet *)icmp_packet;
++
+ 		printf("%s: ICMP TP type %s (%hhu), id %hhu, seq %u, ttl %2d, v %d, length %zu\n",
+ 		       name, tp->subtype == BATADV_TP_MSG ? "MSG" :
+ 			     tp->subtype == BATADV_TP_ACK ? "ACK" : "N/A",

@@ -1,0 +1,25 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 27 Jan 2024 13:49:03 +0100
+Subject: batctl: tcpdump: Add missing ICMPv6 Neighbor Solicit length check
+
+dump_ipv6() is doing a length check for the original ICMPv6 header length.
+But the neighbor solicitation (which is also handled by this function) is
+accessed without doing an additional length check. So it is possible that
+it tries to read outside of the received data.
+
+Fixes: 35b37756f4a3 ("add IPv6 support to tcpdump parser")
+Cc: Marco Dalla Torre <marco.dallato@gmail.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/83025933cb502192d22edc89de3c57103968c4ed
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -604,6 +604,8 @@ static void dump_ipv6(unsigned char *pac
+ 			       (size_t)buff_len - sizeof(struct icmp6_hdr));
+ 			break;
+ 		case ND_NEIGHBOR_SOLICIT:
++			LEN_CHECK((size_t)buff_len - (size_t)(sizeof(struct ip6_hdr)),
++				  sizeof(*nd_neigh_sol), "ICMPv6 Neighbor Solicitation");
+ 			nd_neigh_sol = (struct nd_neighbor_solicit *)icmphdr;
+ 			inet_ntop(AF_INET6, &(nd_neigh_sol->nd_ns_target),
+ 				  nd_nas_target, 40);

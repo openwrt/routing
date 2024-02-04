@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=oonf-dlep-radio
 PKG_VERSION:=0.15.1
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_RELEASE:=30
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/OLSR/OONF.git

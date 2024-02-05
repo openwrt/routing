@@ -22,4 +22,8 @@ proto_batadv_vlan_setup() {
 	proto_send_update "$config"
 }
 
+proto_batadv_vlan_teardown() {
+	local cfg="$1"
+}
+
 add_protocol batadv_vlan

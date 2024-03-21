@@ -2,13 +2,13 @@
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
-# Copyright (C) 2022 BlueWave Projects and Services  <licence@blue-wave.net>
+# Copyright (C) 2022 - 2024 BlueWave Projects and Services <licence@blue-wave.net>
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mesh11sd
-PKG_VERSION:=2.0.0
+PKG_VERSION:=3.1.0
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -17,7 +17,7 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/mesh11sd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=741d219ea9c6fcb5e58771130c319c5b983274caf08f5c1cd5a458864e928649
+PKG_HASH:=841cec7484272155e1200edb354c8a76dc1416390dafd60bef2b8459fbf3ee21
 PKG_BUILD_DIR:=$(BUILD_DIR)/mesh11sd-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk

@@ -59,7 +59,7 @@ This reverts commit f33d7f724675544a36b24c77f8d4b95d41252ae2.
  #include <linux/atomic.h>
  #include <linux/bitops.h>
  #include <linux/bug.h>
-@@ -21,6 +20,7 @@
+@@ -20,6 +19,7 @@
  #include <linux/if_ether.h>
  #include <linux/if_vlan.h>
  #include <linux/init.h>

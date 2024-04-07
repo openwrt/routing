@@ -13,7 +13,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/sbyx/hnetd
-PKG_MIRROR_HASH:=a41baa2e3d7930cc88073b0b3f6e1fa6a4abd9fd663f2577cfde1564fa07f8f2
+PKG_MIRROR_HASH:=3b3bfff16b99dfd23b74932ac6a74af18cb9f8fd029980f1bd3788ddfb0414bb
 
 PKG_MAINTAINER:=Steven Barth <cyrus@openwrt.org>
 PKG_LICENSE:=GPL-2.0-only

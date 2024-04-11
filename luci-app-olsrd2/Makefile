@@ -3,7 +3,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-olsrd2
 PKG_VERSION:=0.2.6
-PKG_RELEASE:=15
+PKG_RELEASE:=16
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
@@ -42,8 +42,8 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DATA) ./htdocs/luci-static/resources/view/olsrd2/* $(1)/www/luci-static/resources/view/olsrd2
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./root/etc/config/* $(1)/etc/config
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_DATA) ./root/etc/uci-defaults/* $(1)/etc/uci-defaults
+	$(INSTALL_DIR) $(1)/usr/share/ucitrack
+	$(INSTALL_DATA) ./root/usr/share/ucitrack/luci-app-olsrd2.json $(1)/usr/share/ucitrack
 	$(INSTALL_DIR) $(1)/usr/libexec/rpcd
 	$(INSTALL_BIN) ./root/usr/libexec/rpcd/status.olsrd2 $(1)/usr/libexec/rpcd/status.olsrd2
 	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d

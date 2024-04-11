@@ -4,14 +4,6 @@
 uci get cjdns.cjdns.ipv6 >/dev/null 2>&1
 if [ $? -ne 0 ]; then
 
-  # register commit handler
-  uci -q batch <<-EOF >/dev/null
-    delete ucitrack.@cjdns[-1]
-    add ucitrack cjdns
-    set ucitrack.@cjdns[-1].init=cjdns
-    commit ucitrack
-EOF
-
   # generate configuration
   touch /etc/config/cjdns
   cjdroute --genconf | cjdroute --cleanconf | cjdrouteconf set

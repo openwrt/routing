@@ -18,7 +18,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cjdns
 PKG_VERSION:=21.1
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/cjdelisle/cjdns/tar.gz/$(PKG_NAME)-v$(PKG_VERSION)?
@@ -99,7 +99,8 @@ define Package/cjdns/install
 		$(1)/etc/config \
 		$(1)/etc/init.d \
 		$(1)/etc/uci-defaults \
-		$(1)/usr/lib/lua/cjdns
+		$(1)/usr/lib/lua/cjdns \
+		$(1)/usr/share/ucitrack
 
 	$(INSTALL_BIN) \
 		./files/cjdrouteconf \
@@ -120,6 +121,10 @@ define Package/cjdns/install
 	$(INSTALL_BIN) \
 		./files/cjdns.defaults \
 		$(1)/etc/uci-defaults/cjdns
+
+	$(INSTALL_DATA) \
+		./files/luci-app-cjdns.json \
+		$(1)/usr/share/ucitrack
 
 	$(CP) \
 		./lua/cjdns/* \

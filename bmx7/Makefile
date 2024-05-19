@@ -1,14 +1,21 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bmx7
-PKG_VERSION:=7.1.1
-PKG_RELEASE:=5
+#  PKG_VERSION:=7.1.1
+PKG_VERSION:=r2024051906
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/bmx-routing/bmx7/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=5f88df1c95e5cb842a6016bb1604e3e7f6097c63c5c9916edc3c84e96d4f5f65
+# PKG_SOURCE_URL:=https://codeload.github.com/bmx-routing/bmx7/tar.gz/v$(PKG_VERSION)?
+# PKG_HASH:=5f88df1c95e5cb842a6016bb1604e3e7f6097c63c5c9916edc3c84e96d4f5f65
 
-PKG_MAINTAINER:=Axel Neumann <neumann@cgws.de>
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=https://github.com/bmx-routing/bmx7.git
+PKG_SOURCE_VERSION:=9020896f89006bc5d3487222eefc7ddea9e8b2bd
+PKG_MIRROR_HASH:=skip
+HASH:=skip
+
+PKG_MAINTAINER:=Axel Neumann <axel@notmail.org>
 PKG_LICENSE:=GPL-2.0-or-later
 PKG_LICENSE_FILES:=LICENSE
 
@@ -21,7 +28,6 @@ TARGET_CFLAGS += $(FPIC)
 MAKE_ARGS += EXTRA_CFLAGS="$(TARGET_CFLAGS) \
 				-I. \
 				-I$(STAGING_DIR)/usr/include \
-				-DCRYPTLIB=MBEDTLS_2_8_0 \
 				-DCORE_LIMIT=20000 \
 				-DTRAFFIC_DUMP \
 				-DNO_TRACE_FUNCTION_CALLS \

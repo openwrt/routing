@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mesh11sd
-PKG_VERSION:=3.1.0
+PKG_VERSION:=4.0.1
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -17,7 +17,7 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/mesh11sd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=841cec7484272155e1200edb354c8a76dc1416390dafd60bef2b8459fbf3ee21
+PKG_HASH:=8029a0e41487d322b1bb20df05fc3ef2073b1239977f2b430b20fe7cabfe71de
 PKG_BUILD_DIR:=$(BUILD_DIR)/mesh11sd-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
@@ -37,11 +37,12 @@ define Package/mesh11sd/description
   This is the open source version and it enables easy and automated mesh network operation with multiple mesh nodes.
   It allows all mesh parameters supported by the wireless driver to be set in the uci config file.
   Settings take effect immediately without having to restart the wireless network.
+  Mesh paths are stabilised when node coverage areas overlap and rssi thresholds and tx power can be dynamically adjusted.
   Default settings give rapid and reliable layer 2 mesh convergence.
   Without mesh11sd, many mesh parameters cannot be set in the uci wireless config file as the mesh interface must be up before the parameters can be set.
   Some of those that are supported, would fail to be implemented when the network is (re)started resulting in errors or dropped nodes.
-  The mesh11sd daemon dynamically checks configured parameters and sets them as required.
-  Upstream wan connectivity is checked (eg Internet feed) and when not present, layer 2 peer mode is autonomously enabled,
+  The mesh11sd daemon can dynamically check configured parameters and set them as required.
+  In auto_config mode, upstream wan connectivity is checked (eg Internet feed) and when not present, layer 2 peer mode is autonomously enabled,
   and when it is present, layer 3 portal mode is enabled. This allows the same simple router configuration to be used on all meshnodes in the layer 2 mesh.
   Remote terminal sessions and remote file transfers are supported using the meshnode mac address as an identifier.
   This version does not require a Captive Portal to be running.

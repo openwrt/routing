@@ -1,19 +1,15 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bmx7
-#  PKG_VERSION:=7.1.1
-PKG_VERSION:=r2024051906
+PKG_VERSION:=r2024061001
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-# PKG_SOURCE_URL:=https://codeload.github.com/bmx-routing/bmx7/tar.gz/v$(PKG_VERSION)?
-# PKG_HASH:=5f88df1c95e5cb842a6016bb1604e3e7f6097c63c5c9916edc3c84e96d4f5f65
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/bmx-routing/bmx7.git
 PKG_SOURCE_VERSION:=9020896f89006bc5d3487222eefc7ddea9e8b2bd
-PKG_MIRROR_HASH:=skip
-HASH:=skip
+PKG_MIRROR_HASH:=6c126c512f9b015d8ce9748cb7d04654aff544395ae0409d4e8fe4b9f6c33eba
 
 PKG_MAINTAINER:=Axel Neumann <axel@notmail.org>
 PKG_LICENSE:=GPL-2.0-or-later

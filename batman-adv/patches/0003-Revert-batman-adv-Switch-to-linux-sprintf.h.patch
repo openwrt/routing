@@ -69,7 +69,7 @@ This reverts commit f0fb49c5ab70dfa064f0aa8d1c5d84f65e8cbc86.
  #include <net/sock.h>
 --- a/net/batman-adv/main.c
 +++ b/net/batman-adv/main.c
-@@ -32,7 +32,6 @@
+@@ -31,7 +31,6 @@
  #include <linux/skbuff.h>
  #include <linux/slab.h>
  #include <linux/spinlock.h>

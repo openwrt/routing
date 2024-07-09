@@ -1,0 +1,25 @@
+--- a/mcproxy/include/utils/extended_igmp_defines.hpp
++++ b/mcproxy/include/utils/extended_igmp_defines.hpp
+@@ -31,6 +31,11 @@
+ #define IGMP_V3_MEMBERSHIP_REPORT 0x22
+ #endif
+ 
++#ifndef IGMP_V3_IP4_TOS
++/// Type of Service for IGMPv3 messages specified in RFC 3376, chapter 4
++#define IGMP_V3_IP4_TOS 0xc0
++#endif
++
+ //struct igmp {
+ //u_int8_t igmp_type;             [> IGMP type <]
+ //u_int8_t igmp_code;             [> routing code <]
+--- a/mcproxy/src/proxy/igmp_sender.cpp
++++ b/mcproxy/src/proxy/igmp_sender.cpp
+@@ -217,7 +217,7 @@ bool igmp_sender::send_igmpv3_query(unsi
+ 
+     ip_hdr->ip_v = 4;
+     ip_hdr->ip_hl = (sizeof(ip) + sizeof(router_alert_option)) / 4;
+-    ip_hdr->ip_tos = 0;
++    ip_hdr->ip_tos = IGMP_V3_IP4_TOS;
+     ip_hdr->ip_len = htons(size);
+     ip_hdr->ip_id = 0;
+     ip_hdr->ip_off = htons(0 | IP_DF); //dont fragment flag

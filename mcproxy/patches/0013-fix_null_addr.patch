@@ -1,0 +1,127 @@
+--- a/mcproxy/src/proxy/check_if.cpp
++++ b/mcproxy/src/proxy/check_if.cpp
+@@ -45,19 +45,30 @@ std::vector<int> check_if::init(std::vec
+ 
+     for (std::vector<int>::iterator i = m_check_lst.begin(); i != m_check_lst.end(); i++) {
+         char cstr[IF_NAMESIZE];
+-        std::string if_name(if_indextoname(*i, cstr)); //fehler wenn null?????????????????????
++        char *ifn = if_indextoname(*i, cstr);
++        if (ifn == NULL) {
++            HC_LOG_ERROR("check_if::init: if name not found by index: " << *i);
++            continue;
++        }
++        std::string if_name(ifn);
+ 
+-        const struct ifaddrs* prop;
++        const struct ifaddrs* prop = nullptr;
+         if (m_addr_family == AF_INET) {
+             prop = m_current_prop->get_ip4_if(if_name);
+         } else if (m_addr_family == AF_INET6) {
+             const std::list<const struct ifaddrs*>* ipv6_if_list = m_current_prop->get_ip6_if(if_name);
+-            prop = *(ipv6_if_list->begin());
++            if ((ipv6_if_list != nullptr) && !ipv6_if_list->empty())
++                prop = *(ipv6_if_list->begin());
+         } else {
+             HC_LOG_ERROR("wrong address family: " << addr_family);
+             return result;
+         }
+ 
++        if (prop == nullptr) {
++            HC_LOG_ERROR("check_if::init: interface name not found: " << if_name);
++            continue;
++        }
++
+         if (!(prop->ifa_flags & IFF_RUNNING)) { //down
+             result.push_back(*i);
+         }
+@@ -88,10 +99,15 @@ bool check_if::check()
+ 
+     for (std::vector<int>::iterator i = m_check_lst.begin(); i != m_check_lst.end(); i++) {
+         char cstr[IF_NAMESIZE];
+-        std::string if_name(if_indextoname(*i, cstr)); //fehler wenn null??????????????????
++        char *ifn = if_indextoname(*i, cstr);
++        if (ifn == NULL) {
++            HC_LOG_ERROR("check_if::check: if name not found by index: " << *i);
++            continue;
++        }
++        std::string if_name(ifn);
+ 
+-        const struct ifaddrs* prop_new = m_current_prop->get_ip4_if(if_name);
+-        const struct ifaddrs* prop_old = if_property_old->get_ip4_if(if_name);
++        const struct ifaddrs* prop_new = nullptr;
++        const struct ifaddrs* prop_old = nullptr;
+ 
+         if (m_addr_family == AF_INET) {
+             prop_new = m_current_prop->get_ip4_if(if_name);
+@@ -100,8 +116,19 @@ bool check_if::check()
+             const std::list<const struct ifaddrs*>* ipv6_if_list_new = m_current_prop->get_ip6_if(if_name);
+             const std::list<const struct ifaddrs*>* ipv6_if_list_old = if_property_old->get_ip6_if(if_name);
+ 
+-            prop_new = *(ipv6_if_list_new->begin());
+-            prop_old = *(ipv6_if_list_old->begin());
++            if ((ipv6_if_list_new != nullptr) && !ipv6_if_list_new->empty())
++                prop_new = *(ipv6_if_list_new->begin());
++            if ((ipv6_if_list_old != nullptr) && !ipv6_if_list_old->empty())
++                prop_old = *(ipv6_if_list_old->begin());
++        }
++        else {
++            HC_LOG_ERROR("check_if::check: wrong address family: " << m_addr_family);
++            return false;
++        }
++
++        if ((prop_new == nullptr) || (prop_old == nullptr)) {
++            HC_LOG_ERROR("check_if::check: interface name not found: " << if_name);
++            continue;
+         }
+ 
+         if (((prop_new->ifa_flags ^ prop_old->ifa_flags) & IFF_RUNNING)) { //IFF_RUNNING changed
+--- a/mcproxy/src/proxy/interfaces.cpp
++++ b/mcproxy/src/proxy/interfaces.cpp
+@@ -165,19 +165,25 @@ addr_storage interfaces::get_saddr(const
+ 
+     if (m_addr_family == AF_INET) {
+         auto tmp = m_if_prop.get_ip4_if(if_name);
+-        return addr_storage(*tmp->ifa_addr);
++        if (tmp != nullptr)
++            return addr_storage(*tmp->ifa_addr);
+     } else if  (m_addr_family == AF_INET6) {
+         auto addr_list = m_if_prop.get_ip6_if(if_name);
+-        if (addr_list->begin() != addr_list->end()) {
+-            const struct ifaddrs* addr = *addr_list->begin();
+-            return addr_storage(*addr->ifa_addr);
+-        } else {
+-            return addr_storage();
++        if (addr_list != nullptr) {
++            if (addr_list->begin() != addr_list->end()) {
++                const struct ifaddrs* addr = *addr_list->begin();
++                return addr_storage(*addr->ifa_addr);
++            } else {
++                return addr_storage();
++            }
+         }
+     } else {
+         HC_LOG_ERROR("unkown addr_family: " << m_addr_family);
+         return addr_storage();
+     }
++
++    HC_LOG_ERROR("interfaces::get_saddr: interface name not found: " << if_name);
++    return addr_storage();
+ }
+ 
+ std::string interfaces::get_if_name(unsigned int if_index)
+--- a/mcproxy/src/proxy/routing.cpp
++++ b/mcproxy/src/proxy/routing.cpp
+@@ -61,10 +61,12 @@ bool routing::add_vif(int if_index, int
+             return false;
+         }
+     } else if (m_addr_family == AF_INET6) {
+-        if ((item = m_if_prop.get_ip6_if(if_name)->front()) == nullptr) {
++        const std::list<const struct ifaddrs*>* ipv6_if_list = m_if_prop.get_ip6_if(if_name);
++        if ((ipv6_if_list == nullptr) || ipv6_if_list->empty()) {
+             HC_LOG_ERROR("interface not found: " << if_name);
+             return false;
+         }
++        item = ipv6_if_list->front();
+     } else {
+         HC_LOG_ERROR("wrong addr_family: " << m_addr_family);
+         return false;

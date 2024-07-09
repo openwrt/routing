@@ -1,0 +1,106 @@
+diff --git a/mcproxy/include/utils/mc_socket.hpp b/mcproxy/include/utils/mc_socket.hpp
+index dee287d..f547a7a 100644
+--- a/mcproxy/include/utils/mc_socket.hpp
++++ b/mcproxy/include/utils/mc_socket.hpp
+@@ -66,6 +66,12 @@
+ #define IPV6_ALL_SITE_LOCAL_ROUTER                "ff05::2"       //All routers on the site local network segment [RFC4291]
+ #define IPV6_ALL_MLDv2_CAPABLE_ROUTERS            "ff02::16"      //All MLDv2-capable routers [RFC3810]
+ #define IPV6_ALL_PIM_ROUTERS                      "ff02::d"       //All PIM Routers
++#define IPV6_UPNP_ADDR                            "ff02::f"       //All PIM Routers
++#define IPV6_MCAST_DNS_ADDR                       "ff02::fb"       //All  MCAST DNS
++#define IPV6_NTP_ADDR                             "ff02::101"       //NTP
++#define IPV6_ALL_DHCP_AGENT_ADDR                  "ff02::1:2"      //All DHCP agents
++#define IPV6_ALL_DHCP_SERVER_ADDR                 "ff05::1:3"      //All DHCP server
++#define IPV6_ALL_SNOOPER_ADDR                     "ff02::6a"      //All snooper
+ 
+ /**
+  * @brief Wrapper for a multicast socket.
+diff --git a/mcproxy/src/proxy/proxy_instance.cpp b/mcproxy/src/proxy/proxy_instance.cpp
+index 7f98c59..59af68e 100644
+--- a/mcproxy/src/proxy/proxy_instance.cpp
++++ b/mcproxy/src/proxy/proxy_instance.cpp
+@@ -865,10 +865,25 @@ void proxy_instance::add_multicast_entry(std::string device_name, addr_storage g
+        from arp table, bridge mdb and fdb tables */
+ 
+     // Filter multicast router service groups from multicast stats
+-    if (gaddr.to_string() == IPV4_ALL_IGMP_ROUTERS_ADDR
+-     || gaddr.to_string() == IPV4_IGMPV3_ADDR
+-     || gaddr.to_string() == IPV6_ALL_NODE_LOCAL_ROUTER
++    size_t found_ip6 = gaddr.to_string().find(IPV6_ALL_NODES_ADDR);
++    if (found_ip6 != std::string::npos)
++        return;
++
++    size_t found_ip4 = gaddr.to_string().find("224.0.0.");
++    if (found_ip4 != std::string::npos)
++        return;
++
++    if (gaddr.to_string() == IPV6_ALL_NODE_LOCAL_ROUTER
+      || gaddr.to_string() == IPV6_ALL_SITE_LOCAL_ROUTER
++     || gaddr.to_string() == IPV6_ALL_NODES_ADDR
++     || gaddr.to_string() == IPV6_ALL_LINK_LOCAL_ROUTER
++     || gaddr.to_string() == IPV6_ALL_PIM_ROUTERS
++     || gaddr.to_string() == IPV6_UPNP_ADDR
++     || gaddr.to_string() == IPV6_MCAST_DNS_ADDR
++     || gaddr.to_string() == IPV6_NTP_ADDR
++     || gaddr.to_string() == IPV6_ALL_SNOOPER_ADDR
++     || gaddr.to_string() == IPV6_ALL_DHCP_AGENT_ADDR
++     || gaddr.to_string() == IPV6_ALL_DHCP_SERVER_ADDR
+      || gaddr.to_string() == IPV6_ALL_MLDv2_CAPABLE_ROUTERS) {
+         return;
+     }
+diff --git a/mcproxy/src/proxy/querier.cpp b/mcproxy/src/proxy/querier.cpp
+index a87056e..165f59a 100644
+--- a/mcproxy/src/proxy/querier.cpp
++++ b/mcproxy/src/proxy/querier.cpp
+@@ -100,27 +100,32 @@ unsigned int querier::get_effective_max_groups() const
+         return 0;
+ 
+     if (is_IPv4(m_db.querier_version_mode)) {
+-        auto router_group = m_db.group_info.find(addr_storage(IPV4_ALL_IGMP_ROUTERS_ADDR));
+-        if (router_group != end(m_db.group_info)) {
+-            max_groups++;
+-        }
+-        router_group = m_db.group_info.find(addr_storage(IPV4_IGMPV3_ADDR));
+-        if (router_group != end(m_db.group_info)) {
+-            max_groups++;
++        for (auto & e : m_db.group_info) {
++            size_t found_ip4 = e.first.to_string().find("224.0.0.");
++            if (found_ip4 != std::string::npos)
++                max_groups++;
+         }
+     } else if (is_IPv6(m_db.querier_version_mode)) {
+-        auto router_group = m_db.group_info.find(addr_storage(IPV6_ALL_NODE_LOCAL_ROUTER));
+-        if (router_group != end(m_db.group_info)) {
+-            max_groups++;
+-        }
+-        router_group = m_db.group_info.find(addr_storage(IPV6_ALL_SITE_LOCAL_ROUTER));
+-        if (router_group != end(m_db.group_info)) {
+-            max_groups++;
+-        }
+-        router_group = m_db.group_info.find(addr_storage(IPV6_ALL_MLDv2_CAPABLE_ROUTERS));
+-        if (router_group != end(m_db.group_info)) {
+-            max_groups++;
+-        }
++        for (auto & e : m_db.group_info) {
++            if (e.first.to_string() == IPV6_ALL_NODE_LOCAL_ROUTER
++             || e.first.to_string() == IPV6_ALL_SITE_LOCAL_ROUTER
++             || e.first.to_string() == IPV6_ALL_NODES_ADDR
++             || e.first.to_string() == IPV6_ALL_LINK_LOCAL_ROUTER
++             || e.first.to_string() == IPV6_ALL_PIM_ROUTERS
++             || e.first.to_string() == IPV6_UPNP_ADDR
++             || e.first.to_string() == IPV6_MCAST_DNS_ADDR
++             || e.first.to_string() == IPV6_NTP_ADDR
++             || e.first.to_string() == IPV6_ALL_SNOOPER_ADDR
++             || e.first.to_string() == IPV6_ALL_DHCP_AGENT_ADDR
++             || e.first.to_string() == IPV6_ALL_DHCP_SERVER_ADDR
++             || e.first.to_string() == IPV6_ALL_MLDv2_CAPABLE_ROUTERS) {
++                max_groups++;
++            }
++
++            size_t found_ip6 = e.first.to_string().find(IPV6_ALL_NODES_ADDR);
++            if (found_ip6 != std::string::npos)
++                max_groups++;
++	}
+     } else {
+         HC_LOG_ERROR("unknown ip version");
+     }

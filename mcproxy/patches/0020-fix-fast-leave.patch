@@ -1,0 +1,209 @@
+diff --git a/mcproxy/include/proxy/message_format.hpp b/mcproxy/include/proxy/message_format.hpp
+index e6fcace..e0cbf1b 100644
+--- a/mcproxy/include/proxy/message_format.hpp
++++ b/mcproxy/include/proxy/message_format.hpp
+@@ -392,6 +392,11 @@ struct group_record_msg : public proxy_msg {
+         return m_host_addr;
+     }
+ 
++    bool is_leave() {
++        return ((get_record_type() == MODE_IS_INCLUDE) || (get_record_type() == CHANGE_TO_INCLUDE_MODE))
++            && get_slist().empty();
++    }
++
+ private:
+     unsigned int m_if_index;
+     mcast_addr_record_type m_record_type;
+diff --git a/mcproxy/include/proxy/proxy_instance.hpp b/mcproxy/include/proxy/proxy_instance.hpp
+index a61393b..88fc3e9 100644
+--- a/mcproxy/include/proxy/proxy_instance.hpp
++++ b/mcproxy/include/proxy/proxy_instance.hpp
+@@ -89,6 +89,7 @@ private:
+     const std::string m_instance_name;
+     const int m_table_number;
+     const bool m_in_debug_testing_mode;
++    const bool m_fast_leave;
+ 
+     const std::shared_ptr<const interfaces> m_interfaces;
+     const std::shared_ptr<timing> m_timing;
+@@ -130,6 +131,7 @@ private:
+ 
+     bool is_upstream(unsigned int if_index) const;
+     bool is_downstream(unsigned int if_index) const;
++    bool is_fast_leave_enabled() const;
+ 
+     std::string to_string() const;
+     friend std::ostream& operator<<(std::ostream& stream, const proxy_instance& pr_i);
+@@ -151,15 +153,19 @@ private:
+     // Function to delete all multicast entries
+     void erase_multicast_entries() const;
+ 
++    // Function to count multicast subscribers for a particular group
++    int count_multicast_entries(addr_storage gaddr) const;
++
+ public:
+     /**
+      * @param group_mem_protocol Defines the highest group membership protocol version for IPv4 or Ipv6 to use.
+      * @param table_number Set the multicast routing table. If set to 0 (default routing table) no other instances running on the system (this simplifie the kernel calls).
+      * @param interfaces Holds all possible needed information of all upstream and downstream interfaces.
+      * @param shared_timing Stores and triggers all time-dependent events for this proxy instance.
++     * @param fast_leave defines wheather to send IGMP group-specific queries after last member leaves the group
+      * @param in_debug_testing_mode If true this proxy instance stops receiving group membership messages and prints a lot of status messages to the command line.
+      */
+-    proxy_instance(group_mem_protocol group_mem_protocol, const std::string& intance_name, int table_number, const std::shared_ptr<const interfaces>& interfaces, const std::shared_ptr<timing>& shared_timing, bool in_debug_testing_mode = false);
++    proxy_instance(group_mem_protocol group_mem_protocol, const std::string& intance_name, int table_number, const std::shared_ptr<const interfaces>& interfaces, const std::shared_ptr<timing>& shared_timing, bool fast_leave, bool in_debug_testing_mode = false);
+ 
+     /**
+      * @brief Release all resources.
+diff --git a/mcproxy/include/proxy/querier.hpp b/mcproxy/include/proxy/querier.hpp
+index e1e1971..a235ac7 100644
+--- a/mcproxy/include/proxy/querier.hpp
++++ b/mcproxy/include/proxy/querier.hpp
+@@ -155,6 +155,11 @@ public:
+ 
+     std::string to_string() const;
+     friend std::ostream& operator<<(std::ostream& stream, const querier& q);
++
++    /*
++     * If skip_query is set then the query will not sent sent from send_Q
++     */
++    bool skip_query;
+ };
+ 
+ #endif // QUERIER_HPP
+diff --git a/mcproxy/src/proxy/proxy.cpp b/mcproxy/src/proxy/proxy.cpp
+index 00d88a4..9d82891 100644
+--- a/mcproxy/src/proxy/proxy.cpp
++++ b/mcproxy/src/proxy/proxy.cpp
+@@ -227,7 +227,7 @@ void proxy::start_proxy_instances()
+ 
+         auto& interfaces = m_configuration->get_interfaces_for_pinstance(instance_name);
+ 
+-        std::unique_ptr<proxy_instance> pr_i(new proxy_instance(m_configuration->get_group_mem_protocol(), instance_name, table_number, interfaces, m_timing));
++        std::unique_ptr<proxy_instance> pr_i(new proxy_instance(m_configuration->get_group_mem_protocol(), instance_name, table_number, interfaces, m_timing, m_configuration->get_fastleave()));
+ 
+         //global rule bindung      
+         auto& global_settings = pinstance->get_global_settings();
+diff --git a/mcproxy/src/proxy/proxy_instance.cpp b/mcproxy/src/proxy/proxy_instance.cpp
+index 877fbaa..7f98c59 100644
+--- a/mcproxy/src/proxy/proxy_instance.cpp
++++ b/mcproxy/src/proxy/proxy_instance.cpp
+@@ -383,13 +383,14 @@ int update_mac_addr_mc_stats(struct mcast_stats *mc_stats)
+ }
+ }
+ 
+-proxy_instance::proxy_instance(group_mem_protocol group_mem_protocol, const std::string& instance_name, int table_number, const std::shared_ptr<const interfaces>& interfaces, const std::shared_ptr<timing>& shared_timing, bool in_debug_testing_mode)
++proxy_instance::proxy_instance(group_mem_protocol group_mem_protocol, const std::string& instance_name, int table_number, const std::shared_ptr<const interfaces>& interfaces, const std::shared_ptr<timing>& shared_timing, bool fast_leave, bool in_debug_testing_mode)
+ : m_group_mem_protocol(group_mem_protocol)
+ , m_instance_name(instance_name)
+ , m_table_number(table_number)
+ , m_in_debug_testing_mode(in_debug_testing_mode)
+ , m_interfaces(interfaces)
+ , m_timing(shared_timing)
++, m_fast_leave(fast_leave)
+ , m_mrt_sock(nullptr)
+ , m_sender(nullptr)
+ , m_receiver(nullptr)
+@@ -559,9 +560,21 @@ void proxy_instance::worker_thread()
+                 {
+                     HC_LOG_DEBUG("group report " << gr->get_gaddr() << " filtered");
+                 }
+-                else
+-                {
++                else {
++
++                    it->second.m_querier->skip_query = false;
++                    /* If leave request is received with fast leave is enabled
++		     * for the last member of group then do not send group specific query
++		     */
++		    if (gr->is_leave()) {
++                        int members_left_in_group = count_multicast_entries(gr->get_gaddr());
++                        if ( members_left_in_group <= 1 && is_fast_leave_enabled() )
++                        {
++                            it->second.m_querier->skip_query = true;
++                        }
++                    }
+                     it->second.m_querier->receive_record(msg);
++                    it->second.m_querier->skip_query = false;
+                 }
+ 
+                 // Sync multicast entries list with querier's memebership db
+@@ -571,6 +584,7 @@ void proxy_instance::worker_thread()
+                 } else {
+                     del_multicast_entry(interfaces::get_if_name(gr->get_if_index()),
+                                         gr->get_gaddr(), gr->get_host_addr());
++
+                 }
+             } else {
+                 HC_LOG_DEBUG("failed to find querier of interface: " << interfaces::get_if_name( gr->get_if_index() ));
+@@ -578,13 +592,11 @@ void proxy_instance::worker_thread()
+ 
+             // mcproxy can't track particular clients
+             // when the host sends an explicit LEAVE-like report - delete it
+-            if (((gr->get_record_type() == MODE_IS_INCLUDE)
+-              || (gr->get_record_type() == CHANGE_TO_INCLUDE_MODE))
+-             && (gr->get_slist().empty())) {
++            if (gr->is_leave()) {
+                 del_multicast_entry(interfaces::get_if_name(gr->get_if_index()),
+                                     gr->get_gaddr(), gr->get_host_addr());
+             }
+-		}
++        }
+         break;
+         case proxy_msg::NEW_SOURCE_MSG: {
+             auto sm = std::static_pointer_cast<new_source_msg>(msg);
+@@ -820,6 +832,30 @@ bool proxy_instance::is_downstream(unsigned int if_index) const
+     return m_downstreams.find(if_index) != m_downstreams.end();
+ }
+ 
++bool proxy_instance::is_fast_leave_enabled() const
++{
++    HC_LOG_TRACE("");
++
++    return m_fast_leave;
++}
++
++// Function to count multicast subscribers for a particular group
++int proxy_instance::count_multicast_entries(addr_storage gaddr) const
++{
++    HC_LOG_TRACE("");
++
++    int count = 0;
++    struct mcast_stats *temp = mc_stats;
++
++    while (temp != NULL) {
++        if (temp->gaddr == gaddr) {
++            count++;
++        }
++        temp = temp->next;
++    }
++    return count;
++}
++
+ // Function to add multicast entries in the mcast_entries
+ void proxy_instance::add_multicast_entry(std::string device_name, addr_storage gaddr, addr_storage saddr) const
+ {
+diff --git a/mcproxy/src/proxy/querier.cpp b/mcproxy/src/proxy/querier.cpp
+index 398a7ec..a87056e 100644
+--- a/mcproxy/src/proxy/querier.cpp
++++ b/mcproxy/src/proxy/querier.cpp
+@@ -771,6 +771,9 @@ void querier::send_Q(const addr_storage& gaddr, gaddr_info& ginfo)
+         m_timing->add_time(llqt, m_msg_worker, ftimer);
+     }
+ 
++    if (skip_query)
++        return;
++
+     if (ginfo.group_retransmission_count > 0) {
+         ginfo.group_retransmission_count--;
+ 
+@@ -799,6 +802,9 @@ void querier::send_Q(const addr_storage& gaddr, gaddr_info& ginfo, source_list<s
+     auto llqt = m_timers_values.get_last_listener_query_time();
+     auto st = std::make_shared<source_timer_msg>(m_if_index, gaddr, llqt);
+ 
++    if (skip_query)
++        return;
++
+     for (auto & e : tmp_list) {
+         auto it = slist.find(e);
+         if (it != std::end(slist)) {

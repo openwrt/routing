@@ -1,0 +1,299 @@
+--- a/mcproxy/include/tester/config_map.hpp
++++ b/mcproxy/include/tester/config_map.hpp
+@@ -68,7 +68,7 @@ public:
+      */
+     inline const mapped_type& operator[](const key_type& group) const {
+         container_type::const_iterator i = m_data.find(group);
+-        if (i == m_data.end()) throw std::range_error("unknown group: " + group);
++        if (i == m_data.end()) throw "unknown group: " + group;
+         return i->second;
+     }
+ 
+--- a/mcproxy/src/main.cpp
++++ b/mcproxy/src/main.cpp
+@@ -46,22 +46,19 @@ void test_test();
+ 
+ int main(int arg_count, char* args[])
+ {
+-#ifdef TESTER
+     try {
++#ifdef TESTER
+         tester(arg_count, args);
+-    } catch (const char* e) {
+-        std::cout << e << std::endl;
+-    }
+ #else
+-    try {
+         proxy p(arg_count, args);
++        //test_test();
++#endif
+     } catch (const char* e) {
+-        std::cout << e << std::endl;
++        std::cerr << e << std::endl;
++    } catch (const std::string &e) {
++        std::cerr << e << std::endl;
+     }
+ 
+-    //test_test();
+-#endif
+-
+     return 0;
+ }
+ 
+--- a/mcproxy/src/proxy/receiver.cpp
++++ b/mcproxy/src/proxy/receiver.cpp
+@@ -36,7 +36,7 @@ receiver::receiver(proxy_instance* pr_i,
+     HC_LOG_TRACE("");
+ 
+     if (!m_mrt_sock->set_receive_timeout(RECEIVER_RECV_TIMEOUT)) {
+-        throw std::string("failed to set receive timeout");
++        throw "failed to set receive timeout";
+     }
+ 
+ }
+--- a/mcproxy/src/tester/config_map.cpp
++++ b/mcproxy/src/tester/config_map.cpp
+@@ -64,7 +64,7 @@ void new_section(boost::smatch& sm, cont
+         err  = "section ";
+         err += sec_name;
+         err += " already defined";
+-        throw runtime_error(err);
++        throw err;
+     }
+     sec = sec_name;
+     // insert sec_name to the map
+@@ -75,7 +75,7 @@ void add_key_value_pair(boost::smatch& s
+ {
+     if (sec.empty())
+     {
+-        throw runtime_error("key value pair outside section");
++        throw "key value pair outside section";
+     }
+     string key = sm[1];
+     string value = sm[2];
+@@ -86,7 +86,7 @@ void add_key_value_pair(boost::smatch& s
+         err  = "key ";
+         err += key;
+         err += " already defined";
+-        throw runtime_error(err);
++        throw err;
+     }
+     kv_map[key] = value;
+ }
+@@ -116,7 +116,7 @@ void config_map::read_ini(const string&
+     ifstream input_stream(filename.c_str());
+     if (!(input_stream.is_open() && input_stream.good()))
+     {
+-        throw runtime_error("Config file " + filename + " not found");
++        throw "Config file " + filename + " not found";
+     }
+     while (getline(input_stream, line))
+     {
+--- a/mcproxy/include/proxy/igmp_receiver.hpp
++++ b/mcproxy/include/proxy/igmp_receiver.hpp
+@@ -51,6 +51,8 @@ private:
+     int get_iov_min_size() override;
+     void analyse_packet(struct msghdr* msg, int info_size) override;
+ 
++    std::string name() const override { return "igmp_receiver"; }
++
+ public:
+     /**
+      * @brief Create an igmp_receiver.
+--- a/mcproxy/include/proxy/mld_receiver.hpp
++++ b/mcproxy/include/proxy/mld_receiver.hpp
+@@ -45,6 +45,8 @@ private:
+     int get_iov_min_size() override; //size in byte
+     void analyse_packet(struct msghdr* msg, int info_size) override;
+ 
++    std::string name() const override { return "mld_receiver"; }
++
+ public:
+     mld_receiver(proxy_instance* pr_i, std::shared_ptr<const mroute_socket> mrt_sock, std::shared_ptr<const interfaces> interfaces, bool in_debug_testing_mode);
+     virtual ~mld_receiver();
+--- a/mcproxy/include/proxy/proxy.hpp
++++ b/mcproxy/include/proxy/proxy.hpp
+@@ -35,6 +35,7 @@
+ #include <string>
+ #include <memory>
+ #include <map>
++#include <mutex>
+ 
+ class configuration;
+ class timing;
+@@ -47,6 +48,11 @@ class proxy
+ {
+ private:
+     static bool m_running;
++
++    static std::exception_ptr m_worker_exception;
++    static std::string m_worker_exception_text;
++    static std::mutex m_worker_exception_lock;
++
+     int m_verbose_lvl;
+     bool m_print_proxy_status;
+     bool m_reset_rp_filter;
+@@ -80,6 +86,11 @@ public:
+      */
+     virtual ~proxy();
+ 
++    /**
++     * @brief End the proxy execution due to an worker's exception.
++     */
++    static void finish(std::exception_ptr worker_exception, std::string worker_exception_text);
++
+     std::string to_string() const;
+     friend std::ostream& operator<<(std::ostream& stream, const proxy& p);
+ };
+--- a/mcproxy/include/proxy/proxy_instance.hpp
++++ b/mcproxy/include/proxy/proxy_instance.hpp
+@@ -129,6 +129,8 @@ private:
+     std::string to_string() const;
+     friend std::ostream& operator<<(std::ostream& stream, const proxy_instance& pr_i);
+ 
++    std::string name() const override { return "proxy_instance " + m_instance_name; }
++
+ public:
+     /**
+      * @param group_mem_protocol Defines the highest group membership protocol version for IPv4 or Ipv6 to use.
+--- a/mcproxy/include/proxy/timing.hpp
++++ b/mcproxy/include/proxy/timing.hpp
+@@ -68,6 +68,8 @@ private:
+     timing& operator=(const timing&) = delete;
+     timing& operator=(const timing&&) = delete;
+ 
++    std::string name() const override { return "timing"; }
++
+ public:
+     timing();
+ 
+--- a/mcproxy/include/proxy/worker.hpp
++++ b/mcproxy/include/proxy/worker.hpp
+@@ -44,6 +44,7 @@ class base_worker
+ private:
+     std::unique_ptr<std::thread> m_thread;
+     std::mutex m_thread_lock;
++    void worker_thread_internal();
+ 
+     mutable std::condition_variable m_stop_event;
+     mutable std::mutex m_stop_event_lock;
+@@ -52,6 +53,11 @@ private:
+ 
+ protected:
+     /**
++     * @brief Worker name for logging.
++     */
++    virtual std::string name() const = 0;
++
++    /**
+      * @brief Worker thread function to process the jobs.
+      */
+     virtual void worker_thread() = 0;
+--- a/mcproxy/src/proxy/proxy.cpp
++++ b/mcproxy/src/proxy/proxy.cpp
+@@ -39,6 +39,10 @@
+ 
+ bool proxy::m_running = false;
+ 
++std::exception_ptr proxy::m_worker_exception = nullptr;
++std::string proxy::m_worker_exception_text;
++std::mutex proxy::m_worker_exception_lock;
++
+ proxy::proxy(int arg_count, char* args[])
+     : m_verbose_lvl(0)
+     , m_print_proxy_status(false)
+@@ -296,7 +300,7 @@ void proxy::start()
+     using namespace std;
+     HC_LOG_TRACE("");
+ 
+-    m_running = true;
++    m_running = (m_worker_exception == nullptr);
+ 
+     if (m_print_proxy_status) {
+         cout << *this << endl;
+@@ -321,6 +325,15 @@ void proxy::start()
+         e.second->finish();
+     });
+ 
++    {
++        std::lock_guard<std::mutex> lock(proxy::m_worker_exception_lock);
++        if (proxy::m_worker_exception != nullptr)
++        {
++            HC_LOG_ERROR(proxy::m_worker_exception_text);
++            std::rethrow_exception(proxy::m_worker_exception);
++        }
++    }
++
+     //vif_map::iterator it_vif;
+     //interface_map::iterator it_proxy_numb;
+     //proxy_msg msg;
+@@ -428,6 +441,18 @@ void proxy::start()
+ 
+ }
+ 
++void proxy::finish(std::exception_ptr worker_exception, std::string worker_exception_text)
++{
++    HC_LOG_TRACE("");
++
++    std::lock_guard<std::mutex> lock(proxy::m_worker_exception_lock);
++    if (proxy::m_worker_exception == nullptr) {
++        proxy::m_worker_exception = worker_exception;
++        proxy::m_worker_exception_text = worker_exception_text;
++    }
++    proxy::m_running = false;
++}
++
+ void proxy::signal_handler(int)
+ {
+     proxy::m_running = false;
+--- a/mcproxy/src/proxy/worker.cpp
++++ b/mcproxy/src/proxy/worker.cpp
+@@ -23,6 +23,7 @@
+ 
+ #include "include/hamcast_logging.h"
+ #include "include/proxy/worker.hpp"
++#include "include/proxy/proxy.hpp"
+ 
+ #include "unistd.h"
+ 
+@@ -49,6 +50,22 @@ base_worker::~base_worker()
+     }
+ }
+ 
++void base_worker::worker_thread_internal()
++{
++    HC_LOG_TRACE("");
++
++    try {
++        worker_thread();
++    } catch (const std::exception& e) {
++        proxy::finish(std::current_exception(), name() + ": " + e.what());
++    } catch (const char* e) {
++        proxy::finish(std::current_exception(), name() + ": " + e);
++    } catch (const std::string &e) {
++        proxy::finish(std::current_exception(), name() + ": " + e);
++    } catch (...) {
++        proxy::finish(std::current_exception(), name() + ": unknown error");
++    }
++}
+ 
+ void base_worker::start()
+ {
+@@ -58,7 +75,7 @@ void base_worker::start()
+ 
+     if (m_thread == nullptr) {
+         m_running =  true;
+-        m_thread.reset(new std::thread(&base_worker::worker_thread, this));
++        m_thread.reset(new std::thread(&base_worker::worker_thread_internal, this));
+     } else {
+         HC_LOG_WARN("base_worker thread is already running");
+     }
+@@ -165,6 +182,8 @@ void worker::test_worker()
+             }
+             HC_LOG_DEBUG("after while(m_running)");
+         };
++
++        std::string name() const override { return "my_worker"; }
+     };
+ 
+ 

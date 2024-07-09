@@ -1,0 +1,186 @@
+diff --git a/mcproxy/include/parser/interface.hpp b/mcproxy/include/parser/interface.hpp
+index 78f0238..93d5d23 100644
+--- a/mcproxy/include/parser/interface.hpp
++++ b/mcproxy/include/parser/interface.hpp
+@@ -220,6 +220,10 @@ public:
+     const std::string& get_instance_name() const;
+     const std::list<std::shared_ptr<interface>>& get_upstreams() const;
+     const std::list<std::shared_ptr<interface>>& get_downstreams() const;
++    bool delete_upstream(const std::shared_ptr<interface>& id);
++    bool delete_downstream(const std::shared_ptr<interface>& id);
++    int get_upstream_count() const;
++    int get_downstream_count() const;
+     const std::list<std::shared_ptr<rule_binding>>& get_global_settings() const;
+     int get_table_number() const;
+     bool get_user_selected_table_number() const; 
+@@ -246,6 +250,7 @@ private:
+ public:
+     inst_def_set();
+     bool insert(const std::shared_ptr<instance_definition>& id);
++    bool erase(const std::shared_ptr<instance_definition>& id);
+ 
+     const_iterator find(const std::string& instance_name) const {
+         return m_instance_def_set.find(std::make_shared<instance_definition>(instance_name));
+diff --git a/mcproxy/src/parser/configuration.cpp b/mcproxy/src/parser/configuration.cpp
+index 036d7de..4a07939 100644
+--- a/mcproxy/src/parser/configuration.cpp
++++ b/mcproxy/src/parser/configuration.cpp
+@@ -199,34 +199,67 @@ void configuration::initalize_interfaces()
+     HC_LOG_TRACE("");
+ 
+     unsigned int if_index;
+-
+-    for (auto & inst : m_inst_def_set) {
+-        auto result = std::make_shared<interfaces>(get_addr_family(m_gmp), m_reset_reverse_path_filter);
+-        auto add = [&](const std::shared_ptr<interface>& interf) {
+-            if_index = interfaces::get_if_index(interf->get_if_name());
+-            if (if_index == 0) {
+-                HC_LOG_ERROR("interface " << interf->get_if_name() << " not found");
+-                throw "unknown interface";
+-            }
+-
+-            if (!result->add_interface(if_index)) {
+-                throw "failed to add interface";
+-            }
+-        };
+-
+-        for (auto & downstream : inst->get_downstreams()) {
+-            add(downstream);
+-        }
+-
+-        for (auto & upstream : inst->get_upstreams()) {
+-            add(upstream);
+-        }
+-
+-        if (!m_interfaces_map.insert(std::pair<std::string, std::shared_ptr<interfaces>>(inst->get_instance_name(), result)).second) {
+-            HC_LOG_ERROR("proxy instance " << inst->get_instance_name() << " already exists");
+-            throw "failed to add instance";
+-        }
++	auto def_set = m_inst_def_set;
++
++	auto result = std::make_shared<interfaces>(get_addr_family(m_gmp), m_reset_reverse_path_filter);
++
++	auto add = [&](const std::shared_ptr<interface>& interf) {
++		if_index = interfaces::get_if_index(interf->get_if_name());
++		if (if_index == 0) {
++			HC_LOG_ERROR("interface " << interf->get_if_name() << " not found");
++			throw "unknown interface";
++		}
++
++		if (!result->add_interface(if_index)) {
++			throw "failed to add interface";
++		}
++	};
++
++    for (auto & inst : def_set) {
++		auto downstreams = inst->get_downstreams();
++			for (auto & downstream : downstreams) {
++				try {
++					add(downstream);
++				} catch (const char *s) {
++					inst->delete_downstream(downstream);
++					continue;
++				}
++			}
++
++			if (inst->get_downstream_count() == 0) {
++				m_inst_def_set.erase(inst);
++				continue;
++			}
++
++		auto upstreams = inst->get_upstreams();
++			for (auto & upstream : upstreams) {
++				try {
++					add(upstream);
++				} catch (const char *s) {
++					inst->delete_upstream(upstream);
++					continue;
++				}
++			}
++
++			if (inst->get_upstream_count() == 0) {
++				m_inst_def_set.erase(inst);
++				continue;
++			}
++
++			try {
++				if (!m_interfaces_map.insert(std::pair<std::string, std::shared_ptr<interfaces>>(inst->get_instance_name(), result)).second) {
++					HC_LOG_ERROR("proxy instance " << inst->get_instance_name() << " already exists");
++					throw "failed to add instance";
++				}
++			} catch (const char *s) {
++				m_inst_def_set.erase(inst);
++				continue;
++			}
+     }
++
++	if (m_inst_def_set.size() == 0) {
++		throw "no valid interfaces found";
++	}
+ }
+ 
+ #ifdef DEBUG_MODE
+diff --git a/mcproxy/src/parser/interface.cpp b/mcproxy/src/parser/interface.cpp
+index 010f39d..3cf51f0 100644
+--- a/mcproxy/src/parser/interface.cpp
++++ b/mcproxy/src/parser/interface.cpp
+@@ -517,6 +517,46 @@ const std::list<std::shared_ptr<interface>>& instance_definition::get_downstream
+     return m_downstreams;
+ }
+ 
++int instance_definition::get_upstream_count() const
++{
++    HC_LOG_TRACE("");
++    return m_upstreams.size();
++}
++
++int instance_definition::get_downstream_count() const
++{
++    HC_LOG_TRACE("");
++    return m_downstreams.size();
++}
++
++bool instance_definition::delete_upstream(const std::shared_ptr<interface>& id)
++{
++	std::list<std::shared_ptr<interface>>::iterator i;
++
++	HC_LOG_TRACE("");
++	for (i = m_upstreams.begin(); i != m_upstreams.end(); ++i) {
++		if (id == *i) {
++			m_upstreams.erase(i);
++			return true;
++		}
++	}
++	return false;
++}
++
++bool instance_definition::delete_downstream(const std::shared_ptr<interface>& id)
++{
++	std::list<std::shared_ptr<interface>>::iterator i;
++
++    HC_LOG_TRACE("");
++	for (i = m_downstreams.begin(); i != m_downstreams.end(); ++i) {
++		if (id == *i) {
++			m_downstreams.erase(i);
++			return true;
++		}
++	}
++	return false;
++}
++
+ const std::list<std::shared_ptr<rule_binding>>& instance_definition::get_global_settings() const
+ {
+     HC_LOG_TRACE("");
+@@ -595,6 +635,12 @@ bool inst_def_set::insert(const std::shared_ptr<instance_definition>& id)
+     return m_instance_def_set.insert(id).second;
+ }
+ 
++bool inst_def_set::erase(const std::shared_ptr<instance_definition>& id)
++{
++    HC_LOG_TRACE("");
++    return m_instance_def_set.erase(id);
++}
++
+ unsigned int inst_def_set::size() const
+ {
+     HC_LOG_TRACE("");

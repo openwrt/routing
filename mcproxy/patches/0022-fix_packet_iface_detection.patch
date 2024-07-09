@@ -1,0 +1,376 @@
+--- a/mcproxy/include/proxy/igmp_receiver.hpp
++++ b/mcproxy/include/proxy/igmp_receiver.hpp
+@@ -47,8 +47,9 @@ class igmp_receiver : public receiver
+ {
+ private:
+ 
+-    int get_ctrl_min_size() override;
+-    int get_iov_min_size() override;
++    int get_ctrl_min_size() const override;
++    int get_iov_min_size() const override;
++    bool get_source_params(struct msghdr* msg, unsigned int& if_index, addr_storage& saddr) const;
+     void analyse_packet(struct msghdr* msg, int info_size) override;
+ 
+     std::string name() const override { return "igmp_receiver"; }
+--- a/mcproxy/include/proxy/mld_receiver.hpp
++++ b/mcproxy/include/proxy/mld_receiver.hpp
+@@ -41,8 +41,8 @@
+ class mld_receiver : public receiver
+ {
+ private:
+-    int get_ctrl_min_size() override; //size in byte
+-    int get_iov_min_size() override; //size in byte
++    int get_ctrl_min_size() const override; //size in byte
++    int get_iov_min_size() const override; //size in byte
+     void analyse_packet(struct msghdr* msg, int info_size) override;
+ 
+     std::string name() const override { return "mld_receiver"; }
+--- a/mcproxy/include/proxy/receiver.hpp
++++ b/mcproxy/include/proxy/receiver.hpp
+@@ -82,12 +82,12 @@ protected:
+     /**
+      * @brief Get the size for the control buffer for recvmsg().
+      */
+-    virtual int get_ctrl_min_size() = 0;
++    virtual int get_ctrl_min_size() const = 0;
+ 
+     /**
+      * @brief Get the size for the iov vector for recvmsg().
+      */
+-    virtual int get_iov_min_size() = 0;
++    virtual int get_iov_min_size() const = 0;
+ 
+     /**
+      * @brief Analyze the received packet and send a message to the relevant proxy instance.
+--- a/mcproxy/include/utils/mroute_socket.hpp
++++ b/mcproxy/include/utils/mroute_socket.hpp
+@@ -152,6 +152,12 @@ public:
+     bool set_mrt_flag(bool enable) const;
+ 
+     /**
++     * @brief Enable or disable IP_PKTINFO option to get incoming interface.
++     * @return Return true on success.
++     */
++    bool set_ipv4_ip_packet(bool enable) const;
++
++    /**
+      * @brief Adds the virtual interface to the mrouted API
+      *        - sysctl net.ipv4.conf.eth0.mc_forwarding will be set
+      *        - /proc/net$ cat ip_mr_vif displays the added interface
+--- a/mcproxy/src/proxy/igmp_receiver.cpp
++++ b/mcproxy/src/proxy/igmp_receiver.cpp
+@@ -87,7 +87,7 @@ igmp_receiver::~igmp_receiver()
+     finish();
+ }
+ 
+-int igmp_receiver::get_iov_min_size()
++int igmp_receiver::get_iov_min_size() const
+ {
+     HC_LOG_TRACE("");
+     int size_ip = sizeof(struct ip) + sizeof(struct igmp) + IGMP_RECEIVER_IPV4_ROUTER_ALERT_OPT_SIZE + 10000; //random number plz fix it??????????????????????????
+@@ -95,11 +95,40 @@ int igmp_receiver::get_iov_min_size()
+     return (size_ip < size_kernel) ? size_kernel : size_ip;
+ }
+ 
+-int igmp_receiver::get_ctrl_min_size()
++int igmp_receiver::get_ctrl_min_size() const
+ {
+     HC_LOG_TRACE("");
+-    //useless
+-    return 0;
++    return sizeof(struct cmsghdr) + sizeof(struct in_pktinfo) + 256;
++}
++
++bool igmp_receiver::get_source_params(struct msghdr* msg, unsigned int& if_index, addr_storage& saddr) const
++{
++    HC_LOG_TRACE("");
++
++    struct ip* ip_hdr = (struct ip*)msg->msg_iov->iov_base;
++    saddr = ip_hdr->ip_src;
++    HC_LOG_DEBUG("\tsrc: " << saddr);
++
++    for (struct cmsghdr* cmsgptr = CMSG_FIRSTHDR(msg); cmsgptr != nullptr; cmsgptr = CMSG_NXTHDR(msg, cmsgptr)) {
++        if (cmsgptr->cmsg_len > 0 && cmsgptr->cmsg_level == IPPROTO_IP && cmsgptr->cmsg_type == IP_PKTINFO) {
++            if_index = ((struct in_pktinfo *)CMSG_DATA(cmsgptr))->ipi_ifindex;
++            break;
++        }
++    }
++
++    if ((if_index == 0) && ((if_index = m_interfaces->get_if_index(saddr)) == 0)) {
++        HC_LOG_DEBUG("no if_index found");
++        return false;
++    }
++
++    HC_LOG_DEBUG("\treceived on interface:" << interfaces::get_if_name(if_index));
++
++    if (!is_if_index_relevant(if_index)) {
++        HC_LOG_DEBUG("interface is not relevant");
++        return false;
++    }
++
++    return true;
+ }
+ 
+ void igmp_receiver::analyse_packet(struct msghdr* msg, int)
+@@ -144,95 +173,83 @@ void igmp_receiver::analyse_packet(struc
+         }
+         default:
+             HC_LOG_WARN("unknown kernel message");
++            break;
+         }
+-    } else if (ip_hdr->ip_p == IPPROTO_IGMP && ntohs(ip_hdr->ip_len) <= get_iov_min_size()) {
+-        if (igmp_hdr->igmp_type == IGMP_V2_MEMBERSHIP_REPORT || igmp_hdr->igmp_type == IGMP_V2_LEAVE_GROUP) {
+-            HC_LOG_DEBUG("IGMP_V2_MEMBERSHIP_REPORT or IGMP_V2_LEAVE_GROUP received");
+-
+-            saddr = ip_hdr->ip_src;
+-            HC_LOG_DEBUG("\tsrc: " << saddr);
+ 
+-            if ((if_index = m_interfaces->get_if_index(saddr)) == 0) {
+-                return;
+-            }
+-
+-            HC_LOG_DEBUG("\treceived on interface:" << interfaces::get_if_name(if_index));
+-
+-            if (!is_if_index_relevant(if_index)) {
+-                HC_LOG_DEBUG("interface is not relevant");
+-                return;
+-            }
+-
+-            gaddr = igmp_hdr->igmp_group;
+-            HC_LOG_DEBUG("\tgroup: " << gaddr);
+-
+-            if (igmp_hdr->igmp_type == IGMP_V2_MEMBERSHIP_REPORT) {
+-                HC_LOG_DEBUG("\treport received");
+-                m_proxy_instance->add_msg(std::make_shared<group_record_msg>(if_index, MODE_IS_EXCLUDE, gaddr, source_list<source>(), IGMPv2, saddr));
+-            } else if (igmp_hdr->igmp_type == IGMP_V2_LEAVE_GROUP) {
+-                HC_LOG_DEBUG("\tleave group received");
+-                m_proxy_instance->add_msg(std::make_shared<group_record_msg>(if_index, CHANGE_TO_INCLUDE_MODE, gaddr, source_list<source>(), IGMPv2, saddr));
+-            } else {
+-                HC_LOG_ERROR("unkown igmp type: " << igmp_hdr->igmp_type);
+-            }
+-        } else if (igmp_hdr->igmp_type == IGMP_V3_MEMBERSHIP_REPORT) {
+-            HC_LOG_DEBUG("IGMP_V3_MEMBERSHIP_REPORT received");
+-
+-            igmpv3_mc_report* v3_report = reinterpret_cast<igmpv3_mc_report*>(igmp_hdr);
+-            igmpv3_mc_record* rec = reinterpret_cast<igmpv3_mc_record*>(reinterpret_cast<unsigned char*>(v3_report) + sizeof(igmpv3_mc_report));
+-
+-            int num_records = ntohs(v3_report->num_of_mc_records);
+-            HC_LOG_DEBUG("\tnum of multicast records: " << num_records);
+-
+-            saddr = ip_hdr->ip_src;
+-            HC_LOG_DEBUG("\tsaddr: " << saddr);
++        return;
++    }
+ 
+-            if ((if_index = m_interfaces->get_if_index(saddr)) == 0) {
+-                HC_LOG_DEBUG("no if_index found");
+-                return;
+-            }
+-            HC_LOG_DEBUG("\treceived on interface:" << interfaces::get_if_name(if_index));
++    if (ip_hdr->ip_p != IPPROTO_IGMP || ntohs(ip_hdr->ip_len) > get_iov_min_size()) {
++        HC_LOG_DEBUG("unknown IP-packet: " << (int)ip_hdr->ip_p);
++        return;
++    }
+ 
+-            if (!is_if_index_relevant(if_index)) {
+-                HC_LOG_DEBUG("interface is not relevant");
+-                return;
++    switch (igmp_hdr->igmp_type) {
++    case IGMP_MEMBERSHIP_QUERY:
++        HC_LOG_DEBUG("IGMP_MEMBERSHIP_QUERY received");
++        HC_LOG_WARN("querier election is not implemented");
++        return;
++    case IGMP_V1_MEMBERSHIP_REPORT:
++        HC_LOG_DEBUG("IGMP_V1_MEMBERSHIP_REPORT received");
++        HC_LOG_WARN("protocol not supported");
++        return;
++    case IGMP_V2_MEMBERSHIP_REPORT:
++    case IGMP_V2_LEAVE_GROUP:
++        HC_LOG_DEBUG(igmp_hdr->igmp_type == IGMP_V2_MEMBERSHIP_REPORT ?
++                     "IGMP_V2_MEMBERSHIP_REPORT received"
++                   : "IGMP_V2_LEAVE_GROUP received");
++
++        if (!get_source_params(msg, if_index, saddr))
++            return;
++        gaddr = igmp_hdr->igmp_group;
++        HC_LOG_DEBUG("\tgroup: " << gaddr);
++
++        m_proxy_instance->add_msg(
++            std::make_shared<group_record_msg>(if_index,
++                                               igmp_hdr->igmp_type == IGMP_V2_MEMBERSHIP_REPORT ?
++                                               MODE_IS_EXCLUDE : CHANGE_TO_INCLUDE_MODE,
++                                               gaddr, source_list<source>(), IGMPv2, saddr));
++        break;
++    case IGMP_V3_MEMBERSHIP_REPORT: {
++        HC_LOG_DEBUG("IGMP_V3_MEMBERSHIP_REPORT received");
++
++        if (!get_source_params(msg, if_index, saddr))
++            return;
++
++        igmpv3_mc_report* v3_report = reinterpret_cast<igmpv3_mc_report*>(igmp_hdr);
++        igmpv3_mc_record* rec = reinterpret_cast<igmpv3_mc_record*>(reinterpret_cast<unsigned char*>(v3_report) + sizeof(igmpv3_mc_report));
++
++        int num_records = ntohs(v3_report->num_of_mc_records);
++        HC_LOG_DEBUG("\tnum of multicast records: " << num_records);
++
++        for (int i = 0; i < num_records; ++i) {
++            mcast_addr_record_type rec_type = static_cast<mcast_addr_record_type>(rec->type);
++            unsigned int aux_size = rec->aux_data_len * 4; //RFC 3376 Section 4.2.6 Aux Data Len
++            int nos = ntohs(rec->num_of_srcs);
++
++            gaddr = addr_storage(rec->gaddr);
++            source_list<source> slist;
++
++            in_addr* src = reinterpret_cast<in_addr*>(reinterpret_cast<unsigned char*>(rec) + sizeof(igmpv3_mc_record));
++            for (int j = 0; j < nos; ++j) {
++                slist.insert(addr_storage(*src));
++                ++src;
+             }
+ 
+-            for (int i = 0; i < num_records; ++i) {
+-                mcast_addr_record_type rec_type = static_cast<mcast_addr_record_type>(rec->type);
+-                unsigned int aux_size = rec->aux_data_len * 4; //RFC 3376 Section 4.2.6 Aux Data Len
+-                int nos = ntohs(rec->num_of_srcs);
+-
+-                gaddr = addr_storage(rec->gaddr);
+-                source_list<source> slist;
+-
+-                in_addr* src = reinterpret_cast<in_addr*>(reinterpret_cast<unsigned char*>(rec) + sizeof(igmpv3_mc_record));
+-                for (int j = 0; j < nos; ++j) {
+-                    slist.insert(addr_storage(*src));
+-                    ++src;
+-                }
+-
+-                HC_LOG_DEBUG("\trecord type: " << get_mcast_addr_record_type_name(rec_type));
+-                HC_LOG_DEBUG("\tgaddr: " << gaddr);
+-                HC_LOG_DEBUG("\tnumber of sources: " << slist.size());
+-                HC_LOG_DEBUG("\tsource_list: " << slist);
+-                m_proxy_instance->add_msg(std::make_shared<group_record_msg>(if_index, rec_type, gaddr, move(slist), IGMPv3, saddr));
+-
+-                rec = reinterpret_cast<igmpv3_mc_record*>(reinterpret_cast<unsigned char*>(rec) + sizeof(igmpv3_mc_record) + nos * sizeof(in_addr) + aux_size);
+-            }
++            HC_LOG_DEBUG("\trecord type: " << get_mcast_addr_record_type_name(rec_type));
++            HC_LOG_DEBUG("\tgaddr: " << gaddr);
++            HC_LOG_DEBUG("\tnumber of sources: " << slist.size());
++            HC_LOG_DEBUG("\tsource_list: " << slist);
++            m_proxy_instance->add_msg(std::make_shared<group_record_msg>(if_index, rec_type, gaddr, move(slist), IGMPv3, saddr));
+ 
+-        } else if (igmp_hdr->igmp_type == IGMP_V1_MEMBERSHIP_REPORT) {
+-            HC_LOG_DEBUG("IGMP_V1_MEMBERSHIP_REPORT received");
+-            HC_LOG_WARN("protocol not supported");
+-        } else if (igmp_hdr->igmp_type == IGMP_MEMBERSHIP_QUERY) {
+-            HC_LOG_DEBUG("IGMP_MEMBERSHIP_QUERY received");
+-            HC_LOG_WARN("querier election is not implemented");
+-        } else {
+-            HC_LOG_WARN("unknown IGMP-packet");
+-            HC_LOG_WARN("type: " << igmp_hdr->igmp_type);
++            rec = reinterpret_cast<igmpv3_mc_record*>(reinterpret_cast<unsigned char*>(rec) + sizeof(igmpv3_mc_record) + nos * sizeof(in_addr) + aux_size);
+         }
+-    } else {
+-        HC_LOG_DEBUG("unknown IP-packet: " << ip_hdr->ip_p);
++
++        break;
++    }
++    default :
++        HC_LOG_WARN("unknown IGMP-packet type: " << (int)igmp_hdr->igmp_type);
++        return;
+     }
+ }
+ 
+--- a/mcproxy/src/proxy/mld_receiver.cpp
++++ b/mcproxy/src/proxy/mld_receiver.cpp
+@@ -55,7 +55,7 @@ mld_receiver::~mld_receiver()
+     finish();
+ }
+ 
+-int mld_receiver::get_iov_min_size()
++int mld_receiver::get_iov_min_size() const
+ {
+     HC_LOG_TRACE("");
+     int size_ip = sizeof(struct mld_hdr) + 10000; //random number plz fix it??????????????????????????
+@@ -63,11 +63,11 @@ int mld_receiver::get_iov_min_size()
+     return (size_ip < size_kernel) ? size_kernel : size_ip;
+ }
+ 
+-int mld_receiver::get_ctrl_min_size()
++int mld_receiver::get_ctrl_min_size() const
+ {
+     HC_LOG_TRACE("");
+ 
+-    return sizeof(struct cmsghdr) + sizeof(struct in6_pktinfo);
++    return sizeof(struct cmsghdr) + sizeof(struct in6_pktinfo) + 256;
+ }
+ 
+ void mld_receiver::analyse_packet(struct msghdr* msg, int)
+--- a/mcproxy/src/proxy/receiver.cpp
++++ b/mcproxy/src/proxy/receiver.cpp
+@@ -39,6 +39,10 @@ receiver::receiver(proxy_instance* pr_i,
+         throw "failed to set receive timeout";
+     }
+ 
++    // Set option to get incoming interface.
++    // Various multicast proxies can send reports with zero source (0.0.0.0),
++    // interface number can't be detected by zero address.
++    m_mrt_sock->set_ipv4_ip_packet(true);
+ }
+ 
+ bool receiver::is_if_index_relevant(unsigned int if_index) const
+@@ -83,7 +87,6 @@ void receiver::worker_thread()
+ 
+     //control
+     std::unique_ptr<unsigned char[]> ctrl { new unsigned char[get_ctrl_min_size()] };
+-    //unsigned char ctrl[r->get_ctrl_min_size()];
+ 
+     //create msghdr
+     struct msghdr msg;
+@@ -93,13 +96,14 @@ void receiver::worker_thread()
+     msg.msg_iov = &iov;
+     msg.msg_iovlen = 1;
+ 
+-    msg.msg_control = ctrl.get();
+-    msg.msg_controllen = get_ctrl_min_size(); //sizeof(ctrl);
++    msg.msg_control = get_ctrl_min_size() ? ctrl.get() : NULL;
+ 
+     msg.msg_flags = 0;
+     //########################
+ 
+     while (m_running) {
++        msg.msg_controllen = get_ctrl_min_size();
++
+         if (!m_mrt_sock->receive_msg(&msg, info_size)) {
+             HC_LOG_ERROR("received failed");
+             wait(1);
+--- a/mcproxy/src/utils/mroute_socket.cpp
++++ b/mcproxy/src/utils/mroute_socket.cpp
+@@ -396,6 +396,31 @@ bool mroute_socket::set_mrt_flag(bool en
+     }
+ }
+ 
++bool mroute_socket::set_ipv4_ip_packet(bool enable) const
++{
++    HC_LOG_TRACE("");
++
++    if (!is_udp_valid()) {
++        HC_LOG_ERROR("raw_socket invalid");
++        return false;
++    }
++
++    if (m_addrFamily == AF_INET) {
++        int one = enable ? 1 : 0;
++        int rc = setsockopt(m_sock, IPPROTO_IP, IP_PKTINFO, &one, sizeof(one));
++
++        if (rc == -1) {
++            HC_LOG_ERROR("failed to add router alert header! Error: " << strerror(errno) << " errno: " << errno);
++            return false;
++        } else {
++            return true;
++        }
++    } else {
++        HC_LOG_ERROR("wrong address family");
++        return false;
++    }
++}
++
+ //vifNum musst the same uniqueName  on delVIF (0 > vifNum < MAXVIF ==32)
+ //iff_register = true if used for PIM Register encap/decap
+ bool mroute_socket::add_vif(int vifNum, uint32_t if_index, const addr_storage& ip_tunnel_remote_addr) const

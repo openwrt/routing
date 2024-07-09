@@ -1,0 +1,623 @@
+--- a/mcproxy/include/proxy/igmp_receiver.hpp
++++ b/mcproxy/include/proxy/igmp_receiver.hpp
+@@ -56,6 +56,7 @@ public:
+      * @brief Create an igmp_receiver.
+      */
+     igmp_receiver(proxy_instance* pr_i, const std::shared_ptr<const mroute_socket> mrt_sock,const std::shared_ptr<const interfaces> interfaces, bool in_debug_testing_mode);
++    virtual ~igmp_receiver();
+ };
+ 
+ #endif // IGMP_RECEIVER_HPP
+--- a/mcproxy/include/proxy/mld_receiver.hpp
++++ b/mcproxy/include/proxy/mld_receiver.hpp
+@@ -47,6 +47,7 @@ private:
+ 
+ public:
+     mld_receiver(proxy_instance* pr_i, std::shared_ptr<const mroute_socket> mrt_sock, std::shared_ptr<const interfaces> interfaces, bool in_debug_testing_mode);
++    virtual ~mld_receiver();
+ };
+ 
+ #endif // MLD_RECEIVER_HPP
+--- a/mcproxy/include/proxy/proxy_instance.hpp
++++ b/mcproxy/include/proxy/proxy_instance.hpp
+@@ -155,6 +155,11 @@ public:
+     static void quick_test(std::function < void(mcast_addr_record_type, source_list<source>&&, group_mem_protocol) > send_record, std::function<void()> print_proxy_instance);
+     static void rand_test(std::function < void(mcast_addr_record_type, source_list<source>&&, group_mem_protocol) > send_record, std::function<void()> print_proxy_instance);
+ 
++    /**
++     * @brief End the execution of this proxy instance thread.
++     */
++    void finish() override;
++
+     friend routing_management;
+     friend simple_mc_proxy_routing;
+     friend interface_memberships;
+--- a/mcproxy/include/proxy/receiver.hpp
++++ b/mcproxy/include/proxy/receiver.hpp
+@@ -36,6 +36,7 @@
+ #include "include/proxy/interfaces.hpp"
+ #include "include/proxy/message_format.hpp"
+ #include "include/proxy/def.hpp"
++#include "include/proxy/worker.hpp"
+ 
+ #include <set>
+ #include <thread>
+@@ -53,13 +54,11 @@ class proxy_instance;
+ /**
+  * @brief Abstract basic receiver class.
+  */
+-class receiver
++class receiver : public base_worker
+ {
+ private:
+ 
+-    bool m_running;
+     bool m_in_debug_testing_mode;
+-    std::unique_ptr<std::thread> m_thread;
+ 
+     std::set<unsigned int> m_relevant_if_index;
+ 
+@@ -67,9 +66,6 @@ private:
+ 
+     std::mutex m_data_lock;
+ 
+-    void stop();
+-    void join();
+-
+ protected:
+     const proxy_instance * const m_proxy_instance;
+ 
+@@ -79,7 +75,7 @@ protected:
+ 
+     const std::shared_ptr<const interfaces> m_interfaces;
+ 
+-    void start();
++    void start() override;
+ 
+     bool is_if_index_relevant(unsigned int if_index) const;
+ 
+@@ -107,11 +103,6 @@ public:
+     receiver(proxy_instance* pr_i, int addr_family, const std::shared_ptr<const mroute_socket> mrt_sock, const std::shared_ptr<const interfaces> interfaces, bool in_debug_testing_mode= false);
+ 
+     /**
+-     * @brief Release all resources.
+-     */
+-    virtual ~receiver();
+-
+-    /**
+      * @brief Register an interface at the receiver.
+      * @param if_index interface index of the registered interface
+      * @param vif virtual interface indxe of the inteface
+@@ -125,11 +116,6 @@ public:
+      * @param vif virtual interface index of the interface
+      */
+     void del_interface(unsigned int if_index);
+-
+-    /**
+-     * @brief Check whether the receiver is running.
+-     */
+-    bool is_running();
+ };
+ 
+ #endif // RECEIVER_HPP
+--- a/mcproxy/include/proxy/timing.hpp
++++ b/mcproxy/include/proxy/timing.hpp
+@@ -30,6 +30,7 @@
+ #define TIME_HPP
+ 
+ #include "include/proxy/message_format.hpp"
++#include "include/proxy/worker.hpp"
+ 
+ #include <list>
+ #include <thread>
+@@ -42,8 +43,6 @@
+ 
+ #define TIMING_IDLE_POLLING_INTERVAL 1 //sec
+ 
+-class worker;
+-
+ using timing_db_value = std::tuple<const worker*, std::shared_ptr<proxy_msg>>;
+ using timing_db_key = std::chrono::time_point<std::chrono::steady_clock>;
+ using timing_db = std::map<timing_db_key, timing_db_value>; 
+@@ -52,21 +51,17 @@ using timing_db_pair = std::pair<timing_
+ /**
+  * @brief Organizes timer events.
+  */
+-class timing
++class timing : public base_worker
+ {
+ private:
+     timing_db m_db;
+ 
+-    bool m_running;
+-    std::unique_ptr<std::thread> m_thread;
+     void worker_thread();
+ 
+     std::mutex m_global_lock;
+     std::condition_variable m_con_var;
+ 
+-    void start();
+-    void stop();
+-    void join() const;
++    void stop() override;
+ 
+     timing(const timing&) = delete;
+     timing(const timing&&) = delete;
+--- a/mcproxy/include/proxy/worker.hpp
++++ b/mcproxy/include/proxy/worker.hpp
+@@ -37,31 +37,70 @@
+ #define WORKER_MESSAGE_QUEUE_DEFAULT_SIZE 150
+ 
+ /**
+- * @brief Wraps a priority job queue like a very simple actor pattern.
+- * The priority queue syncronised the received jobs for squentially processing.
++ * @brief An abstract worker for any asynchronous job.
+  */
+-class worker
++class base_worker
+ {
+-protected:
++private:
+     std::unique_ptr<std::thread> m_thread;
++    std::mutex m_thread_lock;
++
++    mutable std::condition_variable m_stop_event;
++    mutable std::mutex m_stop_event_lock;
+ 
++    void join();
++
++protected:
+     /**
+-     * @brief Worker thread to process the jobs.
++     * @brief Worker thread function to process the jobs.
+      */
+     virtual void worker_thread() = 0;
+ 
+     /**
+-     * @brief The threads runs as long as m_running is true.
++     * @brief The worker thread runs as long as m_running is true.
+      */
+     bool m_running;
+ 
+     /**
++     * @brief Start the worker thread.
++     */
++    virtual void start();
++
++    /**
++     * @brief Send 'stop' signal to the worker's thread.
++     */
++    virtual void stop();
++
++    /**
++     * @brief Wait inside worker_thread().
++     * Returns when the timeout seconds expires or when the stop() function is called.
++     */
++    void wait(unsigned timeout) const;
++
++public:
++    base_worker();
++    /**
++     * @brief finish() MUST be called by a derived object before this destructor.
++     */
++    virtual ~base_worker();
++
++    /**
++     * @brief End the execution of the worker's thread.
++     */
++    virtual void finish();
++};
++
++/**
++ * @brief Wraps a priority job queue like a very simple actor pattern.
++ * The priority queue syncronised the received jobs for squentially processing.
++ */
++class worker : public base_worker
++{
++protected:
++    /**
+      * @brief Job queue to process proxy_msg.
+      */
+     mutable message_queue<std::shared_ptr<proxy_msg>,comp_proxy_msg> m_job_queue;
+-    void join() const;
+-    void start();
+-    void stop();
+ 
+ public:
+     /**
+@@ -71,13 +110,6 @@ public:
+     worker();
+     worker(int queue_size);
+ 
+-    virtual ~worker();
+-
+-    /**
+-     * @brief checks if the worker thread is still running. 
+-     */
+-    bool is_running() const;
+-
+     /**
+      * @brief Add a message to the job queue.
+      */
+--- a/mcproxy/src/proxy/igmp_receiver.cpp
++++ b/mcproxy/src/proxy/igmp_receiver.cpp
+@@ -81,6 +81,12 @@ igmp_receiver::igmp_receiver(proxy_insta
+     start();
+ }
+ 
++igmp_receiver::~igmp_receiver()
++{
++    HC_LOG_TRACE("");
++    finish();
++}
++
+ int igmp_receiver::get_iov_min_size()
+ {
+     HC_LOG_TRACE("");
+--- a/mcproxy/src/proxy/mld_receiver.cpp
++++ b/mcproxy/src/proxy/mld_receiver.cpp
+@@ -49,6 +49,12 @@ mld_receiver::mld_receiver(proxy_instanc
+     start();
+ }
+ 
++mld_receiver::~mld_receiver()
++{
++    HC_LOG_TRACE("");
++    finish();
++}
++
+ int mld_receiver::get_iov_min_size()
+ {
+     HC_LOG_TRACE("");
+--- a/mcproxy/src/proxy/proxy.cpp
++++ b/mcproxy/src/proxy/proxy.cpp
+@@ -72,6 +72,9 @@ proxy::proxy(int arg_count, char* args[]
+ proxy::~proxy()
+ {
+     HC_LOG_TRACE("");
++    // m_timing thread must be terminated explicitly, as it uses
++    // the proxy_instance's queue, which will now be destroyed
++    m_timing->finish();
+ }
+ 
+ void proxy::help_output()
+@@ -313,22 +316,11 @@ void proxy::start()
+ 
+     }
+ 
+-
+     //kill all proxy_instances
+-    std::for_each(begin(m_proxy_instances), end(m_proxy_instances), [](pair<const int, std::unique_ptr<proxy_instance>>& e) {
+-        e.second->add_msg(std::make_shared<exit_cmd>());
++   std::for_each(begin(m_proxy_instances), end(m_proxy_instances), [](pair<const int, std::unique_ptr<proxy_instance>>& e) {
++        e.second->finish();
+     });
+ 
+-    //for (pair<const int, std::unique_ptr<proxy_instance>>& e : m_proxy_instances) {
+-    //e.second->add_msg(std::make_shared<exit_cmd>());
+-    //}
+-
+-
+-
+-
+-
+-
+-
+     //vif_map::iterator it_vif;
+     //interface_map::iterator it_proxy_numb;
+     //proxy_msg msg;
+--- a/mcproxy/src/proxy/proxy_instance.cpp
++++ b/mcproxy/src/proxy/proxy_instance.cpp
+@@ -163,7 +163,8 @@ bool proxy_instance::init_routing_manage
+ proxy_instance::~proxy_instance()
+ {
+     HC_LOG_TRACE("");
+-    add_msg(std::make_shared<exit_cmd>());
++    m_receiver->finish();
++    finish();
+ }
+ 
+ void proxy_instance::worker_thread()
+@@ -276,6 +277,13 @@ void proxy_instance::worker_thread()
+     HC_LOG_DEBUG("worker thread proxy_instance end");
+ }
+ 
++void proxy_instance::finish()
++{
++    HC_LOG_TRACE("");
++    add_msg(std::make_shared<exit_cmd>());
++    worker::finish();
++}
++
+ std::string proxy_instance::to_string() const
+ {
+     HC_LOG_TRACE("");
+--- a/mcproxy/src/proxy/receiver.cpp
++++ b/mcproxy/src/proxy/receiver.cpp
+@@ -27,9 +27,7 @@
+ #include <unistd.h>
+ 
+ receiver::receiver(proxy_instance* pr_i, int addr_family, const std::shared_ptr<const mroute_socket> mrt_sock, const std::shared_ptr<const interfaces> interfaces, bool in_debug_testing_mode)
+-    : m_running(false)
+-    , m_in_debug_testing_mode(in_debug_testing_mode)
+-    , m_thread(nullptr)
++    : m_in_debug_testing_mode(in_debug_testing_mode)
+     , m_proxy_instance(pr_i)
+     , m_addr_family(addr_family)
+     , m_mrt_sock(mrt_sock)
+@@ -43,13 +41,6 @@ receiver::receiver(proxy_instance* pr_i,
+ 
+ }
+ 
+-receiver::~receiver()
+-{
+-    HC_LOG_TRACE("");
+-    stop();
+-    join();
+-}
+-
+ bool receiver::is_if_index_relevant(unsigned int if_index) const
+ {
+     HC_LOG_TRACE("");
+@@ -111,46 +102,26 @@ void receiver::worker_thread()
+     while (m_running) {
+         if (!m_mrt_sock->receive_msg(&msg, info_size)) {
+             HC_LOG_ERROR("received failed");
+-            sleep(1);
++            wait(1);
+             continue;
+         }
+         if (info_size == 0) {
+             continue; //on timeout
+         }
+ 
++        if (!m_running)
++            break;
++
+         m_data_lock.lock();
+         analyse_packet(&msg, info_size);
+         m_data_lock.unlock();
+     }
+ }
+ 
+-bool receiver::is_running()
+-{
+-    HC_LOG_TRACE("");
+-    return m_running;
+-}
+-
+ void receiver::start()
+ {
+     HC_LOG_TRACE("");
+     if (!m_in_debug_testing_mode) {
+-        m_running =  true;
+-        m_thread.reset(new std::thread(&receiver::worker_thread, this));
+-    }
+-}
+-
+-void receiver::stop()
+-{
+-    HC_LOG_TRACE("");
+-
+-    m_running = false;
+-}
+-
+-void receiver::join()
+-{
+-    HC_LOG_TRACE("");
+-
+-    if (m_thread.get() != nullptr) {
+-        m_thread->join();
++        base_worker::start();
+     }
+ }
+--- a/mcproxy/src/proxy/timing.cpp
++++ b/mcproxy/src/proxy/timing.cpp
+@@ -27,8 +27,7 @@
+ #include <iostream>
+ #include <unistd.h>
+ 
+-timing::timing():
+-    m_running(false), m_thread(nullptr)
++timing::timing()
+ {
+     HC_LOG_TRACE("");
+     start();
+@@ -37,8 +36,7 @@ timing::timing():
+ timing::~timing()
+ {
+     HC_LOG_TRACE("");
+-    stop();
+-    join();
++    finish();
+ }
+ 
+ void timing::worker_thread()
+@@ -51,11 +49,14 @@ void timing::worker_thread()
+         std::unique_lock<std::mutex> ull(lokal_lock);
+ 
+         if (m_db.empty()) {
+-            sleep(TIMING_IDLE_POLLING_INTERVAL);
++            wait(TIMING_IDLE_POLLING_INTERVAL);
+         } else {
+             m_con_var.wait_until(ull, m_db.begin()->first);
+         }
+ 
++        if (!m_running)
++            break;
++
+         std::lock_guard<std::mutex> lock(m_global_lock);
+ 
+         timing_db_key now = std::chrono::steady_clock::now();
+@@ -107,34 +108,13 @@ void timing::stop_all_time(const worker*
+ 
+ }
+ 
+-void timing::start()
+-{
+-    HC_LOG_TRACE("");
+-
+-    if (m_thread.get() == nullptr) {
+-        m_running =  true;
+-        m_thread.reset(new std::thread(&timing::worker_thread, this));
+-    } else {
+-        HC_LOG_WARN("timing is already running");
+-    }
+-}
+-
+ void timing::stop()
+ {
+     HC_LOG_TRACE("");
+-    m_running = false;
++    base_worker::stop();
+     m_con_var.notify_one();
+ }
+ 
+-void timing::join() const
+-{
+-    HC_LOG_TRACE("");
+-
+-    if (m_thread) {
+-        m_thread->join();
+-    }
+-}
+-
+ #ifdef DEBUG_MODE
+ void timing::test_timing()
+ {
+--- a/mcproxy/src/proxy/worker.cpp
++++ b/mcproxy/src/proxy/worker.cpp
+@@ -26,71 +26,105 @@
+ 
+ #include "unistd.h"
+ 
+-worker::worker()
+-    : worker(WORKER_MESSAGE_QUEUE_DEFAULT_SIZE)
+-{
+-    HC_LOG_TRACE("");
+-}
+ 
+-worker::worker(int queue_size)
++//-----------------------------------------------------
++
++base_worker::base_worker()
+     : m_thread(nullptr)
+     , m_running(false)
+-    , m_job_queue(queue_size)
+ {
+     HC_LOG_TRACE("");
+ }
+ 
+-worker::~worker()
++base_worker::~base_worker()
+ {
+     HC_LOG_TRACE("");
+-    stop();
+-    join();
++
++    std::lock_guard<std::mutex> lock(m_thread_lock);
++
++    if (m_running || (m_thread != nullptr)) {
++        // Child thread function still runs when the child object is destroyed.
++        // finish() MUST be called by a child object before this destructor
++        HC_LOG_ERROR("worker thread not terminated by implementation");
++    }
+ }
+ 
+ 
+-void worker::start()
++void base_worker::start()
+ {
+     HC_LOG_TRACE("");
+ 
+-    if (m_thread.get() == nullptr) {
++    std::lock_guard<std::mutex> lock(m_thread_lock);
++
++    if (m_thread == nullptr) {
+         m_running =  true;
+-        m_thread.reset(new std::thread(&worker::worker_thread, this));
++        m_thread.reset(new std::thread(&base_worker::worker_thread, this));
+     } else {
+-        HC_LOG_WARN("timing is already running");
++        HC_LOG_WARN("base_worker thread is already running");
+     }
+ }
+ 
+-void worker::add_msg(const std::shared_ptr<proxy_msg>& msg) const
++void base_worker::stop()
+ {
+     HC_LOG_TRACE("");
++    m_running = false;
++    m_stop_event.notify_all();
++}
+ 
+-    HC_LOG_DEBUG("message type: " << proxy_msg::get_message_type_name(msg->get_type()));
+-    HC_LOG_DEBUG("message priority: " << proxy_msg::get_message_priority_name(msg->get_priority()));
+-    if (msg->get_priority() == proxy_msg::LOSEABLE) {
+-        m_job_queue.enqueue_loseable(msg);
+-    } else {
+-        m_job_queue.enqueue(msg);
++void base_worker::join()
++{
++    HC_LOG_TRACE("");
++    std::lock_guard<std::mutex> lock(m_thread_lock);
++
++    if ((m_thread != nullptr) && m_thread->joinable()) {
++        m_thread->join();
++        m_thread.reset(nullptr);
+     }
+ }
+ 
+-bool worker::is_running() const
++void base_worker::wait(unsigned timeout) const
+ {
+     HC_LOG_TRACE("");
+-    return m_running;
++
++    if (!m_running)
++        return;
++
++    std::unique_lock<std::mutex> lock(m_stop_event_lock);
++    m_stop_event.wait_for(lock, std::chrono::seconds(static_cast<long long>(timeout)));
+ }
+ 
+-void worker::stop()
++void base_worker::finish()
+ {
+     HC_LOG_TRACE("");
+-    m_running = false;
++
++    stop();
++    join();
+ }
+ 
+-void worker::join() const
++//-----------------------------------------------------
++
++worker::worker()
++    : worker(WORKER_MESSAGE_QUEUE_DEFAULT_SIZE)
+ {
+     HC_LOG_TRACE("");
++}
+ 
+-    if (m_thread.get() != nullptr) {
+-        m_thread->join();
++worker::worker(int queue_size)
++    : m_job_queue(queue_size)
++{
++    HC_LOG_TRACE("");
++}
++
++void worker::add_msg(const std::shared_ptr<proxy_msg>& msg) const
++{
++    HC_LOG_TRACE("");
++
++    HC_LOG_DEBUG("message type: " << proxy_msg::get_message_type_name(msg->get_type()));
++    HC_LOG_DEBUG("message priority: " << proxy_msg::get_message_priority_name(msg->get_priority()));
++    if (msg->get_priority() == proxy_msg::LOSEABLE) {
++        m_job_queue.enqueue_loseable(msg);
++    } else {
++        m_job_queue.enqueue(msg);
+     }
+ }
+ 

@@ -1,0 +1,243 @@
+--- a/mcproxy/mcproxy/include/proxy/igmp_receiver.hpp
++++ b/mcproxy/include/proxy/igmp_receiver.hpp
+@@ -49,6 +49,7 @@ private:
+ 
+     int get_ctrl_min_size() const override;
+     int get_iov_min_size() const override;
++    int get_name_min_size() const override;
+     bool get_source_params(struct msghdr* msg, unsigned int& if_index, addr_storage& saddr) const;
+     void analyse_packet(struct msghdr* msg, int info_size) override;
+ 
+--- a/mcproxy/mcproxy/include/proxy/mld_receiver.hpp
++++ b/mcproxy/include/proxy/mld_receiver.hpp
+@@ -43,6 +43,8 @@ class mld_receiver : public receiver
+ private:
+     int get_ctrl_min_size() const override; //size in byte
+     int get_iov_min_size() const override; //size in byte
++    int get_name_min_size() const override; //size in byte
++    bool get_source_params(struct msghdr* msg, unsigned int& if_index, addr_storage& saddr) const;
+     void analyse_packet(struct msghdr* msg, int info_size) override;
+ 
+     std::string name() const override { return "mld_receiver"; }
+--- a/mcproxy/mcproxy/include/proxy/receiver.hpp
++++ b/mcproxy/include/proxy/receiver.hpp
+@@ -90,6 +90,11 @@ protected:
+     virtual int get_iov_min_size() const = 0;
+ 
+     /**
++     * @brief Get the size for the msg name for recvmsg().
++     */
++    virtual int get_name_min_size() const = 0;
++
++    /**
+      * @brief Analyze the received packet and send a message to the relevant proxy instance.
+      * @param msg received message
+      * @param info_size received information size
+--- a/mcproxy/mcproxy/src/proxy/igmp_receiver.cpp
++++ b/mcproxy/src/proxy/igmp_receiver.cpp
+@@ -101,6 +101,12 @@ int igmp_receiver::get_ctrl_min_size() c
+     return sizeof(struct cmsghdr) + sizeof(struct in_pktinfo) + 256;
+ }
+ 
++int igmp_receiver::get_name_min_size() const
++{
++    HC_LOG_TRACE("");
++    return 0;
++}
++
+ bool igmp_receiver::get_source_params(struct msghdr* msg, unsigned int& if_index, addr_storage& saddr) const
+ {
+     HC_LOG_TRACE("");
+--- a/mcproxy/mcproxy/src/proxy/mld_receiver.cpp
++++ b/mcproxy/src/proxy/mld_receiver.cpp
+@@ -70,10 +70,39 @@ int mld_receiver::get_ctrl_min_size() co
+     return sizeof(struct cmsghdr) + sizeof(struct in6_pktinfo) + 256;
+ }
+ 
+-void mld_receiver::analyse_packet(struct msghdr* msg, int)
++int mld_receiver::get_name_min_size() const
++{
++    HC_LOG_TRACE("");
++    return sizeof(struct sockaddr_in6);
++}
++
++bool mld_receiver::get_source_params(struct msghdr* msg, unsigned int& if_index, addr_storage& saddr) const
+ {
+     HC_LOG_TRACE("");
+ 
++    saddr = *((struct sockaddr_in6 *)msg->msg_name);
++    HC_LOG_DEBUG("\tsrc: " << saddr);
++
++    for (struct cmsghdr* cmsgptr = CMSG_FIRSTHDR(msg); cmsgptr != nullptr; cmsgptr = CMSG_NXTHDR(msg, cmsgptr)) {
++        if (cmsgptr->cmsg_len > 0 && cmsgptr->cmsg_level == IPPROTO_IPV6 && cmsgptr->cmsg_type == IPV6_PKTINFO ) {
++            if_index = ((struct in6_pktinfo *)CMSG_DATA(cmsgptr))->ipi6_ifindex;
++            break;
++        }
++    }
++
++    HC_LOG_DEBUG("\treceived on interface:" << interfaces::get_if_name(if_index));
++
++    if (!is_if_index_relevant(if_index)) {
++        HC_LOG_DEBUG("interface is not relevant");
++        return false;
++    }
++
++    return true;
++}
++
++void mld_receiver::analyse_packet(struct msghdr* msg, int)
++{
++    HC_LOG_TRACE("");
+ 
+     struct mld_hdr* hdr = (struct mld_hdr*)msg->msg_iov->iov_base;
+     unsigned int if_index = 0;
+@@ -82,9 +111,9 @@ void mld_receiver::analyse_packet(struct
+ 
+     HC_LOG_DEBUG("received packet XXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+ 
+-    /* packets sent up from kernel to daemon have ip->ip_p = 0 */
+-    if (hdr->mld_type == MLD_RECEIVER_KERNEL_MSG) { //kernel
+-        HC_LOG_DEBUG("kernel msg received");
++    switch (hdr->mld_type) {
++    case MLD_RECEIVER_KERNEL_MSG: {
++        HC_LOG_DEBUG("MLD_RECEIVER_KERNEL_MSG received");
+         struct mrt6msg* mldctl = (struct mrt6msg*)msg->msg_iov->iov_base;
+ 
+         switch (mldctl->im6_msgtype) {
+@@ -111,54 +140,35 @@ void mld_receiver::analyse_packet(struct
+         default:
+             HC_LOG_WARN("unknown kernel message");
+         }
+-    } else if (hdr->mld_type == MLD_LISTENER_REPORT || hdr->mld_type == MLD_LISTENER_REDUCTION) {
+-        HC_LOG_DEBUG("MLD_LISTENER_REPORT or MLD_LISTENER_REDUCTION received");
+-
+-        struct in6_pktinfo* packet_info = nullptr;
+-
+-        for (struct cmsghdr* cmsgptr = CMSG_FIRSTHDR(msg); cmsgptr != nullptr; cmsgptr = CMSG_NXTHDR(msg, cmsgptr)) {
+-            if (cmsgptr->cmsg_len > 0 && cmsgptr->cmsg_level == IPPROTO_IPV6 && cmsgptr->cmsg_type == IPV6_PKTINFO ) {
+-                packet_info = (struct in6_pktinfo*)CMSG_DATA(cmsgptr);
+-            }
+-        }
+-        if (packet_info == nullptr) {
+-            return;
+-        }
+ 
+-        HC_LOG_DEBUG("\tsaddr: " << addr_storage(packet_info->ipi6_addr));
+-        if_index = packet_info->ipi6_ifindex;
+-        HC_LOG_DEBUG("\treceived on interface:" << interfaces::get_if_name(if_index));
++        return;
++    }
++    case MLD_LISTENER_QUERY:
++        HC_LOG_DEBUG("MLD_LISTENER_QUERY received");
++        HC_LOG_WARN("querier election is not implemented");
++        return;
++    case MLD_LISTENER_REPORT:
++    case MLD_LISTENER_REDUCTION:
++        HC_LOG_DEBUG(hdr->mld_type == MLD_LISTENER_REPORT ?
++                     "MLD_LISTENER_REPORT received"
++                   : "MLD_LISTENER_REDUCTION received");
+ 
+-        if (!is_if_index_relevant(if_index)) {
+-            HC_LOG_DEBUG("interface is not relevant");
++        if (!get_source_params(msg, if_index, saddr))
+             return;
+-        }
+-
+         gaddr = hdr->mld_addr;
+         HC_LOG_DEBUG("\tgroup: " << gaddr);
+ 
+-        if (hdr->mld_type == MLD_LISTENER_REPORT) {
+-            HC_LOG_DEBUG("\treport received");
+-            m_proxy_instance->add_msg(std::make_shared<group_record_msg>(if_index, MODE_IS_EXCLUDE, gaddr, source_list<source>(), MLDv1, addr_storage(packet_info->ipi6_addr)));
+-        } else if (hdr->mld_type == MLD_LISTENER_REDUCTION) {
+-            HC_LOG_DEBUG("\tlistener reduction received");
+-            m_proxy_instance->add_msg(std::make_shared<group_record_msg>(if_index, CHANGE_TO_INCLUDE_MODE, gaddr, source_list<source>(), MLDv1, addr_storage(packet_info->ipi6_addr)));
+-        } else {
+-            HC_LOG_ERROR("unkown mld type: " << hdr->mld_type);
+-        }
+-    } else if (hdr->mld_type == MLD_V2_LISTENER_REPORT) {
++        m_proxy_instance->add_msg(
++            std::make_shared<group_record_msg>(if_index,
++                                               hdr->mld_type == MLD_LISTENER_REPORT ?
++                                               MODE_IS_EXCLUDE : CHANGE_TO_INCLUDE_MODE,
++                                               gaddr, source_list<source>(), MLDv1, saddr));
++        break;
++    case MLD_V2_LISTENER_REPORT: {
+         HC_LOG_DEBUG("MLD_V2_LISTENER_REPORT received");
+ 
+-        struct in6_pktinfo* packet_info = nullptr;
+-
+-        for (struct cmsghdr* cmsgptr = CMSG_FIRSTHDR(msg); cmsgptr != nullptr; cmsgptr = CMSG_NXTHDR(msg, cmsgptr)) {
+-            if (cmsgptr->cmsg_len > 0 && cmsgptr->cmsg_level == IPPROTO_IPV6 && cmsgptr->cmsg_type == IPV6_PKTINFO ) {
+-                packet_info = (struct in6_pktinfo*)CMSG_DATA(cmsgptr);
+-            }
+-        }
+-        if (packet_info == nullptr) {
++        if (!get_source_params(msg, if_index, saddr))
+             return;
+-        }
+ 
+         mldv2_mc_report* v3_report = reinterpret_cast<mldv2_mc_report*>(hdr);
+         mldv2_mc_record* rec = reinterpret_cast<mldv2_mc_record*>(reinterpret_cast<unsigned char*>(v3_report) + sizeof(mldv2_mc_report));
+@@ -166,14 +176,6 @@ void mld_receiver::analyse_packet(struct
+         int num_records = ntohs(v3_report->num_of_mc_records);
+         HC_LOG_DEBUG("\tnum of multicast records: " << num_records);
+ 
+-        if_index = packet_info->ipi6_ifindex;
+-        HC_LOG_DEBUG("\treceived on interface:" << interfaces::get_if_name(if_index));
+-
+-        if (!is_if_index_relevant(if_index)) {
+-            HC_LOG_DEBUG("interface is not relevant");
+-            return;
+-        }
+-
+         for (int i = 0; i < num_records; ++i) {
+             mcast_addr_record_type rec_type = static_cast<mcast_addr_record_type>(rec->type);
+             unsigned int aux_size = rec->aux_data_len * 4; //RFC 3810 Section 5.2.6 Aux Data Len
+@@ -192,14 +194,15 @@ void mld_receiver::analyse_packet(struct
+             HC_LOG_DEBUG("\tgaddr: " << gaddr);
+             HC_LOG_DEBUG("\tnumber of sources: " << slist.size());
+             HC_LOG_DEBUG("\tsource_list: " << slist);
+-            m_proxy_instance->add_msg(std::make_shared<group_record_msg>(if_index, rec_type, gaddr, move(slist), MLDv2, addr_storage(packet_info->ipi6_addr)));
++            m_proxy_instance->add_msg(std::make_shared<group_record_msg>(if_index, rec_type, gaddr, move(slist), MLDv2, saddr));
+ 
+             rec = reinterpret_cast<mldv2_mc_record*>(reinterpret_cast<unsigned char*>(rec) + sizeof(mldv2_mc_record) + nos * sizeof(in6_addr) + aux_size);
+         }
+-    } else if (hdr->mld_type == MLD_LISTENER_QUERY) {
+-        HC_LOG_DEBUG("MLD_LISTENER_QUERY received");
+-        HC_LOG_WARN("querier election is not implemented");
+-    } else {
+-        HC_LOG_DEBUG("unknown MLD-packet: " << (int)(hdr->mld_type));
++
++        break;
++    }
++    default :
++        HC_LOG_WARN("unknown MLD-packet type: " << (int)(hdr->mld_type));
++        return;
+     }
+ }
+--- a/mcproxy/mcproxy/src/proxy/receiver.cpp
++++ b/mcproxy/src/proxy/receiver.cpp
+@@ -88,10 +88,12 @@ void receiver::worker_thread()
+     //control
+     std::unique_ptr<unsigned char[]> ctrl { new unsigned char[get_ctrl_min_size()] };
+ 
++    // name
++    std::unique_ptr<unsigned char[]> name { new unsigned char[get_name_min_size()] };
++
+     //create msghdr
+     struct msghdr msg;
+-    msg.msg_name = nullptr;
+-    msg.msg_namelen = 0;
++    msg.msg_name = get_name_min_size() ? name.get() : NULL;
+ 
+     msg.msg_iov = &iov;
+     msg.msg_iovlen = 1;
+@@ -102,6 +104,7 @@ void receiver::worker_thread()
+     //########################
+ 
+     while (m_running) {
++        msg.msg_namelen = get_name_min_size();
+         msg.msg_controllen = get_ctrl_min_size();
+ 
+         if (!m_mrt_sock->receive_msg(&msg, info_size)) {

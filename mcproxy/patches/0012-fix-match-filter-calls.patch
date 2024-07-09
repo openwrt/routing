@@ -1,0 +1,90 @@
+--- a/mcproxy/include/parser/interface.hpp
++++ b/mcproxy/include/parser/interface.hpp
+@@ -69,7 +69,7 @@ class rule_addr : public rule_box
+     std::unique_ptr<addr_match> m_source;
+ public:
+     rule_addr(const std::string& if_name, std::unique_ptr<addr_match> group, std::unique_ptr<addr_match> source);
+-    bool match(const std::string& if_name, const addr_storage& gaddr, const addr_storage& saddr) const override;
++    bool match(const std::string& if_name, const addr_storage& saddr, const addr_storage& gaddr) const override;
+     std::string to_string() const override;
+ };
+ 
+@@ -81,7 +81,7 @@ public:
+     table(const std::string& name);
+     table(const std::string& name, std::list<std::unique_ptr<rule_box>>&& rule_box_list);
+     const std::string& get_name() const;
+-    bool match(const std::string& if_name, const addr_storage& gaddr, const addr_storage& saddr) const override;
++    bool match(const std::string& if_name, const addr_storage& saddr, const addr_storage& gaddr) const override;
+     std::string to_string() const override;
+     friend bool operator<(const table& t1, const table& t2);
+ };
+@@ -97,7 +97,7 @@ class rule_table : public rule_box
+     std::unique_ptr<table> m_table;
+ public:
+     rule_table(std::unique_ptr<table> t);
+-    bool match(const std::string& if_name, const addr_storage& gaddr, const addr_storage& saddr) const override;
++    bool match(const std::string& if_name, const addr_storage& saddr, const addr_storage& gaddr) const override;
+     std::string to_string() const override;
+ };
+ 
+@@ -117,7 +117,7 @@ class rule_table_ref : public rule_box
+     const std::shared_ptr<const global_table_set> m_global_table_set;
+ public:
+     rule_table_ref(const std::string& table_name, const std::shared_ptr<const global_table_set>& global_table_set);
+-    bool match(const std::string& if_name, const addr_storage& gaddr, const addr_storage& saddr) const override;
++    bool match(const std::string& if_name, const addr_storage& saddr, const addr_storage& gaddr) const override;
+     std::string to_string() const override;
+ };
+ 
+--- a/mcproxy/src/parser/interface.cpp
++++ b/mcproxy/src/parser/interface.cpp
+@@ -76,7 +76,7 @@ rule_addr::rule_addr(const std::string&
+     HC_LOG_TRACE("");
+ }
+ 
+-bool rule_addr::match(const std::string& if_name, const addr_storage& gaddr, const addr_storage& saddr) const
++bool rule_addr::match(const std::string& if_name, const addr_storage& saddr, const addr_storage& gaddr) const
+ {
+     if (m_if_name.empty()) {
+         return m_group->match(gaddr) &&  m_source->match(saddr);
+@@ -110,10 +110,10 @@ const std::string& table::get_name() con
+     return m_name;
+ }
+ 
+-bool table::match(const std::string& if_name, const addr_storage& gaddr, const addr_storage& saddr) const
++bool table::match(const std::string& if_name, const addr_storage& saddr, const addr_storage& gaddr) const
+ {
+     for (auto & e : m_rule_box_list) {
+-        if (e->match(if_name, gaddr, saddr)) {
++        if (e->match(if_name, saddr, gaddr)) {
+             return true;
+         }
+     }
+@@ -182,9 +182,9 @@ rule_table::rule_table(std::unique_ptr<t
+     HC_LOG_TRACE("");
+ }
+ 
+-bool rule_table::match(const std::string& if_name, const addr_storage& gaddr, const addr_storage& saddr) const
++bool rule_table::match(const std::string& if_name, const addr_storage& saddr, const addr_storage& gaddr) const
+ {
+-    return m_table->match(if_name, gaddr, saddr);
++    return m_table->match(if_name, saddr, gaddr);
+ }
+ 
+ std::string rule_table::to_string() const
+@@ -199,13 +199,13 @@ rule_table_ref::rule_table_ref(const std
+     HC_LOG_TRACE("");
+ }
+ 
+-bool rule_table_ref::match(const std::string& if_name, const addr_storage& gaddr, const addr_storage& saddr) const
++bool rule_table_ref::match(const std::string& if_name, const addr_storage& saddr, const addr_storage& gaddr) const
+ {
+     auto t = m_global_table_set->get_table(m_table_name);
+     if (t == nullptr) {
+         return false;
+     } else {
+-        return t->match(if_name, gaddr, saddr);
++        return t->match(if_name, saddr, gaddr);
+     }
+ }
+ 

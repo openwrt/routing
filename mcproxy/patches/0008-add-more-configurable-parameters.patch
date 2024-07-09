@@ -1,0 +1,406 @@
+diff --git a/mcproxy/include/parser/configuration.hpp b/mcproxy/include/parser/configuration.hpp
+index 97f4029..d2916f0 100644
+--- a/mcproxy/include/parser/configuration.hpp
++++ b/mcproxy/include/parser/configuration.hpp
+@@ -41,6 +41,12 @@ private:
+     group_mem_protocol m_gmp;
+     std::shared_ptr<global_table_set> m_global_table_set;
+     inst_def_set m_inst_def_set;
++    int m_qi = -1; // Query interval
++    int m_qri = -1; // Query response interval
++    int m_lmqi = -1; // Last member Query interval
++    int m_rv = -1; // robustness value
++    bool m_fastleave = true; // Fast leave
++    int m_max_groups = -1;
+ 
+     //<line number (for a better error message output), command>
+     std::vector<std::pair<unsigned int, std::string>> m_cmds;
+@@ -60,6 +66,12 @@ public:
+     const std::shared_ptr<const interfaces> get_interfaces_for_pinstance(const std::string& instance_name) const;
+     group_mem_protocol get_group_mem_protocol() const;
+     const inst_def_set& get_inst_def_set() const;
++    int get_query_interval() const;
++    int get_query_response_interval() const;
++    int get_last_member_query_interval() const;
++    int get_robustness_value() const;
++    bool get_fastleave() const;
++    int get_max_groups() const;
+ 
+     std::string to_string() const;
+ 
+diff --git a/mcproxy/include/parser/parser.hpp b/mcproxy/include/parser/parser.hpp
+index 8998317..8fb6c57 100644
+--- a/mcproxy/include/parser/parser.hpp
++++ b/mcproxy/include/parser/parser.hpp
+@@ -34,7 +34,13 @@
+ #include <memory>
+ 
+ enum parser_type {
+-    PT_PROTOCOL, PT_INSTANCE_DEFINITION, PT_TABLE, PT_INTERFACE_RULE_BINDING
++    PT_PROTOCOL, PT_INSTANCE_DEFINITION, PT_TABLE, PT_INTERFACE_RULE_BINDING,
++    PT_QI,
++    PT_QRI,
++    PT_LMQI,
++    PT_RV,
++    PT_FASTLEAVE,
++    PT_MAX_GROUPS
+ };
+ 
+ class parser
+@@ -64,6 +70,7 @@ public:
+     void parse_instance_definition(inst_def_set& ids);
+     std::unique_ptr<table> parse_table(const std::shared_ptr<const global_table_set>& gts, group_mem_protocol gmp);
+     void parse_interface_rule_binding(const std::shared_ptr<const global_table_set>& gts, group_mem_protocol gmp, const inst_def_set& ids);
++    int parse_get_pram_value();
+ 
+     std::string to_string() const;
+     friend std::ostream& operator<<(std::ostream& stream, const parser& scan);
+diff --git a/mcproxy/include/parser/token.hpp b/mcproxy/include/parser/token.hpp
+index 7cfe817..f97357a 100644
+--- a/mcproxy/include/parser/token.hpp
++++ b/mcproxy/include/parser/token.hpp
+@@ -59,7 +59,13 @@ enum token_type {
+     TT_STAR, //"*"
+     TT_PIPE, //"|"
+     TT_STRING,
+-    TT_NIL
++    TT_NIL,
++    TT_QI,
++    TT_QRI,
++    TT_LMQI,
++    TT_RV,
++    TT_FASTLEAVE,
++    TT_MAX_GROUPS
+ };
+ 
+ std::string get_token_type_name(token_type tt);
+diff --git a/mcproxy/include/proxy/querier.hpp b/mcproxy/include/proxy/querier.hpp
+index 48d05e3..d4d25fa 100644
+--- a/mcproxy/include/proxy/querier.hpp
++++ b/mcproxy/include/proxy/querier.hpp
+@@ -58,6 +58,8 @@ private:
+ 
+     //join all router groups or leave them
+     bool router_groups_function(bool subscribe) const;
++    // get max number of groups, taking into account router groups
++    unsigned int get_effective_max_groups() const;
+     bool send_general_query();
+ 
+     //
+diff --git a/mcproxy/include/proxy/timers_values.hpp b/mcproxy/include/proxy/timers_values.hpp
+index 03ba313..cb49c43 100644
+--- a/mcproxy/include/proxy/timers_values.hpp
++++ b/mcproxy/include/proxy/timers_values.hpp
+@@ -36,6 +36,7 @@ struct timers_values_tank {
+     std::chrono::milliseconds last_listener_query_interval = std::chrono::milliseconds(1000);
+     unsigned int last_listener_query_count = robustness_variable;
+     std::chrono::milliseconds unsolicited_report_interval = std::chrono::milliseconds(1000);
++    unsigned int max_groups = 20;
+ };
+ 
+ static timers_values_tank default_timers_values_tank = timers_values_tank();
+@@ -82,6 +83,7 @@ public:
+     std::chrono::milliseconds get_last_listener_query_time() const; //
+     std::chrono::milliseconds get_unsolicited_report_interval() const;
+     std::chrono::milliseconds get_older_host_present_interval() const; //
++    unsigned int get_max_groups() const;
+ 
+     void set_robustness_variable(unsigned int robustness_variable);
+     void set_query_interval(std::chrono::seconds query_interval);
+@@ -91,6 +93,7 @@ public:
+     void set_last_listener_query_interval(std::chrono::milliseconds last_listener_query_interval);
+     void set_last_listener_query_count(unsigned int last_listener_query_count);
+     void set_unsolicited_report_interval(std::chrono::milliseconds unsolicited_report_interval);
++    void set_max_groups(unsigned int max_groups);
+ 
+     void reset_to_default_tank();
+ 
+diff --git a/mcproxy/src/parser/configuration.cpp b/mcproxy/src/parser/configuration.cpp
+index 2ef36c7..036d7de 100644
+--- a/mcproxy/src/parser/configuration.cpp
++++ b/mcproxy/src/parser/configuration.cpp
+@@ -146,6 +146,30 @@ void configuration::run_parser()
+             m_gmp = p.parse_group_mem_proto();
+             break;
+         }
++        case PT_QI: {
++            m_qi = p.parse_get_pram_value();
++            break;
++        }
++        case PT_QRI: {
++            m_qri = p.parse_get_pram_value();
++            break;
++        }
++        case PT_LMQI: {
++            m_lmqi = p.parse_get_pram_value();
++            break;
++        }
++        case PT_RV: {
++            m_rv = p.parse_get_pram_value();
++            break;
++        }
++        case PT_FASTLEAVE: {
++            m_fastleave = (p.parse_get_pram_value())?true:false;
++            break;
++        }
++        case PT_MAX_GROUPS: {
++            m_max_groups = p.parse_get_pram_value();
++            break;
++        }
+         case PT_INSTANCE_DEFINITION: {
+             p.parse_instance_definition(m_inst_def_set);
+             break;
+@@ -260,6 +284,37 @@ group_mem_protocol configuration::get_group_mem_protocol() const
+     return m_gmp;
+ }
+ 
++int configuration::get_query_interval() const
++{
++    HC_LOG_TRACE("");
++    return m_qi;
++}
++int configuration::get_query_response_interval() const
++{
++    HC_LOG_TRACE("");
++    return m_qri;
++}
++int configuration::get_last_member_query_interval() const
++{
++    HC_LOG_TRACE("");
++    return m_lmqi;
++}
++int configuration::get_robustness_value() const
++{
++    HC_LOG_TRACE("");
++    return m_rv;
++}
++bool configuration::get_fastleave() const
++{
++    HC_LOG_TRACE("");
++    return m_fastleave;
++}
++int configuration::get_max_groups() const
++{
++    HC_LOG_TRACE("");
++    return m_max_groups;
++}
++
+ const inst_def_set& configuration::get_inst_def_set() const
+ {
+     HC_LOG_TRACE("");
+diff --git a/mcproxy/src/parser/parser.cpp b/mcproxy/src/parser/parser.cpp
+index 661e612..0ff0b30 100644
+--- a/mcproxy/src/parser/parser.cpp
++++ b/mcproxy/src/parser/parser.cpp
+@@ -24,7 +24,7 @@
+ #include <algorithm>
+ 
+ #include <stdexcept>
+-	
++
+ parser::parser(unsigned int current_line, const std::string& cmd)
+     : m_scanner(current_line, cmd)
+     , m_current_line(current_line)
+@@ -40,6 +40,18 @@ parser_type parser::get_parser_type()
+         return PT_PROTOCOL;
+     } else if (m_current_token.get_type() == TT_TABLE) {
+         return PT_TABLE;
++    } else if (m_current_token.get_type() == TT_QI) {
++        return PT_QI;
++    } else if (m_current_token.get_type() == TT_QRI) {
++        return PT_QRI;
++    } else if (m_current_token.get_type() == TT_LMQI) {
++        return PT_LMQI;
++    } else if (m_current_token.get_type() == TT_RV) {
++        return PT_RV;
++    } else if (m_current_token.get_type() == TT_FASTLEAVE) {
++        return PT_FASTLEAVE;
++    } else if (m_current_token.get_type() == TT_MAX_GROUPS) {
++        return PT_MAX_GROUPS;
+     } else if (m_current_token.get_type() == TT_PINSTANCE) {
+         auto cmp_token = m_scanner.get_next_token(true, 1);
+         if (cmp_token.get_type() == TT_DOUBLE_DOT || cmp_token.get_type() == TT_LEFT_BRACKET) {
+@@ -104,6 +116,22 @@ group_mem_protocol parser::parse_group_mem_proto()
+     }
+ }
+ 
++int parser::parse_get_pram_value()
++{
++    HC_LOG_TRACE("");
++    get_next_token();
++    std::cout << "value is :" << m_current_token.get_string() <<std::endl;
++
++    int result = std::atoi(m_current_token.get_string().c_str());
++    get_next_token();
++    if (m_current_token.get_type() == TT_NIL) {
++        return result;
++    } else {
++        HC_LOG_ERROR("failed to parse line " << m_current_line << " unknown token " << get_token_type_name(m_current_token.get_type()) << " with value " << m_current_token.get_string());
++        throw "failed to parse config file";
++    }
++}
++
+ void parser::parse_instance_definition(inst_def_set& ids)
+ {
+     HC_LOG_TRACE("");
+diff --git a/mcproxy/src/parser/scanner.cpp b/mcproxy/src/parser/scanner.cpp
+index c6f81a2..69e3c58 100644
+--- a/mcproxy/src/parser/scanner.cpp
++++ b/mcproxy/src/parser/scanner.cpp
+@@ -190,6 +190,18 @@ token scanner::read_next_token()
+                 return TT_MUTEX;
+             } else if (cmp_str.compare("disable") == 0) {
+                 return TT_DISABLE;
++            } else if (cmp_str.compare("qi") == 0) {
++                return TT_QI;
++            } else if (cmp_str.compare("qri") == 0) {
++                return TT_QRI;
++            } else if (cmp_str.compare("lmqi") == 0) {
++                return TT_LMQI;
++            } else if (cmp_str.compare("rv") == 0) {
++                return TT_RV;
++            } else if (cmp_str.compare("fastleave") == 0) {
++                return TT_FASTLEAVE;
++            } else if (cmp_str.compare("max_groups") == 0) {
++                return TT_MAX_GROUPS;
+             } else {
+                 return token(TT_STRING, s.str());
+             }
+diff --git a/mcproxy/src/proxy/proxy.cpp b/mcproxy/src/proxy/proxy.cpp
+index f49e441..e398e6c 100644
+--- a/mcproxy/src/proxy/proxy.cpp
++++ b/mcproxy/src/proxy/proxy.cpp
+@@ -252,6 +252,37 @@ void proxy::start_proxy_instances()
+             //tv.set_startup_query_interval(std::chrono::seconds(15));
+             //tv.set_last_listener_query_count(2);
+             //tv.set_last_listener_query_interval(std::chrono::seconds(4));
++            int val = m_configuration->get_query_interval();
++            std::cout << "QI :" << val <<std::endl;
++            if ( val > 0 ) {
++                    tv.set_query_interval(std::chrono::seconds(val));
++                    tv.set_startup_query_interval(std::chrono::seconds(val)/4);
++            }
++            val = m_configuration->get_query_response_interval();
++            std::cout << "QRI :" << val <<std::endl;
++            if ( val > 0 ) {
++                    tv.set_query_response_interval(std::chrono::milliseconds(val*100));
++            }
++            val = m_configuration->get_last_member_query_interval();
++            std::cout << "lmqi :" << val <<std::endl;
++            if ( val > 0 ) {
++                    tv.set_last_listener_query_interval(std::chrono::milliseconds(val*100));
++            }
++            val = m_configuration->get_robustness_value();
++            std::cout << "rv :" <<val <<std::endl;
++            if ( val > 0 ) {
++                    tv.set_robustness_variable(val);
++                    tv.set_last_listener_query_count(val);
++                    tv.set_startup_query_count(val);
++            }
++
++            std::cout << "fastleave :" <<m_configuration->get_fastleave() <<std::endl;
++
++            val = m_configuration->get_max_groups();
++            std::cout << "max_groups :" << val <<std::endl;
++            if ( val > 0 ) {
++                tv.set_max_groups(val);
++            }
+ 
+             pr_i->add_msg(std::make_shared<config_msg>(config_msg::ADD_DOWNSTREAM, if_index, d, tv));
+         }
+diff --git a/mcproxy/src/proxy/querier.cpp b/mcproxy/src/proxy/querier.cpp
+index 9e6c322..218ec9f 100644
+--- a/mcproxy/src/proxy/querier.cpp
++++ b/mcproxy/src/proxy/querier.cpp
+@@ -92,6 +92,42 @@ bool querier::router_groups_function(bool subscribe) const
+     }
+     return rc;
+ }
++
++unsigned int querier::get_effective_max_groups() const
++{
++    unsigned int max_groups = m_timers_values.get_max_groups();
++    if (max_groups == 0)
++        return 0;
++
++    if (is_IPv4(m_db.querier_version_mode)) {
++        auto router_group = m_db.group_info.find(addr_storage(IPV4_ALL_IGMP_ROUTERS_ADDR));
++        if (router_group != end(m_db.group_info)) {
++            max_groups++;
++        }
++        router_group = m_db.group_info.find(addr_storage(IPV4_IGMPV3_ADDR));
++        if (router_group != end(m_db.group_info)) {
++            max_groups++;
++        }
++    } else if (is_IPv6(m_db.querier_version_mode)) {
++        auto router_group = m_db.group_info.find(addr_storage(IPV6_ALL_NODE_LOCAL_ROUTER));
++        if (router_group != end(m_db.group_info)) {
++            max_groups++;
++        }
++        router_group = m_db.group_info.find(addr_storage(IPV6_ALL_SITE_LOCAL_ROUTER));
++        if (router_group != end(m_db.group_info)) {
++            max_groups++;
++        }
++        router_group = m_db.group_info.find(addr_storage(IPV6_ALL_MLDv2_CAPABLE_ROUTERS));
++        if (router_group != end(m_db.group_info)) {
++            max_groups++;
++        }
++    } else {
++        HC_LOG_ERROR("unknown ip version");
++    }
++
++    return max_groups;
++}
++
+ bool querier::send_general_query()
+ {
+     HC_LOG_TRACE("");
+@@ -128,6 +164,18 @@ void querier::receive_record(const std::shared_ptr<proxy_msg>& msg)
+     auto db_info_it = m_db.group_info.find(gr->get_gaddr());
+ 
+     if (db_info_it == end(m_db.group_info)) {
++        unsigned int max_groups = m_timers_values.get_max_groups();
++        if ((max_groups > 0) && (m_db.group_info.size() >= max_groups))
++        {
++            max_groups = get_effective_max_groups();
++            if ((max_groups > 0) && (m_db.group_info.size() >= max_groups))
++            {
++                HC_LOG_ERROR("Max groups number exceeded (" << m_timers_values.get_max_groups() << "), " <<
++                             "group record skipped: " << gr->get_gaddr());
++                return;
++            }
++        }
++
+         //add an empty neutral record  to membership database
+         HC_LOG_DEBUG("gaddr not found");
+         db_info_it = m_db.group_info.insert(gaddr_pair(gr->get_gaddr(), gaddr_info(m_db.querier_version_mode))).first;
+diff --git a/mcproxy/src/proxy/timers_values.cpp b/mcproxy/src/proxy/timers_values.cpp
+index 164e47a..c97fd08 100644
+--- a/mcproxy/src/proxy/timers_values.cpp
++++ b/mcproxy/src/proxy/timers_values.cpp
+@@ -248,6 +248,12 @@ std::chrono::milliseconds timers_values::get_older_host_present_interval() const
+     return (tank->robustness_variable * tank->query_interval) + tank->query_response_interval;
+ }
+ 
++unsigned int timers_values::get_max_groups() const
++{
++    HC_LOG_TRACE("");
++    return tank->max_groups;
++}
++
+ 
+ void timers_values::set_new_tank()
+ {
+@@ -330,6 +336,12 @@ void timers_values::set_unsolicited_report_interval(std::chrono::milliseconds un
+     tank->unsolicited_report_interval = unsolicited_report_interval;
+ }
+ 
++void timers_values::set_max_groups(unsigned int max_groups)
++{
++    HC_LOG_TRACE("");
++    set_new_tank();
++    tank->max_groups = max_groups;
++}
+ 
+ timers_values::~timers_values()
+ {

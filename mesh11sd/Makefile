@@ -18,7 +18,6 @@ PKG_LICENSE_FILES:=LICENSE
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/mesh11sd/tar.gz/v$(PKG_VERSION)?
 PKG_HASH:=80406e70fadf58320ec4891c8fb1e93d118d2927de7c6d9749a15da6768b4ea5
-PKG_BUILD_DIR:=$(BUILD_DIR)/mesh11sd-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 

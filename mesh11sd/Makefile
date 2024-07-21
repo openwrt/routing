@@ -2,13 +2,13 @@
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
-# Copyright (C) 2022 - 2024 BlueWave Projects and Services <licence@blue-wave.net>
+# Copyright (C) 2022 - 2024 BlueWave Projects and Services  <licence@blue-wave.net>
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mesh11sd
-PKG_VERSION:=4.0.1
+PKG_VERSION:=4.1.0
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -17,8 +17,7 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/mesh11sd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=8029a0e41487d322b1bb20df05fc3ef2073b1239977f2b430b20fe7cabfe71de
-PKG_BUILD_DIR:=$(BUILD_DIR)/mesh11sd-$(PKG_VERSION)
+PKG_HASH:=80406e70fadf58320ec4891c8fb1e93d118d2927de7c6d9749a15da6768b4ea5
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -43,8 +42,10 @@ define Package/mesh11sd/description
   Some of those that are supported, would fail to be implemented when the network is (re)started resulting in errors or dropped nodes.
   The mesh11sd daemon can dynamically check configured parameters and set them as required.
   In auto_config mode, upstream wan connectivity is checked (eg Internet feed) and when not present, layer 2 peer mode is autonomously enabled,
-  and when it is present, layer 3 portal mode is enabled. This allows the same simple router configuration to be used on all meshnodes in the layer 2 mesh.
+  and when it is present, layer 3 portal mode is enabled. This allows the same simple router configuration to be used on all meshnodes in the layer 2 mesh backhaul.
   Remote terminal sessions and remote file transfers are supported using the meshnode mac address as an identifier.
+  Simple configuration of Opportunistic Wireless Encryption (OWE) and Customer[Client] Premises Equipment (CPE) mode is supported on mesh gates.
+  OWE Transition Mode is enabled by default on mesh gates.
   This version does not require a Captive Portal to be running.
 endef
 

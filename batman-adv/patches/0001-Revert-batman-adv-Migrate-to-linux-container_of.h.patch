@@ -175,7 +175,7 @@ This reverts commit 043ae5634bdfd4c4dd8b95a22890752495080bb5.
  #include <linux/lockdep.h>
 --- a/net/batman-adv/originator.c
 +++ b/net/batman-adv/originator.c
-@@ -8,11 +8,11 @@
+@@ -8,12 +8,12 @@
  #include "main.h"
  
  #include <linux/atomic.h>
@@ -183,6 +183,7 @@ This reverts commit 043ae5634bdfd4c4dd8b95a22890752495080bb5.
  #include <linux/errno.h>
  #include <linux/etherdevice.h>
  #include <linux/gfp.h>
+ #include <linux/if_vlan.h>
  #include <linux/jiffies.h>
 +#include <linux/kernel.h>
  #include <linux/kref.h>

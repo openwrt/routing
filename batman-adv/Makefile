@@ -3,12 +3,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batman-adv
-PKG_VERSION:=2024.2
-PKG_RELEASE:=1
+PKG_VERSION:=2024.3
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
-PKG_HASH:=7692a6dee7a2f3f66732e9aec8c7164e0c1818167f3af063bff3fffbb0199643
+PKG_HASH:=b96817ed1f4f48917c32550a84faad8c87ecf53aa6f6f46cc26554b999b57ff3
 PKG_EXTMOD_SUBDIRS:=net/batman-adv
 
 PKG_MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>

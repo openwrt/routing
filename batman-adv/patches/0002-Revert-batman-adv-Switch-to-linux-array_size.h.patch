@@ -41,7 +41,7 @@ This reverts commit f33d7f724675544a36b24c77f8d4b95d41252ae2.
  #include <linux/atomic.h>
  #include <linux/build_bug.h>
  #include <linux/byteorder/generic.h>
-@@ -19,6 +18,7 @@
+@@ -20,6 +19,7 @@
  #include <linux/init.h>
  #include <linux/ip.h>
  #include <linux/ipv6.h>

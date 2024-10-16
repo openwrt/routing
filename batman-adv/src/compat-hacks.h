@@ -5,46 +5,6 @@
 #include <linux/version.h>	/* LINUX_VERSION_CODE */
 #include <linux/types.h>
 
-#if LINUX_VERSION_IS_LESS(6, 0, 0)
-
-#define __vstring(item, fmt, ap) __dynamic_array(char, item, 256)
-#define __assign_vstr(dst, fmt, va) \
-	WARN_ON_ONCE(vsnprintf(__get_dynamic_array(dst), 256, fmt, *va) >= 256)
-
-#endif /* LINUX_VERSION_IS_LESS(6, 0, 0) */
-
-#if LINUX_VERSION_IS_LESS(6, 2, 0)
-
-#include <linux/random.h>
-
-#define genl_split_ops genl_ops
-
-static inline u32 batadv_get_random_u32_below(u32 ep_ro)
-{
-	return prandom_u32_max(ep_ro);
-}
-
-#define get_random_u32_below batadv_get_random_u32_below
-
-#endif /* LINUX_VERSION_IS_LESS(6, 2, 0) */
-
-#if LINUX_VERSION_IS_LESS(6, 4, 0) && \
-    !(LINUX_VERSION_IS_GEQ(5, 10, 205) && LINUX_VERSION_IS_LESS(5, 11, 0)) && \
-    !(LINUX_VERSION_IS_GEQ(5, 15, 144) && LINUX_VERSION_IS_LESS(5, 16, 0)) && \
-    !(LINUX_VERSION_IS_GEQ(6, 1, 69) && LINUX_VERSION_IS_LESS(6, 2, 0))
-
-#include <linux/if_vlan.h>
-
-/* Prefer this version in TX path, instead of
- * skb_reset_mac_header() + vlan_eth_hdr()
- */
-static inline struct vlan_ethhdr *skb_vlan_eth_hdr(const struct sk_buff *skb)
-{
-	return (struct vlan_ethhdr *)skb->data;
-}
-
-#endif /* LINUX_VERSION_IS_LESS(6, 4, 0) */
-
 /* <DECLARE_EWMA> */
 
 #include <linux/version.h>

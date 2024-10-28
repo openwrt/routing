@@ -11,8 +11,6 @@ Subject: [PATCH 3/3] Fixes a compile warning when building with musl: #warning
  src/rule.h   | 2 +-
  4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/src/iface.cc b/src/iface.cc
-index f569d3c..7cbb57f 100644
 --- a/src/iface.cc
 +++ b/src/iface.cc
 @@ -30,7 +30,7 @@
@@ -24,8 +22,6 @@ index f569d3c..7cbb57f 100644
  
  #include <linux/filter.h>
  
-diff --git a/src/iface.h b/src/iface.h
-index 9db59ab..df7ff35 100644
 --- a/src/iface.h
 +++ b/src/iface.h
 @@ -20,7 +20,7 @@
@@ -37,8 +33,6 @@ index 9db59ab..df7ff35 100644
  #include <net/ethernet.h>
  
  #include "ndppd.h"
-diff --git a/src/proxy.h b/src/proxy.h
-index 8141b2a..9299d9a 100644
 --- a/src/proxy.h
 +++ b/src/proxy.h
 @@ -19,7 +19,7 @@
@@ -50,15 +44,14 @@ index 8141b2a..9299d9a 100644
  
  #include "ndppd.h"
  
-diff --git a/src/rule.h b/src/rule.h
-index 0c2f79a..23086e6 100644
 --- a/src/rule.h
 +++ b/src/rule.h
-@@ -20,6 +20,6 @@
+@@ -20,7 +20,7 @@
  #include <map>
+ #include <list>
  
 -#include <sys/poll.h>
 +#include <poll.h>
  
  #include "ndppd.h"
-
+ 

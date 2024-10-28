@@ -9,22 +9,21 @@ Subject: [PATCH 2/3] Fixes strerror_r GNU/XSI issue #40.
  src/logger.h  |  3 +++
  2 files changed, 15 insertions(+), 1 deletions(-)
 
-diff --git a/src/logger.cc b/src/logger.cc
-index 6ddbea9..6ccb2a0 100644
 --- a/src/logger.cc
 +++ b/src/logger.cc
-@@ -84,6 +84,6 @@ std::string logger::err()
- {
-     char buf[2048];
+@@ -89,7 +89,7 @@ std::string logger::err()
+         return "Unknown error";
+     return buf;
+ #else
 -    return strerror_r(errno, buf, sizeof(buf));
 +    return strerror_r_wrapper(strerror_r(errno, buf, sizeof(buf)), buf);
+ #endif
  }
  
- logger logger::error()
-@@ -221,4 +221,16 @@ 
+@@ -228,4 +228,16 @@ bool logger::verbosity(const std::string
      return false;
  }
-
+ 
 +// XSI-compliant: int
 +std::string logger::strerror_r_wrapper(int, char* s)
 +{
@@ -38,11 +37,9 @@ index 6ddbea9..6ccb2a0 100644
 +}
 +
  NDPPD_NS_END
-diff --git a/src/logger.h b/src/logger.h
-index 7d3d7db..0446595 100644
 --- a/src/logger.h
 +++ b/src/logger.h
-@@ -91,6 +91,9 @@ class logger {
+@@ -91,6 +91,9 @@ private:
  
      static int _max_pri;
  
@@ -52,4 +49,3 @@ index 7d3d7db..0446595 100644
  
  };
  
-

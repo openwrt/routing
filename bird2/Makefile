@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird2
 PKG_VERSION:=2.15.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=ftp://bird.network.cz/pub/bird
@@ -36,6 +36,7 @@ define Package/bird2
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
+  KCONFIG:=CONFIG_TCP_MD5SIG=y
   DEPENDS:=+libpthread
   CONFLICTS:=bird1-ipv4 bird1-ipv6 bird4 bird6
 endef

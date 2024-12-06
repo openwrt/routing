@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird2
 PKG_VERSION:=2.15.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=ftp://bird.network.cz/pub/bird
@@ -96,6 +96,10 @@ to BIRD, commands can perform simple actions such as enabling/disabling of
 protocols, telling BIRD to show various information, telling it to show
 a routing table filtered by a filter, or asking BIRD to reconfigure.
 endef
+
+ifeq ($(ARCH),arm)
+TARGET_CFLAGS+=-mno-unaligned-access
+endif
 
 CONFIGURE_ARGS += --disable-libssh
 

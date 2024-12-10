@@ -5,6 +5,12 @@
 #include <linux/version.h>	/* LINUX_VERSION_CODE */
 #include <linux/types.h>
 
+#if LINUX_VERSION_IS_LESS(6, 10, 0)
+
+#define __counted_by_be(member)
+
+#endif /* LINUX_VERSION_IS_LESS(6, 10, 0) */
+
 /* <DECLARE_EWMA> */
 
 #include <linux/version.h>

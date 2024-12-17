@@ -7,12 +7,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird2
-PKG_VERSION:=2.16
+PKG_VERSION:=2.16.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://bird.network.cz/download/
-PKG_HASH:=6629110293af6f1727967121d64f9c8dc94ed6181c4ef8b1dc51c7fdd669871c
+PKG_HASH:=f6e59cbccaca62668aea02068724bd427b9ec449c7e0f0fc5681503988c735b4
 
 PKG_MAINTAINER:=Toke Høiland-Jørgensen <toke@toke.dk>
 PKG_LICENSE:=GPL-2.0-or-later
@@ -96,10 +96,6 @@ to BIRD, commands can perform simple actions such as enabling/disabling of
 protocols, telling BIRD to show various information, telling it to show
 a routing table filtered by a filter, or asking BIRD to reconfigure.
 endef
-
-ifeq ($(ARCH),arm)
-TARGET_CFLAGS+=-mno-unaligned-access
-endif
 
 CONFIGURE_ARGS += --disable-libssh
 

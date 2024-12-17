@@ -1,0 +1,44 @@
+From b4e8108cb2995f45d63105f6b179d8e4a155eab5 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Tue, 17 Dec 2024 23:38:45 +0100
+Subject: [PATCH] Fix net_addr alignment for armv7
+
+The patch originates from the mailing list discussion [0].
+
+On armv7 platforms, the `net_addr` structure caused alignment issues due
+to the use of `u64 align[0]`, which requires 8-byte alignment. This led
+to crashes on systems with stricter alignment rules.
+
+This patch changes the alignment to `u32 align[0]`, which resolves the
+crashes. However, this change may still cause issues with VPN network types
+that rely on stricter alignment.
+
+Previously, we used a workaround with `-mno-unaligned-access` [1,2],
+which prevents unaligned memory crashes but comes at the cost of reduced
+performance, larger code size, and missed hardware optimizations. Applying
+this patch is a better solution, even if VPN network types may still face
+problems. Alignment issues are expected to be properly resolved in the
+upcoming BIRD 3 release, so this patch will not be merged into upstream BIRD
+since it also originates from the BIRD mailing list discussion.
+
+[0] - http://trubka.network.cz/pipermail/bird-users/2024-December/017957.html
+[1] - https://github.com/freifunk-berlin/falter-packages/commit/fcce390fc57b44593fe969f1063c6ba711fc7f9b
+[2] - https://github.com/openwrt/routing/commit/0209a1f3be5d0d227c34c7e73ff779ef7dcc533e
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+---
+ lib/net.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/lib/net.h
++++ b/lib/net.h
+@@ -51,7 +51,7 @@ typedef struct net_addr {
+   u8 pxlen;
+   u16 length;
+   u8 data[20];
+-  u64 align[0];
++  u32 align[0];
+ } net_addr;
+ 
+ typedef struct net_addr_ip4 {

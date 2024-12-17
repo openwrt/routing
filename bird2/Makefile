@@ -97,10 +97,6 @@ protocols, telling BIRD to show various information, telling it to show
 a routing table filtered by a filter, or asking BIRD to reconfigure.
 endef
 
-ifeq ($(ARCH),arm)
-TARGET_CFLAGS+=-mno-unaligned-access
-endif
-
 CONFIGURE_ARGS += --disable-libssh
 
 define Package/bird2/conffiles

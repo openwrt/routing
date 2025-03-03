@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mesh11sd
-PKG_VERSION:=4.1.1
+PKG_VERSION:=5.0.1
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -17,7 +17,7 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/mesh11sd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=348bf2b2a4cf07b0f8688e6e4bcf564879e5a978ab3a711704126454d6a42e19
+PKG_HASH:=db06bc633c2f7221ab72ec9a6761f078ec84a0d117eb9c4bff8b5a0007745252
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -31,22 +31,15 @@ define Package/mesh11sd
 endef
 
 define Package/mesh11sd/description
-  Mesh11sd is a dynamic parameter configuration daemon for 802.11s mesh networks.
-  It was originally designed to leverage 802.11s mesh networking at Captive Portal venues.
-  This is the open source version and it enables easy and automated mesh network operation with multiple mesh nodes.
-  It allows all mesh parameters supported by the wireless driver to be set in the uci config file.
-  Settings take effect immediately without having to restart the wireless network.
-  Mesh paths are stabilised when node coverage areas overlap and rssi thresholds and tx power can be dynamically adjusted.
-  Default settings give rapid and reliable layer 2 mesh convergence.
-  Without mesh11sd, many mesh parameters cannot be set in the uci wireless config file as the mesh interface must be up before the parameters can be set.
-  Some of those that are supported, would fail to be implemented when the network is (re)started resulting in errors or dropped nodes.
-  The mesh11sd daemon can dynamically check configured parameters and set them as required.
-  In auto_config mode, upstream wan connectivity is checked (eg Internet feed) and when not present, layer 2 peer mode is autonomously enabled,
-  and when it is present, layer 3 portal mode is enabled. This allows the same simple router configuration to be used on all meshnodes in the layer 2 mesh backhaul.
-  Remote terminal sessions and remote file transfers are supported using the meshnode mac address as an identifier.
-  Simple configuration of Opportunistic Wireless Encryption (OWE) and Customer[Client] Premises Equipment (CPE) mode is supported on mesh gates.
-  OWE Transition Mode is enabled by default on mesh gates.
-  This version does not require a Captive Portal to be running.
+  Mesh11sd is a package that autonomously configures and manages all aspects of an 802.11s mesh network and its connected nodes.
+  The package acts as a service daemon, dynamically setting mesh parameters across all nodes.
+  It is particularly useful for simplifying setup, reducing manual configuration, and improving network reliability.
+  Support for point to multi-point vxlan tunneling over the wireless backhaul is included as standard.
+  A guest/iot type network is auto-configured without requiring complex vlan setup.
+  If required, custom vlan trunking over the vxlan tunnel is supported.
+  Mesh-gate access point usage is collected in a central database on the mesh portal.
+  A command line interface is provided for reporting in json format output.
+  An optional Customer/Client Premises Equipment (CPE) mode, greatly simplifies rollout of community WISP projects.
 endef
 
 define Package/mesh11sd/install

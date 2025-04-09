@@ -1,0 +1,17 @@
+--- a/node_build/dependencies/libuv/build/gyp/pylib/gyp/common.py
++++ b/node_build/dependencies/libuv/build/gyp/pylib/gyp/common.py
+@@ -498,7 +498,13 @@ def uniquer(seq, idfun=None):
+ 
+ 
+ # Based on http://code.activestate.com/recipes/576694/.
+-class OrderedSet(collections.MutableSet):
++try:
++  # For Python 3.10+
++  from collections.abc import MutableSet
++except ImportError:
++  MutableSet = collections.MutableSet
++
++class OrderedSet(MutableSet):
+   def __init__(self, iterable=None):
+     self.end = end = []
+     end += [None, end, end]         # sentinel node for doubly linked list

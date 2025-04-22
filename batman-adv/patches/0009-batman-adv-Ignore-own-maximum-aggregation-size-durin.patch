@@ -1,0 +1,46 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 2 Feb 2025 17:04:13 +0100
+Subject: batman-adv: Ignore own maximum aggregation size during RX
+
+An OGMv1 and OGMv2 packet receive processing were not only limited by the
+number of bytes in the received packet but also by the nodes maximum
+aggregation packet size limit. But this limit is relevant for TX and not
+for RX. It must not be enforced by batadv_(i)v_ogm_aggr_packet to avoid
+loss of information in case of a different limit for sender and receiver.
+
+This has a minor side effect for B.A.T.M.A.N. IV because the
+batadv_iv_ogm_aggr_packet is also used for the preprocessing for the TX.
+But since the aggregation code itself will not allow more than
+BATADV_MAX_AGGREGATION_BYTES bytes, this check was never triggering (in
+this context) prior of removing it.
+
+Fixes: b780db96954a ("add packet aggregation add jitter for rebroadcast of packets if aggregation is disabled")
+Fixes: 667996ebeab4 ("batman-adv: OGMv2 - implement originators logic")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/7e6b4d0619fe2754787078c23c16c6a7ddb126eb
+
+--- a/net/batman-adv/bat_iv_ogm.c
++++ b/net/batman-adv/bat_iv_ogm.c
+@@ -324,8 +324,7 @@ batadv_iv_ogm_aggr_packet(int buff_pos,
+ 	/* check if there is enough space for the optional TVLV */
+ 	next_buff_pos += ntohs(ogm_packet->tvlv_len);
+ 
+-	return (next_buff_pos <= packet_len) &&
+-	       (next_buff_pos <= BATADV_MAX_AGGREGATION_BYTES);
++	return next_buff_pos <= packet_len;
+ }
+ 
+ /* send a batman ogm to a given interface */
+--- a/net/batman-adv/bat_v_ogm.c
++++ b/net/batman-adv/bat_v_ogm.c
+@@ -839,8 +839,7 @@ batadv_v_ogm_aggr_packet(int buff_pos, i
+ 	/* check if there is enough space for the optional TVLV */
+ 	next_buff_pos += ntohs(ogm2_packet->tvlv_len);
+ 
+-	return (next_buff_pos <= packet_len) &&
+-	       (next_buff_pos <= BATADV_MAX_AGGREGATION_BYTES);
++	return next_buff_pos <= packet_len;
+ }
+ 
+ /**

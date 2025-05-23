@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mesh11sd
-PKG_VERSION:=5.1.0
+PKG_VERSION:=5.1.2
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -17,7 +17,7 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/mesh11sd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=3d28d0f660bcefe065c346b4b5a144b6b05010a61f0b10e5ab78066fa7c6b941
+PKG_HASH:=9cf25ca9cbc54d0c57ceca671634ef1835f6975668287e8eb6712fe4ce8f70ba
 
 include $(INCLUDE_DIR)/package.mk
 

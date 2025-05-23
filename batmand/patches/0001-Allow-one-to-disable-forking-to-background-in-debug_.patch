@@ -1,4 +1,4 @@
-From: Sven Eckelmann <sven@narfation.org>
+From: Sven Eckelmann <>
 Date: Sun, 1 Dec 2013 14:39:00 +0100
 Subject: Allow one to disable forking to background in debug_mode 0
 

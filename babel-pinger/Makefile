@@ -9,7 +9,7 @@ PKG_VERSION:=0.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://www.pps.univ-paris-diderot.fr/~jch/software/files/
+PKG_SOURCE_URL:=https://www.irif.fr/~jch/software/files/
 PKG_HASH:=c411430bb102f08d3d68d2fb5010b5da0149908b671ac0fb12abd8c8ee6380c5
 
 include $(INCLUDE_DIR)/package.mk
@@ -19,7 +19,7 @@ define Package/babel-pinger
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
   TITLE:=Babel-pinger
-  URL:=http://www.pps.univ-paris-diderot.fr/~jch/software/babel/
+  URL:=https://www.irif.fr/~jch/software/babel/
   MAINTAINER:=Gabriel Kerneis <gabriel@kerneis.info>
   DEPENDS:=+librt
 endef

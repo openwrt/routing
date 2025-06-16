@@ -17,6 +17,7 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/openNDS-$(PKG_VERSION)
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
 PKG_LICENSE:=GPL-2.0-or-later
 PKG_LICENSE_FILES:=COPYING
+PKG_CPE_ID:=cpe:/a:opennds:captive_portal
 
 PKG_FIXUP:=autoreconf
 PKG_BUILD_PARALLEL:=1

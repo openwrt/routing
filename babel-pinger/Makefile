@@ -12,6 +12,8 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://www.irif.fr/~jch/software/files/
 PKG_HASH:=c411430bb102f08d3d68d2fb5010b5da0149908b671ac0fb12abd8c8ee6380c5
 
+PKG_MAINTAINER:=Gabriel Kerneis <gabriel@kerneis.info>
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/babel-pinger
@@ -20,7 +22,6 @@ define Package/babel-pinger
   SUBMENU:=Routing and Redirection
   TITLE:=Babel-pinger
   URL:=https://www.irif.fr/~jch/software/babel/
-  MAINTAINER:=Gabriel Kerneis <gabriel@kerneis.info>
   DEPENDS:=+librt
 endef
 

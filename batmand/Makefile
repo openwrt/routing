@@ -8,32 +8,28 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batmand
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://git.open-mesh.org/batmand.git
-PKG_REV:=b67a7087b51d7a5e90d27ac39116d1f57257c86e
-PKG_VERSION:=1440
-PKG_RELEASE:=2
-PKG_LICENSE:=GPL-2.0
+PKG_MIRROR_HASH:=bb8b74bea9f70ae91b3ef3ef089aa3149e3f5335b6e1db31ea7870d899b0a176
+PKG_SOURCE_VERSION:=2f62b17d4132f82c4716b672101eb7faa916192a
+PKG_SOURCE_DATE:=2022-12-31
 
-PKG_SOURCE_VERSION:=$(PKG_REV)
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
-PKG_MIRROR_HASH:=ceb8e0e399f79b1b663594fcf9642e1efc40e696a7604daf709c77da9b6ec52f
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
+PKG_LICENSE:=GPL-2.0-only
+PKG_MAINTAINER:=Corinna "Elektra" Aichele <onelektra@gmx.net>
 
 PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/batmand
-  URL:=https://www.open-mesh.org/
-  MAINTAINER:=Corinna "Elektra" Aichele <onelektra@gmx.net>
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
-  DEPENDS:=+libpthread +kmod-tun
   TITLE:=B.A.T.M.A.N. layer 3 routing daemon
+  URL:=https://www.open-mesh.org/
+  DEPENDS:=+libpthread +kmod-tun
 endef
 
 define Package/batmand/description
@@ -41,8 +37,8 @@ B.A.T.M.A.N. layer 3 routing daemon
 endef
 
 MAKE_FLAGS += \
-	EXTRA_CFLAGS='-DDEBUG_MALLOC -DMEMORY_USAGE -DPROFILE_DATA -DREVISION_VERSION=\"\ rv$(PKG_REV)\" -D_GNU_SOURCE' \
-	REVISION="$(PKG_REV)" \
+	EXTRA_CFLAGS='-DDEBUG_MALLOC -DMEMORY_USAGE -DPROFILE_DATA -DREVISION_VERSION=\"\ rv$(PKG_SOURCE_VERSION)\" -D_GNU_SOURCE' \
+	REVISION="$(PKG_SOURCE_VERSION)" \
 	CC="$(TARGET_CC)" \
 	UNAME="Linux" \
 	batmand

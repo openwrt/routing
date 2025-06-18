@@ -18,17 +18,9 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/bird-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/bird3/Default/description
-BIRD is an internet routing daemon which manages TCP/IP routing tables
-with support of modern routing protocols, easy to use configuration
-interface and powerful route filtering language. It is lightweight and
-efficient and therefore appropriate for small embedded routers.
-
-endef
-
 define Package/bird3
   TITLE:=The BIRD Internet Routing Daemon (v3)
-  URL:=http://bird.network.cz/
+  URL:=https://bird.network.cz/
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
@@ -38,7 +30,7 @@ endef
 
 define Package/bird3c
   TITLE:=The BIRD command-line client (v3)
-  URL:=http://bird.network.cz/
+  URL:=https://bird.network.cz/
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
@@ -48,12 +40,19 @@ endef
 
 define Package/bird3cl
   TITLE:=The BIRD lightweight command-line client (v2)
-  URL:=http://bird.network.cz/
+  URL:=https://bird.network.cz/
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
   DEPENDS:=+bird3
   CONFLICTS:=bird2
+endef
+
+define Package/bird3/Default/description
+BIRD is an internet routing daemon which manages TCP/IP routing tables
+with support of modern routing protocols, easy to use configuration
+interface and powerful route filtering language. It is lightweight and
+efficient and therefore appropriate for small embedded routers.
 endef
 
 define Package/bird3/description

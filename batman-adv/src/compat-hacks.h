@@ -11,6 +11,17 @@
 
 #endif /* LINUX_VERSION_IS_LESS(6, 10, 0) */
 
+#if LINUX_VERSION_IS_LESS(6, 15, 0)
+#include <linux/crc32c.h>
+#endif /* LINUX_VERSION_IS_LESS(6, 15, 0) */
+
+#if LINUX_VERSION_IS_LESS(6, 16, 0)
+
+#define timer_container_of(var, callback_timer, timer_fieldname)	\
+	from_timer(var, callback_timer, timer_fieldname)
+
+#endif /* LINUX_VERSION_IS_LESS(6, 16, 0) */
+
 /* <DECLARE_EWMA> */
 
 #include <linux/version.h>

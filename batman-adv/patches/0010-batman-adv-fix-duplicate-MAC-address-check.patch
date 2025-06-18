@@ -1,0 +1,105 @@
+From: Matthias Schiffer <mschiffer@universe-factory.net>
+Date: Wed, 16 Apr 2025 20:37:56 +0200
+Subject: batman-adv: fix duplicate MAC address check
+
+batadv_check_known_mac_addr() is both too lenient and too strict:
+
+- It is called from batadv_hardif_add_interface(), which means that it
+  checked interfaces that are not used for batman-adv at all. Move it
+  to batadv_hardif_enable_interface(). Also, restrict it to hardifs of
+  the same mesh interface; different mesh interfaces should not interact
+  at all. The batadv_check_known_mac_addr() argument is changed from
+  `struct net_device` to `struct batadv_hard_iface` to achieve this.
+- The check only cares about hardifs in BATADV_IF_ACTIVE and
+  BATADV_IF_TO_BE_ACTIVATED states, but interfaces in BATADV_IF_INACTIVE
+  state should be checked as well, or the following steps will not
+  result in a warning then they should:
+
+  - Add two interfaces in down state with different MAC addresses to
+    a mesh as hardifs
+  - Change the MAC addresses so they conflict
+  - Set interfaces to up state
+
+  Now there will be two active hardifs with the same MAC address, but no
+  warning. Fix by only ignoring hardifs in BATADV_IF_NOT_IN_USE state.
+
+The RCU lock can be dropped, as we're holding RTNL anyways when the
+function is called.
+
+Fixes: c7560658b16b ("[batman-adv] print a warning when an existing mac address is added again")
+Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+(cherry picked from commit 4a2b85600c38876b6c76eb7e75d76aef2c60a055)
+
+--- a/net/batman-adv/hard-interface.c
++++ b/net/batman-adv/hard-interface.c
+@@ -505,28 +505,32 @@ batadv_hardif_is_iface_up(const struct b
+ 	return false;
+ }
+ 
+-static void batadv_check_known_mac_addr(const struct net_device *net_dev)
++static void batadv_check_known_mac_addr(const struct batadv_hard_iface *hard_iface)
+ {
+-	const struct batadv_hard_iface *hard_iface;
++	const struct net_device *soft_iface = hard_iface->soft_iface;
++	const struct batadv_hard_iface *tmp_hard_iface;
+ 
+-	rcu_read_lock();
+-	list_for_each_entry_rcu(hard_iface, &batadv_hardif_list, list) {
+-		if (hard_iface->if_status != BATADV_IF_ACTIVE &&
+-		    hard_iface->if_status != BATADV_IF_TO_BE_ACTIVATED)
++	if (!soft_iface)
++		return;
++
++	list_for_each_entry(tmp_hard_iface, &batadv_hardif_list, list) {
++		if (tmp_hard_iface == hard_iface)
++			continue;
++
++		if (tmp_hard_iface->soft_iface != soft_iface)
+ 			continue;
+ 
+-		if (hard_iface->net_dev == net_dev)
++		if (tmp_hard_iface->if_status == BATADV_IF_NOT_IN_USE)
+ 			continue;
+ 
+-		if (!batadv_compare_eth(hard_iface->net_dev->dev_addr,
+-					net_dev->dev_addr))
++		if (!batadv_compare_eth(tmp_hard_iface->net_dev->dev_addr,
++					hard_iface->net_dev->dev_addr))
+ 			continue;
+ 
+ 		pr_warn("The newly added mac address (%pM) already exists on: %s\n",
+-			net_dev->dev_addr, hard_iface->net_dev->name);
++			hard_iface->net_dev->dev_addr, tmp_hard_iface->net_dev->name);
+ 		pr_warn("It is strongly recommended to keep mac addresses unique to avoid problems!\n");
+ 	}
+-	rcu_read_unlock();
+ }
+ 
+ /**
+@@ -764,6 +768,8 @@ int batadv_hardif_enable_interface(struc
+ 			    hard_iface->net_dev->name, hardif_mtu,
+ 			    required_mtu);
+ 
++	batadv_check_known_mac_addr(hard_iface);
++
+ 	if (batadv_hardif_is_iface_up(hard_iface))
+ 		batadv_hardif_activate_interface(hard_iface);
+ 	else
+@@ -902,7 +908,6 @@ batadv_hardif_add_interface(struct net_d
+ 
+ 	batadv_v_hardif_init(hard_iface);
+ 
+-	batadv_check_known_mac_addr(hard_iface->net_dev);
+ 	kref_get(&hard_iface->refcount);
+ 	list_add_tail_rcu(&hard_iface->list, &batadv_hardif_list);
+ 	batadv_hardif_generation++;
+@@ -994,7 +999,7 @@ static int batadv_hard_if_event(struct n
+ 		if (hard_iface->if_status == BATADV_IF_NOT_IN_USE)
+ 			goto hardif_put;
+ 
+-		batadv_check_known_mac_addr(hard_iface->net_dev);
++		batadv_check_known_mac_addr(hard_iface);
+ 
+ 		bat_priv = netdev_priv(hard_iface->soft_iface);
+ 		bat_priv->algo_ops->iface.update_mac(hard_iface);

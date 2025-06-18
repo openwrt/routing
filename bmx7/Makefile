@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bmx7
 PKG_VERSION:=2024.06.11
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
@@ -116,7 +116,7 @@ define Package/bmx7-uci-config/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(MAKE_PATH)/lib/bmx7_uci_config/bmx7_config.so \
 		$(1)/usr/lib/bmx7_config.so
 	$(INSTALL_BIN) ./files/etc/init.d/bmx7 $(1)/etc/init.d/bmx7
-	$(INSTALL_DATA) ./files/etc/config/bmx7 $(1)/etc/config/bmx7
+	$(INSTALL_CONF) ./files/etc/config/bmx7 $(1)/etc/config/bmx7
 endef
 
 define Package/bmx7-iwinfo/install

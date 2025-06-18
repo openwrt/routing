@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=vis
-PKG_RELEASE:=9
+PKG_RELEASE:=10
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_DATE:=2013-04-07
@@ -46,7 +46,7 @@ define Package/vis/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/config $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/vis $(1)/usr/sbin/
 	$(INSTALL_BIN) ./files/etc/init.d/vis $(1)/etc/init.d
-	$(INSTALL_DATA) ./files/etc/config/vis $(1)/etc/config
+	$(INSTALL_CONF) ./files/etc/config/vis $(1)/etc/config
 endef
 
 define Package/vis/conffiles

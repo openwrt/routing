@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=oonf-olsrd2
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/OLSR/OONF.git
@@ -78,7 +78,7 @@ define Package/oonf-olsrd2/install
 	$(INSTALL_BIN)  -D $(PKG_BUILD_DIR)/olsrd2_static $(1)/usr/sbin/olsrd2
 	$(INSTALL_BIN)  -D ./files/olsrd2.init            $(1)/etc/init.d/olsrd2
 	$(INSTALL_BIN)  -D ./files/olsrd2.hotplug         $(1)/etc/hotplug.d/iface/50-olsrd2
-	$(INSTALL_DATA) -D ./files/olsrd2.uci             $(1)/etc/config/olsrd2
+	$(INSTALL_CONF) -D ./files/olsrd2.uci             $(1)/etc/config/olsrd2
 endef
 
 define Package/oonf-olsrd2/conffiles

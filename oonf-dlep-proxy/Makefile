@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=oonf-dlep-proxy
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/OLSR/OONF.git
@@ -55,7 +55,7 @@ define Package/oonf-dlep-proxy/install
 	$(INSTALL_BIN)  -D $(PKG_BUILD_DIR)/dlep_radio_static $(1)/usr/sbin/dlep_proxy
 	$(INSTALL_BIN)  -D ./files/dlep_proxy.init            $(1)/etc/init.d/dlep_proxy
 	$(INSTALL_BIN)  -D ./files/dlep_proxy.hotplug         $(1)/etc/hotplug.d/iface/50-dlep_proxy
-	$(INSTALL_DATA) -D ./files/dlep_proxy.uci             $(1)/etc/config/dlep_proxy
+	$(INSTALL_CONF) -D ./files/dlep_proxy.uci             $(1)/etc/config/dlep_proxy
 endef
 
 define Package/oonf-dlep-proxy/conffiles

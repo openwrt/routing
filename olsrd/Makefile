@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=olsrd
 PKG_SOURCE_DATE:=2024-06-09
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/OLSR/olsrd.git
@@ -192,8 +192,8 @@ define Package/olsrd/install
 	$(INSTALL_DIR) $(1)/lib/functions
 	$(INSTALL_DATA) ./files/olsrd.sh $(1)/lib/functions/olsrd.sh
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DATA) ./files/olsrd.config $(1)/etc/config/olsrd
-	$(INSTALL_DATA) ./files/olsrd6.config $(1)/etc/config/olsrd6
+	$(INSTALL_CONF) ./files/olsrd.config $(1)/etc/config/olsrd
+	$(INSTALL_CONF) ./files/olsrd6.config $(1)/etc/config/olsrd6
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/olsrd $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/etc/init.d

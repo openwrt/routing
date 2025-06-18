@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird3
 PKG_VERSION:=3.1.0
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://bird.network.cz/download/
@@ -105,7 +105,7 @@ define Package/bird3/install
 	$(INSTALL_DIR)  $(1)/usr/sbin
 	$(INSTALL_BIN)  $(PKG_BUILD_DIR)/bird $(1)/usr/sbin/
 	$(INSTALL_DIR)  $(1)/etc
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/doc/bird.conf.example $(1)/etc/bird.conf
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/doc/bird.conf.example $(1)/etc/bird.conf
 	$(INSTALL_DIR)  $(1)/etc/init.d
 	$(INSTALL_BIN)  ./files/bird.init $(1)/etc/init.d/bird
 endef

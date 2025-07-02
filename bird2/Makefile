@@ -16,6 +16,7 @@ PKG_HASH:=bfd718dfa596819b3801688783212514b467163329aec9bbcd0fa3dee03e10e9
 
 PKG_MAINTAINER:=Toke Høiland-Jørgensen <toke@toke.dk>
 PKG_LICENSE:=GPL-2.0-or-later
+PKG_CPE_ID:=cpe:/a:nic:bird
 
 PKG_BUILD_DEPENDS:=ncurses readline
 PKG_BUILD_DIR:=$(BUILD_DIR)/bird-$(PKG_VERSION)

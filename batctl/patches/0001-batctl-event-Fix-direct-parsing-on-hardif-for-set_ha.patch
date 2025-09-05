@@ -1,0 +1,27 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 3 Aug 2025 08:48:40 +0200
+Subject: batctl: event: Fix direct parsing on hardif for set_hardif
+
+The code to get the hard interface name for an even was accidentally
+checking for BATADV_ATTR_MESH_IFNAME instead of BATADV_ATTR_HARD_IFNAME. As
+result, the fallback code was always used when BATADV_ATTR_MESH_IFNAME
+would have not been available.
+
+Luckily, at the moment, BATADV_ATTR_HARD_IFNAME is always available when
+BATADV_ATTR_MESH_IFNAME is set BATADV_CMD_SET_HARDIF events.
+
+Fixes: d12322eeb361 ("batctl: event: Get ifname from netlink message")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=03288f4f3060591dbc33600b4e5f6371d6a9f4ff
+
+--- a/event.c
++++ b/event.c
+@@ -320,7 +320,7 @@ static void event_parse_set_hardif(struc
+ 			return;
+ 	}
+ 
+-	if (attrs[BATADV_ATTR_MESH_IFNAME]) {
++	if (attrs[BATADV_ATTR_HARD_IFNAME]) {
+ 		hardif_name = nla_get_string(attrs[BATADV_ATTR_HARD_IFNAME]);
+ 	} else {
+ 		/* compatibility for Linux < 5.14/batman-adv < 2021.2 */

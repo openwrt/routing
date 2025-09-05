@@ -1,0 +1,34 @@
+From: Stanislav Fort <stanislav.fort@aisle.com>
+Date: Sun, 31 Aug 2025 16:56:23 +0200
+Subject: batman-adv: fix OOB read/write in network-coding decode
+
+batadv_nc_skb_decode_packet() trusts coded_len and checks only against
+skb->len. XOR starts at sizeof(struct batadv_unicast_packet), reducing
+payload headroom, and the source skb length is not verified, allowing an
+out-of-bounds read and a small out-of-bounds write.
+
+Validate that coded_len fits within the payload area of both destination
+and source sk_buffs before XORing.
+
+Fixes: 65aa656f3be9 ("batman-adv: network coding - receive coded packets and decode them")
+Reported-by: Stanislav Fort <disclosure@aisle.com>
+Signed-off-by: Stanislav Fort <stanislav.fort@aisle.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=afd409d7b189044fc9bf66e50de35cb1fc08a1ee
+
+--- a/net/batman-adv/network-coding.c
++++ b/net/batman-adv/network-coding.c
+@@ -1687,7 +1687,12 @@ batadv_nc_skb_decode_packet(struct batad
+ 
+ 	coding_len = ntohs(coded_packet_tmp.coded_len);
+ 
+-	if (coding_len > skb->len)
++	/* ensure dst buffer is large enough (payload only) */
++	if (coding_len + h_size > skb->len)
++		return NULL;
++
++	/* ensure src buffer is large enough (payload only) */
++	if (coding_len + h_size > nc_packet->skb->len)
+ 		return NULL;
+ 
+ 	/* Here the magic is reversed:

@@ -3,12 +3,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=alfred
-PKG_VERSION:=2025.2
-PKG_RELEASE:=1
+PKG_VERSION:=2025.3
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
-PKG_HASH:=4347d1e4b0794afbf6b171a857b9a3c7d51a291fc54f16cdad92c7f7d1cdb51a
+PKG_HASH:=fb04c8db663a6e1d1dc9e46712fcabe82b73d0c0b47e40b4d1610002ef510975
 
 PKG_MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
 PKG_LICENSE:=GPL-2.0-only MIT
@@ -76,7 +76,7 @@ define Package/alfred/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/alfred.init $(1)/etc/init.d/alfred
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DATA) ./files/alfred.config $(1)/etc/config/alfred
+	$(INSTALL_CONF) ./files/alfred.config $(1)/etc/config/alfred
 	$(INSTALL_DIR) $(1)/etc/alfred
 	[ "x$(CONFIG_PACKAGE_ALFRED_BATHOSTS)" == "xy" ] && $(INSTALL_BIN) ./files/bat-hosts.lua $(1)/etc/alfred/bat-hosts.lua ; true
 endef

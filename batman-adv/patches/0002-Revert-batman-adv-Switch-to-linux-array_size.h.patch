@@ -65,5 +65,5 @@ This reverts commit f33d7f724675544a36b24c77f8d4b95d41252ae2.
  #include <linux/init.h>
 +#include <linux/kernel.h>
  #include <linux/limits.h>
- #include <linux/list.h>
  #include <linux/minmax.h>
+ #include <linux/netdevice.h>

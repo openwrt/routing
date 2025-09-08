@@ -1,0 +1,31 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 3 Aug 2025 08:49:12 +0200
+Subject: batctl: Avoid memory leak in print_routing_algos
+
+The opts.remaining_header string is alocated before the netlink callback
+object is created. But the callback object allocation can fail and the
+function will return in this case. To fix this, either the string buffer
+must be freed in this case or the opts.remaining_header allocation can
+simply be moved to a later point.
+
+Fixes: 0a14f8800dac ("batctl: Handle nl_cb_alloc errors")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=9363370cee11af3687ebef028f7c4518107ea424
+
+--- a/routing_algo.c
++++ b/routing_algo.c
+@@ -96,12 +96,12 @@ static int print_routing_algos(struct st
+ 	nl_send_auto_complete(state->sock, msg);
+ 	nlmsg_free(msg);
+ 
+-	opts.remaining_header = strdup("Available routing algorithms:\n");
+-
+ 	cb = nl_cb_alloc(NL_CB_DEFAULT);
+ 	if (!cb)
+ 		return -ENOMEM;
+ 
++	opts.remaining_header = strdup("Available routing algorithms:\n");
++
+ 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, netlink_print_common_cb,
+ 		  &opts);
+ 	nl_cb_set(cb, NL_CB_FINISH, NL_CB_CUSTOM, netlink_stop_callback, NULL);

@@ -17,7 +17,7 @@ PKG_SOURCE_VERSION:=2f62b17d4132f82c4716b672101eb7faa916192a
 PKG_SOURCE_DATE:=2022-12-31
 
 PKG_LICENSE:=GPL-2.0-only
-PKG_MAINTAINER:=Corinna "Elektra" Aichele <onelektra@gmx.net>
+PKG_MAINTAINER:=Corinna Aichele <onelektra@gmx.net>
 
 PKG_BUILD_PARALLEL:=1
 

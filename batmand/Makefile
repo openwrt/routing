@@ -28,7 +28,7 @@ include $(INCLUDE_DIR)/package.mk
 
 define Package/batmand
   URL:=https://www.open-mesh.org/
-  MAINTAINER:=Corinna "Elektra" Aichele <onelektra@gmx.net>
+  MAINTAINER:=Corinna Aichele <onelektra@gmx.net>
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection

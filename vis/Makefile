@@ -16,7 +16,7 @@ PKG_SOURCE_VERSION:=7710cce42e8d63ea114056a4a140835d4a452933
 PKG_SOURCE_URL:=https://git.open-mesh.org/vis.git
 PKG_MIRROR_HASH:=0ed79822a694f220ea44fc81d91ccdacae6ab8ef599810ecfd39acd34d68ae53
 
-PKG_MAINTAINER:=Corinna "Elektra" Aichele <onelektra@gmx.net>
+PKG_MAINTAINER:=Corinna Aichele <onelektra@gmx.net>
 PKG_LICENSE:=GPL-2.0-only
 
 PKG_BUILD_PARALLEL:=1

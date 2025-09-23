@@ -7,12 +7,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird2
-PKG_VERSION:=2.17.1
+PKG_VERSION:=2.17.2
 PKG_RELEASE:=1
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://bird.network.cz/download/
-PKG_HASH:=bfd718dfa596819b3801688783212514b467163329aec9bbcd0fa3dee03e10e9
+PKG_SOURCE_URL:=https://bird.nic.cz/download/
+PKG_HASH:=440dd2d3aca64323b46fd45532e573accaf8bdde639ee4bfcd68ea9b13328cdd
 
 PKG_MAINTAINER:=Toke Høiland-Jørgensen <toke@toke.dk>
 PKG_LICENSE:=GPL-2.0-or-later
@@ -25,7 +25,7 @@ include $(INCLUDE_DIR)/package.mk
 
 define Package/bird2
   TITLE:=The BIRD Internet Routing Daemon (v2)
-  URL:=https://bird.network.cz/
+  URL:=https://bird.nic.cz/
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
@@ -35,7 +35,7 @@ endef
 
 define Package/bird2c
   TITLE:=The BIRD command-line client (v2)
-  URL:=https://bird.network.cz/
+  URL:=https://bird.nic.cz/
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
@@ -45,7 +45,7 @@ endef
 
 define Package/bird2cl
   TITLE:=The BIRD lightweight command-line client (v2)
-  URL:=https://bird.network.cz/
+  URL:=https://bird.nic.cz/
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection

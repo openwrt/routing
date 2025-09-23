@@ -3,12 +3,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird3
-PKG_VERSION:=3.1.2
+PKG_VERSION:=3.1.4
 PKG_RELEASE:=1
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://bird.network.cz/download/
-PKG_HASH:=9be6196c5755fca1adf92e90e46aaf6f8ec003bec9b73c084fb45915e07e173f
+PKG_SOURCE_URL:=https://bird.nic.cz/download/
+PKG_HASH:=a5757b60e1de9ac5efc9765f87b7c8baefa31db789966c83870d070f7608278c
 
 PKG_MAINTAINER:=Toke Høiland-Jørgensen <toke@toke.dk>, Nick Hainke <vincent@systemli.org>
 PKG_LICENSE:=GPL-2.0-or-later
@@ -20,7 +20,7 @@ include $(INCLUDE_DIR)/package.mk
 
 define Package/bird3
   TITLE:=The BIRD Internet Routing Daemon (v3)
-  URL:=https://bird.network.cz/
+  URL:=https://bird.nic.cz/
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
@@ -30,7 +30,7 @@ endef
 
 define Package/bird3c
   TITLE:=The BIRD command-line client (v3)
-  URL:=https://bird.network.cz/
+  URL:=https://bird.nic.cz/
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
@@ -40,7 +40,7 @@ endef
 
 define Package/bird3cl
   TITLE:=The BIRD lightweight command-line client (v2)
-  URL:=https://bird.network.cz/
+  URL:=https://bird.nic.cz/
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection

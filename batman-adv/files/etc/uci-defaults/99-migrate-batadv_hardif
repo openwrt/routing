@@ -45,7 +45,6 @@ mv_batadv_config_section() {
     local isolation_mark
     local log_level
     local multicast_mode
-    local network_coding
     local orig_interval
 
     config_get aggregated_ogms "${section}" aggregated_ogms
@@ -61,7 +60,6 @@ mv_batadv_config_section() {
     config_get isolation_mark "${section}" isolation_mark
     config_get log_level "${section}" log_level
     config_get multicast_mode "${section}" multicast_mode
-    config_get network_coding "${section}" network_coding
     config_get orig_interval "${section}" orig_interval
 
     # update section in case it exists
@@ -78,7 +76,6 @@ mv_batadv_config_section() {
     [ -n "${isolation_mark}" ]  && uci set network."${section}".isolation_mark="${isolation_mark}"
     [ -n "${log_level}" ]  && uci set network."${section}".log_level="${log_level}"
     [ -n "${multicast_mode}" ]  && uci set network."${section}".multicast_mode="${multicast_mode}"
-    [ -n "${network_coding}" ]  && uci set network."${section}".network_coding="${network_coding}"
     [ -n "${orig_interval}" ]  && uci set network."${section}".orig_interval="${orig_interval}"
 }
 

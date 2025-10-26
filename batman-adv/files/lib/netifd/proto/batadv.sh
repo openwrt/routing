@@ -24,7 +24,6 @@ proto_batadv_init_config() {
 	proto_config_add_string 'log_level'
 	proto_config_add_int 'multicast_fanout'
 	proto_config_add_boolean 'multicast_mode:bool'
-	proto_config_add_boolean 'network_coding:bool'
 	proto_config_add_int 'orig_interval'
 	proto_config_add_string 'routing_algo'
 }
@@ -47,7 +46,6 @@ proto_batadv_setup() {
 	local log_level
 	local multicast_fanout
 	local multicast_mode
-	local network_coding
 	local orig_interval
 	local routing_algo
 
@@ -65,7 +63,6 @@ proto_batadv_setup() {
 	json_get_vars log_level
 	json_get_vars multicast_fanout
 	json_get_vars multicast_mode
-	json_get_vars network_coding
 	json_get_vars orig_interval
 	json_get_vars routing_algo
 
@@ -105,7 +102,6 @@ proto_batadv_setup() {
 	[ -n "$isolation_mark" ] && batctl meshif "$iface" isolation_mark "$isolation_mark"
 	[ -n "$multicast_fanout" ] && batctl meshif "$iface" multicast_fanout "$multicast_fanout"
 	[ -n "$multicast_mode" ] && batctl meshif "$iface" multicast_mode "$multicast_mode" 2>&-
-	[ -n "$network_coding" ] && batctl meshif "$iface" network_coding "$network_coding" 2>&-
 	[ -n "$log_level" ] && batctl meshif "$iface" loglevel "$log_level" 2>&-
 	[ -n "$orig_interval" ] && batctl meshif "$iface" orig_interval "$orig_interval"
 

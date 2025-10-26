@@ -3,12 +3,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batctl
-PKG_VERSION:=2025.3
+PKG_VERSION:=2025.4
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
-PKG_HASH:=70444b182c85d0c2714d914574124980801bb743d1626ee27a179fa22066fdc2
+PKG_HASH:=566aa4fd74355e8d5dd2bd21c25e98cc068e77fd08e19f80b8e2b5edde7c8e65
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
@@ -111,7 +111,6 @@ config-n := \
 	multicast_mode \
 	neighbors \
 	neighbors_json \
-	network_coding \
 	orig_interval \
 	originators \
 	originators_json \
@@ -145,7 +144,6 @@ config-settings := \
 	multicast_fanout \
 	multicast_forceflood \
 	multicast_mode \
-	network_coding \
 	orig_interval \
 	routing_algo \
 	throughput_override \

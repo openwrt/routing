@@ -1,0 +1,42 @@
+--- a/mcproxy/src/proxy/igmp_sender.cpp
++++ b/mcproxy/src/proxy/igmp_sender.cpp
+@@ -54,10 +54,14 @@ bool igmp_sender::send_record(unsigned int if_index, mc_filter filter_mode, cons
+         m_sock.leave_group(gaddr, if_index);
+         return true;
+     } else if (filter_mode == EXCLUDE_MODE || filter_mode == INCLUDE_MODE) {
+-        m_sock.join_group(gaddr, if_index);
+         std::list<addr_storage> src_list;
+-        for (auto & e : slist) {
+-            src_list.push_back(e.saddr);
++        if (slist.empty()) {
++            m_sock.join_group(gaddr, if_index);
++        } else {
++           for (auto & e : slist) {
++                   m_sock.join_source_group(gaddr, addr_storage(e.saddr), if_index);
++                   src_list.push_back(e.saddr);
++           }
+         }
+ 
+         return m_sock.set_source_filter(if_index, gaddr, filter_mode, src_list);
+--- a/mcproxy/src/proxy/mld_sender.cpp
++++ b/mcproxy/src/proxy/mld_sender.cpp
+@@ -55,11 +55,15 @@ bool mld_sender::send_record(unsigned int if_index, mc_filter filter_mode, const
+     if (filter_mode == INCLUDE_MODE && slist.empty() ) {
+         m_sock.leave_group(gaddr, if_index);
+         return true;
+-    } else if (filter_mode == EXCLUDE_MODE || filter_mode == EXCLUDE_MODE) {
+-        m_sock.join_group(gaddr, if_index);
++    } else if (filter_mode == EXCLUDE_MODE || filter_mode == INCLUDE_MODE) {
+         std::list<addr_storage> src_list;
+-        for (auto & e : slist) {
+-            src_list.push_back(e.saddr);
++        if ( slist.empty() ) {
++            m_sock.join_group(gaddr, if_index);
++        } else {
++            for (auto & e : slist) {
++                    m_sock.join_source_group(gaddr, addr_storage(e.saddr), if_index);
++                    src_list.push_back(e.saddr);
++            }
+         }
+ 
+         return m_sock.set_source_filter(if_index, gaddr, filter_mode, src_list);

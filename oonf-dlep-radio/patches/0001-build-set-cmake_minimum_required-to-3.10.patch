@@ -1,0 +1,30 @@
+From aeb6f57d0aa1180511302c948363c59343215aa6 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Sun, 9 Nov 2025 17:30:53 +0100
+Subject: [PATCH] build: set cmake_minimum_required to 3.10
+
+New cmake versions require at least 3.5 as 'cmake_minimum_required'
+in CMakeLists.txt. In future 3.10 will be required.
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ CMakeLists.txt         | 2 +-
+ CMakeListsGlobal.cmake | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
++cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+ project (OONF C)
+ 
+ ###########################
+--- a/CMakeListsGlobal.cmake
++++ b/CMakeListsGlobal.cmake
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
++cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+ if(POLICY CMP0048)
+   cmake_policy(SET CMP0048 NEW)
+ endif()

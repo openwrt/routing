@@ -1,8 +1,0 @@
-#!/bin/sh /etc/rc.common
-
-START=82
-DAEMON='dlep_proxy'
-
-[ -n "$IPKG_INSTROOT" ] || {
-        . /lib/functions/oonf_init.sh
-}

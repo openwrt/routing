@@ -1,5 +1,0 @@
-#!/bin/sh
-
-DAEMON='dlep_radio'
-
-. /lib/functions/oonf_hotplug.sh

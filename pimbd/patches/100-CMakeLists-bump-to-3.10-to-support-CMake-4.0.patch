@@ -1,0 +1,21 @@
+From 415b9a4e6cb043fb9bbf07840b5150f0b0380f4c Mon Sep 17 00:00:00 2001
+From: Christian Marangi <ansuelsmth@gmail.com>
+Date: Thu, 13 Nov 2025 15:45:58 +0100
+Subject: [PATCH 1/2] CMakeLists: bump to 3.10 to support CMake >= 4.0
+
+Bump to minimum required version for CMake to 3.10 to support
+CMake >= 4.0 version.
+
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 2.8.8)
++cmake_minimum_required(VERSION 3.10)
+ 
+ project(pimbd C)
+ 

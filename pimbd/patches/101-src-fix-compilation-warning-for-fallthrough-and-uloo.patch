@@ -1,0 +1,187 @@
+From b29c800f9bb565b804358fe8a8786db6d51006b8 Mon Sep 17 00:00:00 2001
+From: Christian Marangi <ansuelsmth@gmail.com>
+Date: Thu, 13 Nov 2025 15:47:23 +0100
+Subject: [PATCH] src: fix compilation warning for fallthrough and uloop
+ deprecation
+
+uloop_timeout_remaining has been deprecated and cause compilation
+warning. Switch to uloop_timeout_remaining64 and blobmsg_add_u64.
+
+Also replace comments with proper fallthrough.
+
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ src/groups.c    |  2 +-
+ src/monitor.c   | 28 ++++++++++++++--------------
+ src/pim.c       |  2 +-
+ src/pim_group.c |  4 ++--
+ src/pim_jp.c    |  6 +++---
+ src/pim_rpa.c   |  4 ++--
+ src/querier.c   |  4 ++--
+ 7 files changed, 25 insertions(+), 25 deletions(-)
+
+--- a/src/groups.c
++++ b/src/groups.c
+@@ -133,7 +133,7 @@ static pimbd_time_t expire_group(ifgroup
+ // Rearm the global groups-timer if the next event is before timer expiration
+ static void rearm_timer(iface i, int msecs)
+ {
+-	int remain = uloop_timeout_remaining(&i->querier.groups_timer);
++	int remain = uloop_timeout_remaining64(&i->querier.groups_timer);
+ 	if (remain < 0 || remain >= msecs)
+ 		uloop_timeout_set(&i->querier.groups_timer, msecs);
+ }
+--- a/src/monitor.c
++++ b/src/monitor.c
+@@ -208,10 +208,10 @@ int monitor_group(struct ipc_user *u, __
+ 			blobmsg_add_string(reply, "ifname", ig->iface->ifname);
+ 			blobmsg_add_string(reply, "pim_downstream", PIM_STATE_STR(ig->pim_downstream));
+ 			blobmsg_add_string(reply, "pim_local_exclude", ig->pim_local_exclude?"Exclude":"Include");
+-			blobmsg_add_u32(reply, "pim_expiry_timer",
+-					(uint32_t) uloop_timeout_remaining(&ig->pim_expiry_timer));
+-			blobmsg_add_u32(reply, "pim_pp_timer",
+-								(uint32_t) uloop_timeout_remaining(&ig->pim_pp_timer));
++			blobmsg_add_u64(reply, "pim_expiry_timer",
++					(uint64_t) uloop_timeout_remaining64(&ig->pim_expiry_timer));
++			blobmsg_add_u64(reply, "pim_pp_timer",
++					(uint64_t) uloop_timeout_remaining64(&ig->pim_pp_timer));
+ 			blobmsg_add_u32(reply, "listener_exclude", ig->listener_exclude);
+ 			blobmsg_add_u32(reply, "proxy_join", ig->proxy_join);
+ 			ifgsource ifgs;
+@@ -221,16 +221,16 @@ int monitor_group(struct ipc_user *u, __
+ 				blobmsg_add_string(reply, "source", ADDR_REPR(&ifgs->gs->source->addr));
+ 				//Downstream
+ 				blobmsg_add_string(reply, "pim_dowstream", PIM_STATE_STR(ifgs->pim_downstream));
+-				blobmsg_add_u32(reply, "pim_expiry_timer",
+-						(uint32_t) uloop_timeout_remaining(&ifgs->pim_expiry_timer));
+-				blobmsg_add_u32(reply, "pim_pp_timer",
+-						(uint32_t) uloop_timeout_remaining(&ifgs->pim_pp_timer));
++				blobmsg_add_u64(reply, "pim_expiry_timer",
++						(uint64_t) uloop_timeout_remaining64(&ifgs->pim_expiry_timer));
++				blobmsg_add_u64(reply, "pim_pp_timer",
++						(uint64_t) uloop_timeout_remaining64(&ifgs->pim_pp_timer));
+ 				//Downstream rpt
+ 				blobmsg_add_string(reply, "pim_dowstream_rpt", PIM_STATE_STR(ifgs->pim_downstream_rpt));
+-				blobmsg_add_u32(reply, "pim_expiry_timer_rpt",
+-						(uint32_t) uloop_timeout_remaining(&ifgs->pim_rpt_expiry_timer));
+-				blobmsg_add_u32(reply, "pim_pp_timer_rpt",
+-						(uint32_t) uloop_timeout_remaining(&ifgs->pim_rpt_pp_timer));
++				blobmsg_add_u64(reply, "pim_expiry_timer_rpt",
++						(uint64_t) uloop_timeout_remaining64(&ifgs->pim_rpt_expiry_timer));
++				blobmsg_add_u64(reply, "pim_pp_timer_rpt",
++						(uint64_t) uloop_timeout_remaining64(&ifgs->pim_rpt_pp_timer));
+ 				//Local
+ 				blobmsg_add_string(reply, "pim_local_exclude", ifgs->pim_local_exclude?"Exclude":"None");
+ 				blobmsg_add_string(reply, "pim_local_include", ifgs->pim_local_include?"Include":"None");
+@@ -267,9 +267,9 @@ int monitor_proxy(struct ipc_user *u, __
+ 		blobmsg_add_u16(reply, "port", ctl->port);
+ 		blobmsg_add_string(reply, "state", ctl->ufd.fd.fd?"Open":"Pending");
+ 		if(!ctl->ufd.fd.fd)
+-			blobmsg_add_u32(reply, "next_try", uloop_timeout_remaining(&ctl->timer));
++			blobmsg_add_u64(reply, "next_try", (uint64_t) uloop_timeout_remaining64(&ctl->timer));
+ 		else
+-			blobmsg_add_u32(reply, "next_ka", uloop_timeout_remaining(&ctl->timer));
++			blobmsg_add_u64(reply, "next_ka", (uint64_t) uloop_timeout_remaining64(&ctl->timer));
+ 		blobmsg_close_table(reply, pr);
+ 	}
+ 	blobmsg_close_array(reply, ar);
+--- a/src/pim.c
++++ b/src/pim.c
+@@ -288,7 +288,7 @@ static void pim_iface_teardown(iface i)
+ 			pim_iface_teardown_socket(i);
+ 			i->pim.p->ifaces[i->pim.pim_index] = NULL;
+ 			i->pim.pim_index = 0;
+-			//no break
++			fallthrough;
+ 		case PIM_IF_TRYING:
+ 			uloop_timeout_cancel(&i->pim.timer);
+ 			pim_iface_setstate(i, PIM_IF_NONE);
+--- a/src/pim_group.c
++++ b/src/pim_group.c
+@@ -675,7 +675,7 @@ void pim_group_rcv_joinprune_G(ifgroup i
+ 		switch (ig->pim_downstream) {
+ 		case PIM_PRUNEPENDING:
+ 			uloop_timeout_cancel(&ig->pim_pp_timer);
+-			//no break
++			fallthrough;
+ 		case PIM_JOIN:
+ 		case PIM_NONE:
+ 			pim_downstream_G_set_state(p, ig, PIM_JOIN);
+@@ -737,7 +737,7 @@ void pim_group_rcv_joinprune_G_S_rpt(ifg
+ 			//This is rather weird in the RFC as it does not happen in non-temporary state
+ 			int time = (holdtime_s == PP_JP_HOLDTIME_MAX)?PP_JP_HOLDTIME_FOREVER_MS:
+ 					((int)holdtime_s) * 1000;
+-			if(time > uloop_timeout_remaining(&ifgs->pim_rpt_expiry_timer))
++			if(time > uloop_timeout_remaining64(&ifgs->pim_rpt_expiry_timer))
+ 				pim_downstream_G_S_rpt_set_expiry(p, ifgs, time);
+ 		}
+ 	} else {
+--- a/src/pim_jp.c
++++ b/src/pim_jp.c
+@@ -486,7 +486,7 @@ void pim_jp_update_G_S_rpt(pim p, gsourc
+ 	}
+ 
+ 	if((gs->jp_rpt_next == event) && //If we updated
+-			(!p->jp_timer.pending || (uloop_timeout_remaining(&p->jp_timer) > (int)delay))) {
++			(!p->jp_timer.pending || (uloop_timeout_remaining64(&p->jp_timer) > (int)delay))) {
+ 		uloop_timeout_set(&p->jp_timer, delay);
+ 	}
+ 
+@@ -536,7 +536,7 @@ void pim_jp_update_G_S(pim p, gsource gs
+ 	}
+ 
+ 	if((gs->jp_next == event) && //If we updated
+-			(!p->jp_timer.pending || (uloop_timeout_remaining(&p->jp_timer) > (int)delay))) {
++			(!p->jp_timer.pending || (uloop_timeout_remaining64(&p->jp_timer) > (int)delay))) {
+ 		uloop_timeout_set(&p->jp_timer, delay);
+ 	}
+ 
+@@ -591,7 +591,7 @@ void pim_jp_update_G(pim p, group g, enu
+ 	}
+ 
+ 	if((g->jp_next == event) && //If we updated
+-			(!p->jp_timer.pending || (uloop_timeout_remaining(&p->jp_timer) > (int)delay))) {
++			(!p->jp_timer.pending || (uloop_timeout_remaining64(&p->jp_timer) > (int)delay))) {
+ 		uloop_timeout_set(&p->jp_timer, delay);
+ 	}
+ 
+--- a/src/pim_rpa.c
++++ b/src/pim_rpa.c
+@@ -422,7 +422,7 @@ static void pim_dfe_panic(pim_dfe dfe)
+ static int pim_dfe_timer_set(pim_dfe dfe, int delay, int cancel)
+ {
+ 	dfe->timer.cb = pim_dfe_timeout;
+-	if((cancel || !dfe->timer.pending || (uloop_timeout_remaining(&dfe->timer) > delay)) &&
++	if((cancel || !dfe->timer.pending || (uloop_timeout_remaining64(&dfe->timer) > delay)) &&
+ 			uloop_timeout_set(&dfe->timer, delay)) {
+ 		L_ERR("Can't set timeout for "DFE_L, DFE_LA(dfe));
+ 		pim_dfe_panic(dfe);
+@@ -646,7 +646,7 @@ static void pim_dfe_rcv_offer(pim_dfe df
+ 		case PIM_DFE_BACKOFF:
+ 			pim_dfe_set_state(dfe, PIM_DFE_WIN);
+ 			uloop_timeout_cancel(&dfe->timer);
+-			//no break;
++			fallthrough;
+ 		case PIM_DFE_WIN:
+ 			pim_dfe_send_next_winoffer(dfe, 0);
+ 			break;
+--- a/src/querier.c
++++ b/src/querier.c
+@@ -271,7 +271,7 @@ static void querier_iface_setup(iface i)
+ 	switch (i->querier.state) {
+ 	case QUERIER_IF_NONE:
+ 		querier_iface_init(i);
+-		//no break;
++		fallthrough;
+ 	case QUERIER_IF_INIT:
+ 	case QUERIER_IF_TRYING:
+ 		uloop_timeout_cancel(&i->querier.timeout);
+@@ -315,7 +315,7 @@ static void querier_iface_teardown(iface
+ 		case QUERIER_IF_UP:
+ 			groups_deinit(i);
+ 			mrib_detach_querier(&i->querier.mrib);
+-			//no break;
++			fallthrough;
+ 		case QUERIER_IF_TRYING:
+ 			L_INFO("Tearing down querier on %s", i->ifname);
+ 			uloop_timeout_cancel(&i->querier.timeout);

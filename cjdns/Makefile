@@ -81,7 +81,7 @@ define Build/Compile
 	CC="$(TARGET_CC_NOCACHE)" \
 	AR="$(TARGET_AR)" \
 	RANLIB="$(TARGET_RANLIB)" \
-	CFLAGS="$(TARGET_CFLAGS) -U_FORTIFY_SOURCE -Wno-error=array-bounds -Wno-error=stringop-overflow -Wno-error=stringop-overread" \
+	CFLAGS="$(TARGET_CFLAGS) -U_FORTIFY_SOURCE -Wno-error=array-bounds -Wno-error=stringop-overflow -Wno-error=stringop-overread -Wno-error=calloc-transposed-args" \
 	LDFLAGS="$(TARGET_LDFLAGS)" \
 	SYSTEM="linux" \
 	TARGET_ARCH="$(CONFIG_ARCH)" \

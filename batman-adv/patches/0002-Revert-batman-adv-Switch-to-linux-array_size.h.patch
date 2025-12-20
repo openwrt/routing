@@ -10,7 +10,7 @@ This reverts commit f33d7f724675544a36b24c77f8d4b95d41252ae2.
 
 --- a/compat-include/linux/array_size.h
 +++ /dev/null
-@@ -1,20 +0,0 @@
+@@ -1,23 +0,0 @@
 -/* SPDX-License-Identifier: GPL-2.0 */
 -/* Copyright (C) B.A.T.M.A.N. contributors:
 - *
@@ -24,7 +24,10 @@ This reverts commit f33d7f724675544a36b24c77f8d4b95d41252ae2.
 -#define _NET_BATMAN_ADV_COMPAT_LINUX_ARRAY_SIZE_H_
 -
 -#include <linux/version.h>
--#if LINUX_VERSION_IS_GEQ(6, 7, 0)
+-#if (LINUX_VERSION_IS_GEQ(5, 15, 197) && LINUX_VERSION_IS_LESS(5, 16, 0)) || \
+-    (LINUX_VERSION_IS_GEQ(6, 1, 159) && LINUX_VERSION_IS_LESS(6, 2, 0)) || \
+-    (LINUX_VERSION_IS_GEQ(6, 6, 118) && LINUX_VERSION_IS_LESS(6, 7, 0)) || \
+-    LINUX_VERSION_IS_GEQ(6, 7, 0)
 -#include_next <linux/array_size.h>
 -#else
 -#include <linux/kernel.h>

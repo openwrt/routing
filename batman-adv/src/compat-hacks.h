@@ -5,12 +5,6 @@
 #include <linux/version.h>	/* LINUX_VERSION_CODE */
 #include <linux/types.h>
 
-#if LINUX_VERSION_IS_LESS(6, 10, 0)
-
-#define __counted_by_be(member)
-
-#endif /* LINUX_VERSION_IS_LESS(6, 10, 0) */
-
 #if LINUX_VERSION_IS_LESS(6, 15, 0)
 #include <linux/crc32c.h>
 #endif /* LINUX_VERSION_IS_LESS(6, 15, 0) */

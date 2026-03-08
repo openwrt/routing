@@ -1,45 +1,44 @@
 # SPDX-License-Identifier: GPL-2.0-only
 #
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-# Copyright (C) 2022 - 2024 BlueWave Projects and Services  <licence@blue-wave.net>
+# Copyright (C) 2022 - 2026 BlueWave Projects and Services  <licence@blue-wave.net>
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mesh11sd
-PKG_VERSION:=6.2.0
+PKG_VERSION:=6.2.1
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
-PKG_LICENSE:=GPL-2.0-or-later
+PKG_LICENSE:=GPL-2.0-only
 PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/opennds/mesh11sd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=89117cc65c6661cc22829e248cc5ee7e9fce6a341d2dbe54bfd1a7d95f9cef31
+PKG_HASH:=8ee36f12873a4648edc0ba5ac991a93ae79c6cd48940d9b7e999bb845cf78471
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/mesh11sd
-  SUBMENU:=Captive Portals
+  SUBMENU:=Mesh
   SECTION:=net
   CATEGORY:=Network
-  TITLE:=Dynamic 802.11s Mesh Configuration Daemon
+  TITLE:=Dynamic 802.11s Mesh Management Daemon
   PKGARCH:=all
   URL:=https://github.com/opennds/mesh11sd
 endef
 
 define Package/mesh11sd/description
-  Mesh11sd is a package that autonomously configures and manages all aspects of an 802.11s mesh network and its connected nodes.
-  The package acts as a service daemon, dynamically setting mesh parameters across all nodes.
-  It is particularly useful for simplifying setup, reducing manual configuration, and improving network reliability.
-  Support for point to multi-point vxlan tunneling over the wireless backhaul is included as standard.
-  A guest/iot type network is auto-configured without requiring complex vlan setup.
-  If required, custom vlan trunking over the vxlan tunnel is supported.
-  Mesh-gate access point usage is collected in a central database on the mesh portal.
-  A command line interface is provided for reporting in json format output.
-  An optional Customer/Client Premises Equipment (CPE) mode, greatly simplifies rollout of community WISP projects.
+  Mesh11sd autonomously manages all aspects of an 802.11s mesh network.
+  It acts as a service daemon.
+  Mesh parameters are dynamically set across all nodes.
+  Point to multi-point vxlan tunneling is provided by default.
+  Custom vlan trunking over the vxlan tunnel is fully supported.
+  Cabled sections of backhaul are fully supported.
+  Access Point usage data is collected in a central database.
+  A command line interface is provided for many functions.
+  An optional Customer/Client Premises Equipment (CPE) mode is provided
+  CPE mode greatly simplifies rollout of community WISP projects.
 endef
 
 define Package/mesh11sd/install

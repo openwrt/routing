@@ -1,0 +1,27 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 8 Mar 2026 15:52:30 +0100
+Subject: batctl: tcpdump: Fix printing of usecs
+
+musl on a 32 bit system still uses a 64-bit value (long long) for the
+storage of microseconds. But the printf was evaluating this argument always
+only as long.
+
+During the print of this usec value, range of 0-999_999 is only possible.
+20 bit is therefore enough to store this range. For simplicity, just use an
+unsigned int.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=cc35fafeb49c709632eaf3089bbc87350ad7eef5
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -102,7 +102,8 @@ static int print_time(void)
+ 	tm = localtime(&tv.tv_sec);
+ 
+ 	if (tm)
+-		printf("%02d:%02d:%02d.%06ld ", tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec);
++		printf("%02d:%02d:%02d.%06u ", tm->tm_hour, tm->tm_min, tm->tm_sec,
++		       (unsigned int)tv.tv_usec);
+ 	else
+ 		printf("00:00:00.000000 ");
+ 

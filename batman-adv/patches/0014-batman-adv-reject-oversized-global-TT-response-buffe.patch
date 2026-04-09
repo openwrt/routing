@@ -1,0 +1,55 @@
+From: Ruide Cao <caoruide123@gmail.com>
+Date: Thu, 2 Apr 2026 23:12:31 +0800
+Subject: batman-adv: reject oversized global TT response buffers
+
+batadv_tt_prepare_tvlv_global_data() builds the allocation length for a
+global TT response in 16-bit temporaries. When a remote originator
+advertises a large enough global TT, the TT payload length plus the VLAN
+header offset can exceed 65535 and wrap before kmalloc().
+
+The full-table response path still uses the original TT payload length when
+it fills tt_change, so the wrapped allocation is too small and
+batadv_tt_prepare_tvlv_global_data() writes past the end of the heap object
+before the later packet-size check runs.
+
+Fix this by rejecting TT responses whose TVLV value length cannot fit in
+the 16-bit TVLV payload length field.
+
+Fixes: 21a57f6e7a3b ("batman-adv: make the TT CRC logic VLAN specific")
+Reported-by: Yifan Wu <yifanwucs@gmail.com>
+Reported-by: Juefei Pu <tomapufckgml@gmail.com>
+Co-developed-by: Yuan Tan <yuantan098@gmail.com>
+Signed-off-by: Yuan Tan <yuantan098@gmail.com>
+Suggested-by: Xin Liu <bird@lzu.edu.cn>
+Tested-by: Ren Wei <enjou1224z@gmail.com>
+Signed-off-by: Ruide Cao <caoruide123@gmail.com>
+Signed-off-by: Ren Wei <n05ec@lzu.edu.cn>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=6043a632dd0677b8720b3f416553b67eef40bca4
+
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -844,8 +844,8 @@ batadv_tt_prepare_tvlv_global_data(struc
+ {
+ 	u16 num_vlan = 0;
+ 	u16 num_entries = 0;
+-	u16 change_offset;
+-	u16 tvlv_len;
++	u16 tvlv_len = 0;
++	unsigned int change_offset;
+ 	struct batadv_tvlv_tt_vlan_data *tt_vlan;
+ 	struct batadv_orig_node_vlan *vlan;
+ 	u8 *tt_change_ptr;
+@@ -863,6 +863,11 @@ batadv_tt_prepare_tvlv_global_data(struc
+ 	if (*tt_len < 0)
+ 		*tt_len = batadv_tt_len(num_entries);
+ 
++	if (change_offset > U16_MAX || *tt_len > U16_MAX - change_offset) {
++		*tt_len = 0;
++		goto out;
++	}
++
+ 	tvlv_len = *tt_len;
+ 	tvlv_len += change_offset;
+ 

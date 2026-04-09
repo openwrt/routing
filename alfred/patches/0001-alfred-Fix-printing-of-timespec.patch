@@ -1,0 +1,44 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 8 Mar 2026 16:07:25 +0100
+Subject: alfred: Fix printing of timespec
+
+musl on a 32 bit system still uses a 64-bit value (long long) for the
+storage of tv_sec and tv_nsec. But the printf was evaluating these
+arguments always only as long.
+
+During the print of the nsec value, range of 0-999_999_999 is only
+possible. 30 bit is therefore enough to store this range. For simplicity,
+just use an unsigned int.
+
+The second value on the other hand can get up to 64 bit on a 64-bit-unix
+timestamp system. Just use long long for it to be on the safe side.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/alfred.git/commit/?id=b35a33063bf1f82fb43a689439c3f0bce631d712
+
+--- a/main.c
++++ b/main.c
+@@ -285,7 +285,9 @@ static struct globals *alfred_init(int a
+ 			sync_period = strtod(optarg, NULL);
+ 			globals->sync_period.tv_sec = (int)sync_period;
+ 			globals->sync_period.tv_nsec = (double)(sync_period - (int)sync_period) * 1e9;
+-			printf(" ** Setting sync interval to: %.9f seconds (%ld.%09ld)\n", sync_period, globals->sync_period.tv_sec, globals->sync_period.tv_nsec);
++			printf(" ** Setting sync interval to: %.9f seconds (%lld.%09u)\n", sync_period,
++			       (long long)globals->sync_period.tv_sec,
++			       (unsigned int)globals->sync_period.tv_nsec);
+ 			break;
+ 		case '4':
+ 			globals->ipv4mode = true;
+--- a/server.c
++++ b/server.c
+@@ -404,8 +404,8 @@ static void sync_period_timer(struct glo
+ 
+ 	if (globals->opmode == OPMODE_PRIMARY) {
+ 		/* we are a primary */
+-		printf("[%ld.%09ld] announce primary ...\n",
+-		       now.tv_sec, now.tv_nsec);
++		printf("[%lld.%09u] announce primary ...\n",
++		       (long long)now.tv_sec, (unsigned int)now.tv_nsec);
+ 		announce_primary(globals);
+ 		sync_data(globals);
+ 	} else {

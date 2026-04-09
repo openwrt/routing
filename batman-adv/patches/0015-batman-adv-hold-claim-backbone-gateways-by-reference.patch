@@ -1,0 +1,106 @@
+From: Haoze Xie <royenheart@gmail.com>
+Date: Mon, 6 Apr 2026 21:17:28 +0800
+Subject: batman-adv: hold claim backbone gateways by reference
+
+batadv_bla_add_claim() can replace claim->backbone_gw and drop the old
+gateway's last reference while readers still follow the pointer.
+
+The netlink claim dump path dereferences claim->backbone_gw->orig and
+takes claim->backbone_gw->crc_lock without pinning the underlying
+backbone gateway. batadv_bla_check_claim() still has the same naked
+pointer access pattern.
+
+Reuse batadv_bla_claim_get_backbone_gw() in both readers so they operate
+on a stable gateway reference until the read-side work is complete.
+This keeps the dump and claim-check paths aligned with the lifetime
+rules introduced for the other BLA claim readers.
+
+Fixes: a9ce0dc43e2c ("batman-adv: add basic bridge loop avoidance code")
+Fixes: 3b7a63606020 ("batman-adv: add B.A.T.M.A.N. Dump BLA claims via netlink")
+Reported-by: Yifan Wu <yifanwucs@gmail.com>
+Reported-by: Juefei Pu <tomapufckgml@gmail.com>
+Co-developed-by: Yuan Tan <yuantan098@gmail.com>
+Signed-off-by: Yuan Tan <yuantan098@gmail.com>
+Suggested-by: Xin Liu <bird@lzu.edu.cn>
+Signed-off-by: Haoze Xie <royenheart@gmail.com>
+Signed-off-by: Ao Zhou <n05ec@lzu.edu.cn>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=cca46b5556f2f69162e9721f1834f85c60ae83e8
+
+--- a/net/batman-adv/bridge_loop_avoidance.c
++++ b/net/batman-adv/bridge_loop_avoidance.c
+@@ -2132,6 +2132,7 @@ batadv_bla_claim_dump_entry(struct sk_bu
+ 			    struct batadv_bla_claim *claim)
+ {
+ 	const u8 *primary_addr = primary_if->net_dev->dev_addr;
++	struct batadv_bla_backbone_gw *backbone_gw;
+ 	u16 backbone_crc;
+ 	bool is_own;
+ 	void *hdr;
+@@ -2147,32 +2148,35 @@ batadv_bla_claim_dump_entry(struct sk_bu
+ 
+ 	genl_dump_check_consistent(cb, hdr);
+ 
+-	is_own = batadv_compare_eth(claim->backbone_gw->orig,
+-				    primary_addr);
++	backbone_gw = batadv_bla_claim_get_backbone_gw(claim);
++
++	is_own = batadv_compare_eth(backbone_gw->orig, primary_addr);
+ 
+-	spin_lock_bh(&claim->backbone_gw->crc_lock);
+-	backbone_crc = claim->backbone_gw->crc;
+-	spin_unlock_bh(&claim->backbone_gw->crc_lock);
++	spin_lock_bh(&backbone_gw->crc_lock);
++	backbone_crc = backbone_gw->crc;
++	spin_unlock_bh(&backbone_gw->crc_lock);
+ 
+ 	if (is_own)
+ 		if (nla_put_flag(msg, BATADV_ATTR_BLA_OWN)) {
+ 			genlmsg_cancel(msg, hdr);
+-			goto out;
++			goto put_backbone_gw;
+ 		}
+ 
+ 	if (nla_put(msg, BATADV_ATTR_BLA_ADDRESS, ETH_ALEN, claim->addr) ||
+ 	    nla_put_u16(msg, BATADV_ATTR_BLA_VID, claim->vid) ||
+ 	    nla_put(msg, BATADV_ATTR_BLA_BACKBONE, ETH_ALEN,
+-		    claim->backbone_gw->orig) ||
++		    backbone_gw->orig) ||
+ 	    nla_put_u16(msg, BATADV_ATTR_BLA_CRC,
+ 			backbone_crc)) {
+ 		genlmsg_cancel(msg, hdr);
+-		goto out;
++		goto put_backbone_gw;
+ 	}
+ 
+ 	genlmsg_end(msg, hdr);
+ 	ret = 0;
+ 
++put_backbone_gw:
++	batadv_backbone_gw_put(backbone_gw);
+ out:
+ 	return ret;
+ }
+@@ -2468,6 +2472,7 @@ out:
+ bool batadv_bla_check_claim(struct batadv_priv *bat_priv,
+ 			    u8 *addr, unsigned short vid)
+ {
++	struct batadv_bla_backbone_gw *backbone_gw;
+ 	struct batadv_bla_claim search_claim;
+ 	struct batadv_bla_claim *claim = NULL;
+ 	struct batadv_hard_iface *primary_if = NULL;
+@@ -2490,9 +2495,13 @@ bool batadv_bla_check_claim(struct batad
+ 	 * return false.
+ 	 */
+ 	if (claim) {
+-		if (!batadv_compare_eth(claim->backbone_gw->orig,
++		backbone_gw = batadv_bla_claim_get_backbone_gw(claim);
++
++		if (!batadv_compare_eth(backbone_gw->orig,
+ 					primary_if->net_dev->dev_addr))
+ 			ret = false;
++
++		batadv_backbone_gw_put(backbone_gw);
+ 		batadv_claim_put(claim);
+ 	}
+ 

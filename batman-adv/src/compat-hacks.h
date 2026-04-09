@@ -46,6 +46,19 @@ static inline u32 batadv_skb_crc32c(struct sk_buff *skb, int offset,
 
 #endif /* LINUX_VERSION_IS_LESS(6, 16, 0) || !defined(CONFIG_NET_CRC32C) */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 0, 0)
+
+#define kzalloc_obj(P, GFP) \
+	kzalloc(sizeof(P), GFP)
+
+#define kmalloc_obj(P, GFP) \
+	kmalloc(sizeof(P), GFP)
+
+#define kmalloc_objs(P, COUNT, GFP) \
+	kmalloc_array((COUNT), sizeof(P), GFP)
+
+#endif /* < KERNEL_VERSION(7, 0, 0) */
+
 /* <DECLARE_EWMA> */
 
 #include <linux/version.h>

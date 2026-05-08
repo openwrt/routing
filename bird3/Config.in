@@ -1,0 +1,80 @@
+if PACKAGE_bird3
+
+comment "Routing protocols"
+comment "Protocols mrt, pipe, and static are always included"
+
+config BIRD3_PROTO_BGP
+	bool "BGP"
+	default y
+	help
+	  Border Gateway Protocol. Required for internet routing,
+	  route servers, and route reflectors.
+
+config BIRD3_PROTO_RPKI
+	bool "RPKI"
+	default y
+	help
+	  Route Origin Validation via the Resource Public Key
+	  Infrastructure. Used alongside BGP to validate route origins.
+
+config BIRD3_PROTO_BFD
+	bool "BFD"
+	default y
+	help
+	  Bidirectional Forwarding Detection. Provides fast link failure
+	  detection for BGP and OSPF sessions.
+
+config BIRD3_PROTO_OSPF
+	bool "OSPF"
+	default y
+	help
+	  Open Shortest Path First (OSPFv2 for IPv4, OSPFv3 for IPv6).
+	  Common interior gateway protocol for enterprise and ISP networks.
+
+config BIRD3_PROTO_BABEL
+	bool "Babel"
+	default y
+	help
+	  Babel routing protocol. Distance-vector protocol suitable for
+	  mesh and wireless networks.
+
+config BIRD3_PROTO_RIP
+	bool "RIP"
+	default y
+	help
+	  Routing Information Protocol (RIPv2 for IPv4, RIPng for IPv6).
+
+config BIRD3_PROTO_RADV
+	bool "RAdv"
+	default y
+	help
+	  IPv6 Router Advertisements. Announces IPv6 prefixes and router
+	  information to hosts on the link.
+
+config BIRD3_PROTO_AGGREGATOR
+	bool "Aggregator"
+	default y
+	help
+	  Route aggregation protocol. Merges multiple routes into
+	  aggregate prefixes, typically used with BGP.
+
+config BIRD3_PROTO_BMP
+	bool "BMP"
+	default n
+	help
+	  BGP Monitoring Protocol. Streams BGP session state to a
+	  monitoring station. Rarely needed on embedded routers.
+
+config BIRD3_PROTO_L3VPN
+	bool "L3VPN"
+	default n
+	help
+	  MPLS/L3VPN support. Required for BGP-based MPLS VPNs.
+
+config BIRD3_PROTO_PERF
+	bool "PERF"
+	default n
+	help
+	  Performance testing protocol. Not intended for production use.
+
+endif

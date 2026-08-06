@@ -10,8 +10,6 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
  CMakeLists.txt | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 1c970d9..cfb878e 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -1,4 +1,4 @@
@@ -20,6 +18,3 @@ index 1c970d9..cfb878e 100644
  project(ohybridproxy C)
  
  set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
--- 
-2.51.0
-

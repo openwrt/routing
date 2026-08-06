@@ -32,13 +32,13 @@ PKG_LICENSE_FILES:=LICENSE
 include $(INCLUDE_DIR)/package.mk
 
 define Package/cjdns
-	SECTION:=net
-	CATEGORY:=Network
-	SUBMENU:=Routing and Redirection
-	TITLE:=Encrypted near-zero-conf mesh routing protocol
-	URL:=https://github.com/cjdelisle/cjdns
-	DEPENDS:=@!arc @IPV6 +kmod-tun +libnl-tiny +libpthread +librt \
-		+libuci-lua +lua-bencode +dkjson +luasocket +lua-sha2
+  SECTION:=net
+  CATEGORY:=Network
+  SUBMENU:=Routing and Redirection
+  TITLE:=Encrypted near-zero-conf mesh routing protocol
+  URL:=https://github.com/cjdelisle/cjdns
+  DEPENDS:=@!arc @IPV6 +kmod-tun +libnl-tiny +libpthread +librt \
+    +libuci-lua +lua-bencode +dkjson +luasocket +lua-sha2
 endef
 
 define Package/cjdns/description
@@ -49,12 +49,12 @@ define Package/cjdns/description
 endef
 
 define Package/cjdns-tests
-	SECTION:=net
-	CATEGORY:=Network
-	SUBMENU:=Routing and Redirection
-	TITLE:=cjdns test cases
-	URL:=https://github.com/cjdelisle/cjdns
-	DEPENDS:=+libpthread +librt @!arc
+  SECTION:=net
+  CATEGORY:=Network
+  SUBMENU:=Routing and Redirection
+  TITLE:=cjdns test cases
+  URL:=https://github.com/cjdelisle/cjdns
+  DEPENDS:=+libpthread +librt @!arc
 endef
 
 define Package/cjdns-test/description

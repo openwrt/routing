@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=alfred
 PKG_VERSION:=2026.2
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
@@ -31,7 +31,7 @@ define Package/alfred
   CATEGORY:=Network
   TITLE:=A.L.F.R.E.D. - Almighty Lightweight Fact Remote Exchange Daemon
   URL:=https://www.open-mesh.org/
-  DEPENDS:= +libc @IPV6 +libnl-tiny +librt \
+  DEPENDS:=@IPV6 +libnl-tiny +librt \
             +ALFRED_NEEDS_lua:lua \
             +ALFRED_NEEDS_libgps:libgps
 endef
@@ -54,6 +54,7 @@ endef
 
 define Package/alfred/conffiles
 /etc/config/alfred
+/etc/alfred/bat-hosts.lua
 endef
 
 define Package/alfred/config
@@ -64,21 +65,24 @@ MAKE_FLAGS += \
 	CONFIG_ALFRED_VIS=$(if $(CONFIG_PACKAGE_ALFRED_VIS),y,n) \
 	CONFIG_ALFRED_GPSD=$(if $(CONFIG_PACKAGE_ALFRED_GPSD),y,n) \
 	CONFIG_ALFRED_CAPABILITIES=n \
-        LIBNL_NAME="libnl-tiny" \
-        LIBNL_GENL_NAME="libnl-tiny" \
-        REVISION="$(PKG_VERSION)-openwrt-$(PKG_RELEASE)"
+	LIBNL_NAME="libnl-tiny" \
+	LIBNL_GENL_NAME="libnl-tiny" \
+	REVISION="$(PKG_VERSION)-openwrt-$(PKG_RELEASE)"
 
 define Package/alfred/install
 	$(INSTALL_DIR) $(1)/usr/sbin
-	cp -fpR  $(PKG_BUILD_DIR)/alfred $(1)/usr/sbin/
-	[ "x$(CONFIG_PACKAGE_ALFRED_VIS)" == "xy" ] && cp -fpR  $(PKG_BUILD_DIR)/vis/batadv-vis $(1)/usr/sbin/ ; true
-	[ "x$(CONFIG_PACKAGE_ALFRED_GPSD)" == "xy" ] && cp -fpR  $(PKG_BUILD_DIR)/gpsd/alfred-gpsd $(1)/usr/sbin/ ; true
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/alfred $(1)/usr/sbin/
+	$(if $(CONFIG_PACKAGE_ALFRED_VIS), \
+		$(INSTALL_BIN) $(PKG_BUILD_DIR)/vis/batadv-vis $(1)/usr/sbin/)
+	$(if $(CONFIG_PACKAGE_ALFRED_GPSD), \
+		$(INSTALL_BIN) $(PKG_BUILD_DIR)/gpsd/alfred-gpsd $(1)/usr/sbin/)
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/alfred.init $(1)/etc/init.d/alfred
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/alfred.config $(1)/etc/config/alfred
 	$(INSTALL_DIR) $(1)/etc/alfred
-	[ "x$(CONFIG_PACKAGE_ALFRED_BATHOSTS)" == "xy" ] && $(INSTALL_BIN) ./files/bat-hosts.lua $(1)/etc/alfred/bat-hosts.lua ; true
+	$(if $(CONFIG_PACKAGE_ALFRED_BATHOSTS), \
+		$(INSTALL_BIN) ./files/bat-hosts.lua $(1)/etc/alfred/bat-hosts.lua)
 endef
 
 $(eval $(call BuildPackage,alfred))

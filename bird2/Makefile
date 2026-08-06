@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird2
 PKG_VERSION:=2.19.2
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://bird.nic.cz/download/
@@ -100,8 +100,6 @@ CONFIGURE_ARGS += --disable-libssh
 
 define Package/bird2/conffiles
 /etc/bird.conf
-/etc/bird4.conf
-/etc/bird6.conf
 endef
 
 define Package/bird2/install

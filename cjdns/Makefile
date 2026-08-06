@@ -18,7 +18,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cjdns
 PKG_VERSION:=21.1
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/cjdelisle/cjdns/tar.gz/$(PKG_NAME)-v$(PKG_VERSION)?
@@ -64,7 +64,7 @@ endef
 define Build/Configure
 endef
 
-PKG_DO_VARS:=CJDNS_RELEASE_VERSION=$(PKG_SOURCE_VERSION)
+PKG_DO_VARS:=CJDNS_RELEASE_VERSION=$(PKG_VERSION)
 
 ifneq ($(CONFIG_KERNEL_SECCOMP_FILTER),y)
 PKG_DO_VARS+= Seccomp_NO=1

@@ -107,7 +107,7 @@ endef
 
 define Package/bmx7-uci-config/conffiles
 /etc/config/bmx7
-/etc/bmx7
+/etc/bmx7/
 endef
 
 define Package/bmx7-uci-config/install

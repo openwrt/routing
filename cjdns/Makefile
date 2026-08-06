@@ -37,7 +37,7 @@ define Package/cjdns
   SUBMENU:=Routing and Redirection
   TITLE:=Encrypted near-zero-conf mesh routing protocol
   URL:=https://github.com/cjdelisle/cjdns
-  DEPENDS:=@!arc @IPV6 +kmod-tun +libnl-tiny +libpthread +librt \
+  DEPENDS:=@!arc @!riscv64 @IPV6 +kmod-tun +libnl-tiny +libpthread +librt \
     +libuci-lua +lua-bencode +dkjson +luasocket +lua-sha2
 endef
 
@@ -54,7 +54,7 @@ define Package/cjdns-tests
   SUBMENU:=Routing and Redirection
   TITLE:=cjdns test cases
   URL:=https://github.com/cjdelisle/cjdns
-  DEPENDS:=+libpthread +librt @!arc
+  DEPENDS:=+libpthread +librt @!arc @!riscv64
 endef
 
 define Package/cjdns-test/description

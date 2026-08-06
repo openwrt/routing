@@ -17,6 +17,7 @@ PKG_MIRROR_HASH:=e05d2724e6c76233148ce460b9611bafccff2114904542fa3b5caf75dc1c4e0
 PKG_MAINTAINER:=Nick Hainke <vincent@systemli.org>
 PKG_BUILD_PARALLEL:=0
 PKG_LICENSE:=BSD-3-Clause
+PKG_LICENSE_FILES:=license.txt
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -26,9 +27,8 @@ define Package/olsrd/template
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
-  MAINTAINER:=Saverio Proto <zioproto@gmail.com>
   TITLE:=OLSR (Optimized Link State Routing) daemon
-  URL:=http://www.olsr.org/
+  URL:=https://www.olsr.org/
 endef
 
 define Package/olsrd

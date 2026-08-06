@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bmx7
 PKG_VERSION:=2024.06.11
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
@@ -30,7 +30,6 @@ MAKE_ARGS += EXTRA_CFLAGS="$(TARGET_CFLAGS) \
 				-DBMX7_LIB_IWINFO" \
 				EXTRA_LDFLAGS="$(TARGET_LDFLAGS) \
 			 	-L$(STAGING_DIR)/usr/lib -liwinfo" \
-				GIT_REV="$(PKG_REV)" \
 				CC="$(TARGET_CC)" \
 				INSTALL_DIR="$(PKG_INSTALL_DIR)" \
 				build_all
@@ -98,7 +97,7 @@ define Package/bmx7-table
 endef
 
 define Package/bmx7/install
-	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/config $(1)/etc/init.d
+	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(MAKE_PATH)/bmx7 $(1)/usr/sbin/bmx7
 endef
 

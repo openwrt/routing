@@ -102,7 +102,7 @@ define Package/bmx7/install
 endef
 
 define Build/Compile
-       $(MAKE) -C $(PKG_BUILD_DIR)/$(MAKE_PATH) $(MAKE_ARGS)
+	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR)/$(MAKE_PATH) $(MAKE_ARGS)
 endef
 
 define Package/bmx7-uci-config/conffiles

@@ -4,9 +4,11 @@
 
 case "$PKG_NAME" in
 naywatch)
-	# naywatch is a watchdog shell script which does not provide any
-	# option to report its version. It must not be executed during
-	# the CI runtime tests, since it may trigger a reboot.
+	# naywatch takes positional arguments (check interval, watchdog
+	# timeout, ...), not options, so a probe flag ends up as the
+	# check interval and the script enters its monitoring loop
+	# instead of reporting anything, until the probe timeout kills
+	# it.
 	exit 0
 	;;
 

@@ -45,8 +45,7 @@ endef
 
 MAKE_FLAGS+= \
 	CFLAGS="$(TARGET_CFLAGS)" \
-	LDLIBS="" \
-	LDLIBS+="-lubus -lubox"
+	LDLIBS="-lubus -lubox"
 
 define Package/babeld/install
 	$(INSTALL_DIR) $(1)/usr/sbin

@@ -39,17 +39,20 @@ boot()
 start_service() {
 	olsrd_generate_config $OLSRD
 
-	procd_open_instance
-
 	config_load olsrd6
 	local _respawn_threshold
 	local _respawn_timeout
 	local _respawn_retry
+	local _ignore
 
 	config_get _respawn_threshold procd _respawn_threshold 3600
 	config_get _respawn_timeout procd respawn_timeout 15
 	config_get _respawn_retry procd respawn_retry 0
+	config_get_bool _ignore olsrd ignore 0
 
+	[ $_ignore -ne 0 ] && return
+
+	procd_open_instance
 	procd_set_param command "$BIN"
 	procd_append_param command -f ${CONF}
 	procd_append_param command -nofork

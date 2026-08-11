@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=babeld
 PKG_VERSION:=1.13.1
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://www.irif.fr/~jch/software/files/
@@ -45,8 +45,7 @@ endef
 
 MAKE_FLAGS+= \
 	CFLAGS="$(TARGET_CFLAGS)" \
-	LDLIBS="" \
-	LDLIBS+="-lubus -lubox"
+	LDLIBS="-lubus -lubox"
 
 define Package/babeld/install
 	$(INSTALL_DIR) $(1)/usr/sbin

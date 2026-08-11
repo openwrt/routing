@@ -4,12 +4,11 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batctl
 PKG_VERSION:=2025.4
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
 PKG_HASH:=566aa4fd74355e8d5dd2bd21c25e98cc068e77fd08e19f80b8e2b5edde7c8e65
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
 PKG_LICENSE:=GPL-2.0-only ISC MIT
@@ -29,7 +28,7 @@ define Package/batctl/Default
 endef
 
 define Package/batctl/description
-  batctl is a more intuitive managment utility for B.A.T.M.A.N.-Advanced.
+  batctl is a more intuitive management utility for B.A.T.M.A.N.-Advanced.
   It is an easier method for configuring batman-adv and provides some
   additional tools for debugging as well. This package builds
   version $(PKG_VERSION) of the user space utility.
@@ -72,11 +71,11 @@ $(Package/batctl/description)
 endef
 
 MAKE_VARS += \
-        LIBNL_NAME="libnl-tiny" \
-        LIBNL_GENL_NAME="libnl-tiny"
+	LIBNL_NAME="libnl-tiny" \
+	LIBNL_GENL_NAME="libnl-tiny"
 
 MAKE_FLAGS += \
-        REVISION="$(PKG_VERSION)-openwrt-$(PKG_RELEASE)"
+	REVISION="$(PKG_VERSION)-openwrt-$(PKG_RELEASE)"
 
 config-n := \
 	aggregation \
@@ -214,17 +213,9 @@ config-y := \
 
 endif
 
-define ConfigVars
-$(subst $(space),,$(foreach opt,$(config-$(1)),CONFIG_$(opt)=$(1)
-))
-endef
-
-define batctl_config
-$(call ConfigVars,n)$(call ConfigVars,y)
-endef
-$(eval $(call shexport,batctl_config))
-
-MAKE_FLAGS += $$$$$(call shvar,batctl_config)
+MAKE_FLAGS += \
+	$(patsubst %,CONFIG_%=n,$(config-n)) \
+	$(patsubst %,CONFIG_%=y,$(config-y))
 
 define Package/batctl-tiny/install
 	$(INSTALL_DIR) $(1)/usr/libexec

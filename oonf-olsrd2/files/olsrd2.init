@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+
+START=82
+DAEMON='olsrd2'
+
+[ -n "$IPKG_INSTROOT" ] || {
+        . /lib/functions/oonf_init.sh
+
+        extra_command "running" "Check if service is running"
+        extra_command "status" "Service status"
+}

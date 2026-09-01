@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 12:24:05 +0200
+Subject: batctl: genl_json: drop leftover network coding log level
+
+Support for the network coding feature was removed from batctl but missed
+in the genl_json loglevel output.
+
+Fixes: 882ab0d91468 ("batctl: remove support for network coding")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=96b0c7dc42e8cf4a4fecaa57ad0aa94598aa3ceb
+
+--- a/genl_json.c
++++ b/genl_json.c
+@@ -219,8 +219,6 @@ static void nljson_print_loglevel(struct
+ 	       val & BIT(3) ? "true" : "false");
+ 	printf("\"dat\": %s,",
+ 	       val & BIT(4) ? "true" : "false");
+-	printf("\"nc\": %s,",
+-	       val & BIT(5) ? "true" : "false");
+ 	printf("\"mcast\": %s,",
+ 	       val & BIT(6) ? "true" : "false");
+ 	printf("\"tp\": %s,",

@@ -1,0 +1,66 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 08:34:46 +0200
+Subject: batctl: icmp_helper: attach socket filter before packets can arrive
+
+The raw packet socket is created with ETH_P_ALL as protocol, which
+registers the ethernet packet hook immediately. Frames from every interface
+start queuing the moment the socket exists. The BPF filter that restricts
+the socket to batman-adv ICMP packets with our uid is only attached after
+bind(). Frames received in the window between socket() and SO_ATTACH_FILTER
+are therefore queued unfiltered.
+
+Delay the start of the capture by:
+
+* create the socket with protocol 0 (no capture)
+* attach the filter while the queue is guaranteed empty
+* then bind() with sll_protocol = htons(ETH_P_ALL)
+
+Only after the bind, packets will be captured.
+
+Fixes: 4bd751eed4dc ("batctl: Implement non-routing batadv_icmp in userspace")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=3e85d01cdf1c4dbc433e4d8cc7cbaf19501b5a19
+
+--- a/icmp_helper.c
++++ b/icmp_helper.c
+@@ -175,7 +175,12 @@ static int icmp_interface_add(const char
+ 	strncpy(iface->name, ifname, IFNAMSIZ);
+ 	iface->name[sizeof(iface->name) - 1] = '\0';
+ 
+-	iface->sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
++	/* create the socket with protocol 0 so the kernel does not start
++	 * capturing yet - otherwise frames would queue unfiltered between
++	 * socket() and SO_ATTACH_FILTER. Delivery only starts at bind() below,
++	 * by which time the filter is already installed.
++	 */
++	iface->sock = socket(PF_PACKET, SOCK_RAW, 0);
+ 	if (iface->sock < 0) {
+ 		perror("Error - can't create raw socket");
+ 		ret = -errno;
+@@ -193,6 +198,12 @@ static int icmp_interface_add(const char
+ 		goto close_sock;
+ 	}
+ 
++	ret = icmp_interface_filter(iface->sock, uid);
++	if (ret < 0) {
++		fprintf(stderr, "Error - can't add filter to raw socket: %s\n", strerror(-ret));
++		goto close_sock;
++	}
++
+ 	memset(&sll, 0, sizeof(sll));
+ 	sll.sll_family = AF_PACKET;
+ 	sll.sll_protocol = htons(ETH_P_ALL);
+@@ -206,12 +217,6 @@ static int icmp_interface_add(const char
+ 		goto close_sock;
+ 	}
+ 
+-	ret = icmp_interface_filter(iface->sock, uid);
+-	if (ret < 0) {
+-		fprintf(stderr, "Error - can't add filter to raw socket: %s\n", strerror(-ret));
+-		goto close_sock;
+-	}
+-
+ 	list_add(&iface->list, &interface_list);
+ 
+ 	return 0;

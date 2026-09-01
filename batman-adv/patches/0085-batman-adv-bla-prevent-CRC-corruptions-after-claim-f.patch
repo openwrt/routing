@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 5 Jul 2026 22:21:50 +0200
+Subject: batman-adv: bla: prevent CRC corruptions after claim flush
+
+When batadv_bla_del_backbone_claims() tried to remove all claims of a
+backbone, it sets the CRC to 0. It assumes that the it had the last
+reference of the claims because batadv_claim_release() (which runs after
+the last reference was released), is XORing the crc16 of the claim address
+with the backbone CRC.
+
+If there would be a parallel holder of any of these references, it could
+happen that the backbone CRC is (0 ^ crc16(delayed_released_claim)). Which
+is the wrong starting point for the new claims it may receive when the
+remote answers the claim request from batadv_bla_send_request().
+
+This reinitializations can be completely dropped to avoid this problem.
+batadv_claim_release() will take care of fixing the backbone CRC.
+
+Fixes: a9ce0dc43e2c ("batman-adv: add basic bridge loop avoidance code")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=76e6026f15c9f4aa9ad1f83e122fac6446fc1132
+
+--- a/net/batman-adv/bridge_loop_avoidance.c
++++ b/net/batman-adv/bridge_loop_avoidance.c
+@@ -324,11 +324,6 @@ batadv_bla_del_backbone_claims(struct ba
+ 		}
+ 		spin_unlock_bh(list_lock);
+ 	}
+-
+-	/* all claims gone, initialize CRC */
+-	spin_lock_bh(&backbone_gw->crc_lock);
+-	backbone_gw->crc = BATADV_BLA_CRC_INIT;
+-	spin_unlock_bh(&backbone_gw->crc_lock);
+ }
+ 
+ /**

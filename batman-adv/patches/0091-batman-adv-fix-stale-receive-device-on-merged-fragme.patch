@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Zhiling Zou <zhilinz@nebusec.ai>
+Date: Fri, 31 Jul 2026 11:18:49 +0800
+Subject: batman-adv: fix stale receive device on merged fragments
+
+Fragment reassembly reuses the skb from the highest-numbered buffered
+fragment as the merged packet. When that fragment was received on a hard
+interface which is deleted before the chain completes, the merged skb can
+re-enter the receive path with a stale skb->dev and skb_iif.
+
+batadv_batman_skb_recv() passes such merged packets through the normal
+receive handlers again. DAT and bridge loop avoidance both derive the ARP
+header length from skb->dev, so they can dereference the freed net_device
+before the packet reaches the local mesh interface.
+
+Refresh the receive device metadata from the current receive device before
+running the packet handlers. This keeps internally reinjected merged
+fragments consistent with the normal receive path after hard interface
+teardown.
+
+Fixes: 9b3eab61754d ("batman-adv: Receive fragmented packets and merge")
+Reported-by: Vega <vega@nebusec.ai>
+Signed-off-by: Zhiling Zou <zhilinz@nebusec.ai>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=dc92cfae652a109fca4d0db084328395ce88d38e
+
+--- a/net/batman-adv/main.c
++++ b/net/batman-adv/main.c
+@@ -436,6 +436,10 @@ int batadv_batman_skb_recv(struct sk_buf
+ 	if (!skb)
+ 		goto err_put;
+ 
++	/* Merged fragments re-enter here with reused skb metadata. */
++	skb->dev = dev;
++	skb->skb_iif = dev->ifindex;
++
+ 	/* packet should hold at least type and version */
+ 	if (unlikely(!pskb_may_pull(skb, 2)))
+ 		goto err_free;

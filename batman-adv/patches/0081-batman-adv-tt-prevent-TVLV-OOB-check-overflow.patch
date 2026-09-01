@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 22:19:01 +0200
+Subject: batman-adv: tt: prevent TVLV OOB check overflow
+
+A TT unicast TVLV contains the number of VLANs stored in it. This number is
+an u16 and gets multiplied by the size of the struct
+batadv_tvlv_tt_vlan_data (8 bytes). The size can therefore overflow the u16
+used to store the tt_vlan_len. All additional safety checks to prevent
+out-of-bounds access of the TVLV buffer are invalid due to this overflow.
+
+Using size_t prevents this overflow and ensures that the safety checks
+compare against the actual buffer requirements.
+
+Fixes: 21a57f6e7a3b ("batman-adv: make the TT CRC logic VLAN specific")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=f11771cdce654b3b5e17d0fc08fb32c0d6fa6a39
+
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -4065,7 +4065,8 @@ static int batadv_tt_tvlv_unicast_handle
+ 					     u16 tvlv_value_len)
+ {
+ 	struct batadv_tvlv_tt_data *tt_data;
+-	u16 tt_vlan_len, tt_num_entries;
++	u16 tt_num_entries;
++	size_t tt_vlan_len;
+ 	char tt_flag;
+ 	bool ret;
+ 

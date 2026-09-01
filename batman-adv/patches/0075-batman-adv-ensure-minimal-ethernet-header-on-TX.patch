@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 11:34:54 +0200
+Subject: batman-adv: ensure minimal ethernet header on TX
+
+As documented in commit 8bd67ebb50c0 ("net: bridge: xmit: make sure we have
+at least eth header len bytes"), it is possible by for a local user with
+eBPF TC hook access to attach a tc filter which truncates the packet and
+redirects to an batadv interface. But the code assumes that at least
+ETH_HLEN bytes are available and thus might read outside of the available
+buffer.
+
+The batadv_interface_tx() must therefore always check itself if enough data
+is available for the ethernet header and don't rely on min_header_len.
+
+Fixes: 094a751463a9 ("route outgoing traffic")
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=c54eb3034180f1e5230da89cdb6885849d93c397
+
+--- a/net/batman-adv/mesh-interface.c
++++ b/net/batman-adv/mesh-interface.c
+@@ -193,6 +193,9 @@ static netdev_tx_t batadv_interface_tx(s
+ 	if (atomic_read(&bat_priv->mesh_state) != BATADV_MESH_ACTIVE)
+ 		goto dropped;
+ 
++	if (!pskb_may_pull(skb, ETH_HLEN))
++		goto dropped;
++
+ 	/* reset control block to avoid left overs from previous users */
+ 	memset(skb->cb, 0, sizeof(struct batadv_skb_cb));
+ 

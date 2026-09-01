@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Mon, 6 Jul 2026 19:46:37 +0200
+Subject: batman-adv: dat: avoid unaligned fault in IP extraction
+
+Independent of the alignment of the ARP packet in the SKB, either the
+batadv_arp_ip_src or the batadv_arp_ip_dst will have an unaligned access
+(on HW without native unaligned read support).
+
+Use get_unaligned() to handle this properly on all architectures.
+
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Fixes: 0591c25abca9 ("batman-adv: Distributed ARP Table - add ARP parsing functions")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=2ba19c19805d21753cba095cdad3a32b0d49971b
+
+--- a/net/batman-adv/distributed-arp-table.c
++++ b/net/batman-adv/distributed-arp-table.c
+@@ -249,7 +249,10 @@ static u8 *batadv_arp_hw_src(struct sk_b
+  */
+ static __be32 batadv_arp_ip_src(struct sk_buff *skb, int hdr_size)
+ {
+-	return *(__force __be32 *)(batadv_arp_hw_src(skb, hdr_size) + ETH_ALEN);
++	u8 *src = batadv_arp_hw_src(skb, hdr_size) + ETH_ALEN;
++	__be32 *ip = (__force __be32 *)src;
++
++	return get_unaligned(ip);
+ }
+ 
+ /**
+@@ -274,8 +277,9 @@ static u8 *batadv_arp_hw_dst(struct sk_b
+ static __be32 batadv_arp_ip_dst(struct sk_buff *skb, int hdr_size)
+ {
+ 	u8 *dst = batadv_arp_hw_src(skb, hdr_size) + ETH_ALEN * 2 + 4;
++	__be32 *ip = (__force __be32 *)dst;
+ 
+-	return *(__force __be32 *)dst;
++	return get_unaligned(ip);
+ }
+ 
+ /**

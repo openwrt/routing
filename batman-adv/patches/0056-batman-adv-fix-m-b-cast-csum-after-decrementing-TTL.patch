@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Wed, 10 Jun 2026 09:52:22 +0200
 Subject: batman-adv: fix (m|b)cast csum after decrementing TTL

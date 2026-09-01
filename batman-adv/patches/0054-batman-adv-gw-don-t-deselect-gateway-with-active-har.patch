@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sun, 7 Jun 2026 14:34:28 +0200
 Subject: batman-adv: gw: don't deselect gateway with active hardif

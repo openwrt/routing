@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Tue, 10 Dec 2024 22:31:33 +0100
 Subject: Revert "batman-adv: move asm/unaligned.h to linux/unaligned.h"

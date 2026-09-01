@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sat, 2 May 2026 19:47:11 +0200
 Subject: batman-adv: tt: fix TOCTOU race for reported vlans

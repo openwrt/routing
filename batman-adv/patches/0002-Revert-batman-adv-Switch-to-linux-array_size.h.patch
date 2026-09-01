@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 2 Feb 2024 22:49:48 +0100
 Subject: Revert "batman-adv: Switch to linux/array_size.h"

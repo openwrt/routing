@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sun, 3 Aug 2025 08:49:12 +0200
 Subject: batctl: Avoid memory leak in print_routing_algos

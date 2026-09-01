@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sun, 28 Jun 2026 08:35:35 +0200
 Subject: batman-adv: access unicast_ttvn skb->data only after skb realloc

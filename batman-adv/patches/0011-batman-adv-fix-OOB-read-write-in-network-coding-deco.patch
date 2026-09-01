@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Stanislav Fort <stanislav.fort@aisle.com>
 Date: Sun, 31 Aug 2025 16:56:23 +0200
 Subject: batman-adv: fix OOB read/write in network-coding decode

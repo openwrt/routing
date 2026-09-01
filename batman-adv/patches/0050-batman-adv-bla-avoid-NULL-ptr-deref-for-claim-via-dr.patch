@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Tue, 19 May 2026 09:23:49 +0200
 Subject: batman-adv: bla: avoid NULL-ptr deref for claim via dropped interface

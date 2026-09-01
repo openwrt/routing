@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Wed, 22 Jan 2025 21:51:20 +0100
 Subject: batman-adv: Ignore neighbor throughput metrics in error case

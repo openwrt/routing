@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Fri, 12 Jun 2026 13:44:07 +0200
 Subject: batman-adv: tt: don't merge change entries with different VIDs

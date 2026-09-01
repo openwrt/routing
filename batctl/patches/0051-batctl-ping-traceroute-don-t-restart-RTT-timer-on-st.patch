@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:16:41 +0200
+Subject: batctl: ping/traceroute: don't restart RTT timer on stray replies
+
+When a reply with an unexpected seqno arrives (for example a late answer to
+an already timed out request), ping and traceroute jump back to read_packet
+to keep waiting for the real answer. The jump target also re-runs
+start_timer(), so the reported round trip time only measures from the
+arrival of the stray packet instead of from the transmission of the
+request, underreporting the RTT and polluting the min/avg/max statistics.
+
+Start the timer (and initialize the timeout in traceroute) once per
+transmitted request. At the same time, let select in icmp_interface_read()
+the wait time instead of restarting it each time.
+
+Fixes: 2ecb2c8b060b ("batctl: tr / ping - ignore packets with wrong sequence number")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=8983dc388306906afb1b951b11fb9b6395feed8e
+
+--- a/ping.c
++++ b/ping.c
+@@ -209,9 +209,9 @@ static int ping(struct state *state, int
+ 
+ 		packets_out++;
+ 
+-read_packet:
+ 		start_timer();
+ 
++read_packet:
+ 		read_len = icmp_interface_read((struct batadv_icmp_header *)&icmp_packet_in,
+ 					       packet_len, &tv);
+ 
+--- a/traceroute.c
++++ b/traceroute.c
+@@ -137,12 +137,12 @@ static int traceroute(struct state *stat
+ 				continue;
+ 			}
+ 
+-read_packet:
+ 			start_timer();
+ 
+ 			tv.tv_sec = 2;
+ 			tv.tv_usec = 0;
+ 
++read_packet:
+ 			read_len = icmp_interface_read((struct batadv_icmp_header *)&icmp_packet_in,
+ 						       sizeof(icmp_packet_in), &tv);
+ 			if (read_len <= 0)

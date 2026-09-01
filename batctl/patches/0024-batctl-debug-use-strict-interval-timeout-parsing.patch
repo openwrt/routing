@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 10:16:03 +0200
+Subject: batctl: debug: use strict interval/timeout parsing
+
+The sscanf() function does not only return 0 when the value could not be
+parsed from the string. Also EOF is a potential return value. To make the
+check more strict, just compare the returned value with the expected number
+of scanned/parsed items.
+
+Fixes: 302a41a73915 ("batctl: Add timeout filtering option for originators")
+Fixes: e4a7b7733faf ("batctl: Add an optional interval for watch-mode")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=df40586930d6c864bde47b1cb42dbcf607f625bd
+
+--- a/debug.c
++++ b/debug.c
+@@ -67,7 +67,7 @@ int handle_debug_table(struct state *sta
+ 			if (!optarg)
+ 				break;
+ 
+-			if (!sscanf(optarg, "%f", &watch_interval)) {
++			if (sscanf(optarg, "%f", &watch_interval) != 1) {
+ 				fprintf(stderr,
+ 					"Error - provided argument of '-%c' is not a number\n",
+ 					optchar);
+@@ -82,7 +82,7 @@ int handle_debug_table(struct state *sta
+ 			}
+ 
+ 			read_opt |= NO_OLD_ORIGS;
+-			if (!sscanf(optarg, "%f", &orig_timeout)) {
++			if (sscanf(optarg, "%f", &orig_timeout) != 1) {
+ 				fprintf(stderr,
+ 					"Error - provided argument of '-%c' is not a number\n",
+ 					optchar);

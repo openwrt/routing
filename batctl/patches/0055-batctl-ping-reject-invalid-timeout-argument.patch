@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 13:55:32 +0200
+Subject: batctl: ping: reject invalid timeout argument
+
+The -t option parses its argument with strtol and defines a lower limit of
+1. But it ignores any invalid parameter silently.
+
+Use the same strto* validation as the rest of batctl and print a user
+readable error in case of an parsing error.
+
+Fixes: 2474249a6312 ("[batctl] ping utility updated to latest batman adv")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=8e57d0baeb34016165b6690298e7e06006f8fea9
+
+--- a/ping.c
++++ b/ping.c
+@@ -128,9 +128,16 @@ static int ping(struct state *state, int
+ 			loop_interval.tv_nsec = (long)(fractional_part * 1000000000l);
+ 			break;
+ 		case 't':
+-			timeout = strtol(optarg, NULL, 10);
+-			if (timeout < 1)
+-				timeout = 1;
++			tmp = strtol(optarg, &endptr, 10);
++			if (!endptr || *endptr != '\0' || endptr == optarg ||
++			    tmp < 1 || tmp > INT_MAX) {
++				fprintf(stderr,
++					"Error - the supplied timeout is invalid: %s\n",
++					optarg);
++				ping_usage();
++				return EXIT_FAILURE;
++			}
++			timeout = tmp;
+ 			break;
+ 		case 'R':
+ 			rr = 1;

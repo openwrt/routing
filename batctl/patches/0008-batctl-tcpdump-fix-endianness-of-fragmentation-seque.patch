@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 14:00:21 +0200
+Subject: batctl: tcpdump: fix endianness of fragmentation sequence number
+
+The kernel returns the unicast fragmentation packet in network (big endian)
+byte order. But the system might be little endian. In this case, the bytes
+must be first reordered before they can be printed.
+
+Fixes: 30f8fe9c105a ("batctl: tcpdump: Add support for unicast fragmentation")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=ae2632b8cf4b1881ad7fe87f72e93f85f482de03
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1050,7 +1050,7 @@ static void dump_batman_ucast_frag(unsig
+ 	printf("%s: UCAST FRAG, seqno %d, no %d, ttl %hhu\n",
+ 	       get_name_by_macaddr((struct ether_addr *)frag_packet->dest,
+ 				   read_opt),
+-	       frag_packet->seqno, frag_packet->no, frag_packet->ttl);
++	       ntohs(frag_packet->seqno), frag_packet->no, frag_packet->ttl);
+ }
+ 
+ static void dump_batman_bcast(unsigned char *packet_buff, ssize_t buff_len,

@@ -1,0 +1,87 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 04:50:36 +0200
+Subject: batctl: tpmeter: don't cancel test from the signal handler
+
+tp_sig_handler() calls fflush() and tp_meter_stop() directly from signal
+context. tp_meter_stop() allocates a netlink message with nlmsg_alloc() and
+sends it via nl_send_auto_complete() - none of these functions (nor fflush)
+are async-signal-safe.
+
+Let the signal handler only set a flag. tp_recv_result() now waits for the
+result notification with poll(), which is not restarted when a signal
+arrives, and sends the CANCEL request from the main flow before continuing
+to wait for the (then canceled) test result.
+
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=a7aa6484b2a3c0fcd44d2307eddcfd712336e8d7
+
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -17,6 +17,7 @@
+ #include <inttypes.h>
+ #include <limits.h>
+ #include <net/if.h>
++#include <poll.h>
+ #include <stdbool.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -34,6 +35,7 @@
+ 
+ static struct ether_addr *dst_mac;
+ static struct state *tp_state;
++static volatile sig_atomic_t tp_aborted;
+ 
+ struct tp_result {
+ 	int error;
+@@ -194,8 +196,15 @@ static int no_seq_check(struct nl_msg *m
+ 	return NL_OK;
+ }
+ 
++static int tp_meter_stop(struct state *state, struct ether_addr *dst_mac);
++
+ static int tp_recv_result(struct nl_sock *sock, struct tp_result *result)
+ {
++	struct pollfd pfd = {
++		.fd = nl_socket_get_fd(sock),
++		.events = POLLIN,
++	};
++	bool cancel_sent = false;
+ 	struct nl_cb *cb;
+ 	int err = 0;
+ 	int ret;
+@@ -207,6 +216,23 @@ static int tp_recv_result(struct nl_sock
+ 	nl_cb_err(cb, NL_CB_CUSTOM, tpmeter_nl_print_error, result);
+ 
+ 	while (result->error == 0 && !result->found) {
++		if (tp_aborted && !cancel_sent) {
++			cancel_sent = true;
++			tp_meter_stop(tp_state, dst_mac);
++		}
++
++		/* wake up regularly to notice an abort even when the signal
++		 * arrived outside of poll()
++		 */
++		ret = poll(&pfd, 1, 1000);
++		if (ret < 0) {
++			if (errno == EINTR)
++				continue;
++			break;
++		}
++		if (ret == 0)
++			continue;
++
+ 		ret = nl_recvmsgs(sock, cb);
+ 		if (ret < 0)
+ 			break;
+@@ -295,8 +321,7 @@ void tp_sig_handler(int sig)
+ 	switch (sig) {
+ 	case SIGINT:
+ 	case SIGTERM:
+-		fflush(stdout);
+-		tp_meter_stop(tp_state, dst_mac);
++		tp_aborted = 1;
+ 		break;
+ 	default:
+ 		break;

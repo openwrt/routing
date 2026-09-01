@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 15:12:40 +0200
+Subject: batctl: only mark file read successful on read line
+
+The line_ptr is shared globally. It can happen that another function like
+parse_hosts_file() allocated the buffer successfully. But the next
+getline() in read_file() fails - but keeps the line_ptr valid. In this
+case, the function would return a success - even when the buffer contains
+stale data.
+
+Instead only set the return value to EXIT_SUCCESS when a single line could
+be read.
+
+Fixes: deb324e65044 ("batctl: buffer based reading replaced by line-by-line reading")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=ef685613924fddb553369d41688c6c9ce4c7562b
+
+--- a/functions.c
++++ b/functions.c
+@@ -159,6 +159,8 @@ int read_file(const char *full_path, int
+ 	}
+ 
+ 	while (getline(&line_ptr, &len, fp) != -1) {
++		res = EXIT_SUCCESS;
++
+ 		/* the buffer will be handled elsewhere */
+ 		if (read_opt & USE_READ_BUFF)
+ 			break;
+@@ -166,9 +168,6 @@ int read_file(const char *full_path, int
+ 		printf("%s", line_ptr);
+ 	}
+ 
+-	if (line_ptr)
+-		res = EXIT_SUCCESS;
+-
+ 	fclose(fp);
+ 	return res;
+ }

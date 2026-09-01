@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sat, 18 Jul 2026 14:38:49 +0200
+Subject: debug: drop stray debug printf line
+
+Fixes: 46aca094072a ("batctl: debug: avoid endless getopt loop for attached '-w' argument")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=475062a00e17225d0193e415ab2062ed20e93f78
+
+--- a/debug.c
++++ b/debug.c
+@@ -56,7 +56,6 @@ int handle_debug_table(struct state *sta
+ 	int err;
+ 
+ 	while ((optchar = getopt(argc, argv, "hnw::t:Humi:")) != -1) {
+-		printf("%c\n", optchar);
+ 		switch (optchar) {
+ 		case 'h':
+ 			debug_table_usage(state);

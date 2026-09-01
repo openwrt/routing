@@ -1,0 +1,103 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:10:21 +0200
+Subject: batctl: debug: avoid endless getopt loop for attached '-w' argument
+
+The watch-mode "optinaparsing hack is not stable and breaks the assumptions
+of getopt parsers. If something like "-w-" was specified as argument, then
+the glibc and musl parsers would just cause an endless loop. And when no
+argument was specified, an error "option requires an argument: w" was
+always appearing.
+
+It is better to use the optional parameter support which is directly
+provided by glibc and musl:
+
+  batctl meshif bat0 originators -w
+  batctl meshif bat0 originators -w2.3
+
+Fixes: e4a7b7733faf ("batctl: Add an optional interval for watch-mode")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=46aca094072a611ff41f353aa62d0d08e8c36c46
+
+--- a/debug.c
++++ b/debug.c
+@@ -26,7 +26,7 @@ static void debug_table_usage(struct sta
+ 	fprintf(stderr, " \t -h print this help\n");
+ 	fprintf(stderr, " \t -n don't replace mac addresses with bat-host names\n");
+ 	fprintf(stderr, " \t -H don't show the header\n");
+-	fprintf(stderr, " \t -w [interval] watch mode - refresh the table continuously\n");
++	fprintf(stderr, " \t -w[interval] watch mode - refresh the table continuously\n");
+ 
+ 	if (debug_table->option_timeout_interval)
+ 		fprintf(stderr,
+@@ -53,7 +53,8 @@ int handle_debug_table(struct state *sta
+ 	int optchar;
+ 	int err;
+ 
+-	while ((optchar = getopt(argc, argv, "hnw:t:Humi:")) != -1) {
++	while ((optchar = getopt(argc, argv, "hnw::t:Humi:")) != -1) {
++		printf("%c\n", optchar);
+ 		switch (optchar) {
+ 		case 'h':
+ 			debug_table_usage(state);
+@@ -63,10 +64,8 @@ int handle_debug_table(struct state *sta
+ 			break;
+ 		case 'w':
+ 			read_opt |= CLR_CONT_READ;
+-			if (optarg[0] == '-') {
+-				optind--;
++			if (!optarg)
+ 				break;
+-			}
+ 
+ 			if (!sscanf(optarg, "%f", &watch_interval)) {
+ 				fprintf(stderr,
+@@ -130,9 +129,6 @@ int handle_debug_table(struct state *sta
+ 			} else if (optopt == 'i') {
+ 				fprintf(stderr,
+ 					"Error - option '-i' needs an interface as argument\n");
+-			} else if (optopt == 'w') {
+-				read_opt |= CLR_CONT_READ;
+-				break;
+ 			} else {
+ 				fprintf(stderr, "Error - unrecognised option: '-%c'\n", optopt);
+ 			}
+--- a/man/batctl.8
++++ b/man/batctl.8
+@@ -376,27 +376,27 @@ is printed.
+ The local and global translation tables also support the "\-u" and "\-m" option to only display unicast or multicast translation table announcements respectively.
+ 
+ .TP
+-[\fBmeshif\fP \fInetdev\fP] \fBbackbonetable\fP|\fBbbt\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP \fIinterval\fP]
++[\fBmeshif\fP \fInetdev\fP] \fBbackbonetable\fP|\fBbbt\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP\fIinterval\fP]
+ (compile time option)
+ .TP
+-[\fBmeshif\fP \fInetdev\fP] \fBclaimtable\fP|\fBcl\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP \fIinterval\fP]
++[\fBmeshif\fP \fInetdev\fP] \fBclaimtable\fP|\fBcl\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP[\fIinterval\fP]]
+ .TP
+-[\fBmeshif\fP \fInetdev\fP] \fBdat_cache\fP|\fBdc\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP \fIinterval\fP]
++[\fBmeshif\fP \fInetdev\fP] \fBdat_cache\fP|\fBdc\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP[\fIinterval\fP]]
+ (compile time option)
+ .TP
+-[\fBmeshif\fP \fInetdev\fP] \fBgateways\fP|\fBgwl\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP \fIinterval\fP]
++[\fBmeshif\fP \fInetdev\fP] \fBgateways\fP|\fBgwl\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP[\fIinterval\fP]]
+ .TP
+-[\fBmeshif\fP \fInetdev\fP] \fBmcast_flags\fP|\fBmf\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP \fIinterval\fP]
++[\fBmeshif\fP \fInetdev\fP] \fBmcast_flags\fP|\fBmf\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP[\fIinterval\fP]]
+ (compile time option)
+ .TP
+-[\fBmeshif\fP \fInetdev\fP] \fBneighbors\fP|\fBn\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP \fIinterval\fP]
++[\fBmeshif\fP \fInetdev\fP] \fBneighbors\fP|\fBn\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP[\fIinterval\fP]]
+ .TP
+-[\fBmeshif\fP \fInetdev\fP] \fBoriginators\fP|\fBo\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP \fIinterval\fP] [\fB-t\fP \fItimeout_interval\fP] [\fB-i\fP \fIinterface\fP]
++[\fBmeshif\fP \fInetdev\fP] \fBoriginators\fP|\fBo\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP[\fIinterval\fP]] [\fB-t\fP \fItimeout_interval\fP] [\fB-i\fP \fIinterface\fP]
+ .TP
+-[\fBmeshif\fP \fInetdev\fP] \fBtransglobal\fP|\fBtg\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP \fIinterval\fP] [\fB-u\fP] [\fB-m\fP]
++[\fBmeshif\fP \fInetdev\fP] \fBtransglobal\fP|\fBtg\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP[\fIinterval\fP]] [\fB-u\fP] [\fB-m\fP]
+ (compile time option)
+ .TP
+-[\fBmeshif\fP \fInetdev\fP] \fBtranslocal\fP|\fBtl\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP \fIinterval\fP] [\fB-u\fP] [\fB-m\fP]
++[\fBmeshif\fP \fInetdev\fP] \fBtranslocal\fP|\fBtl\fP [\fB-n\fP] [\fB-H\fP] [\fB-w\fP[\fIinterval\fP]] [\fB-u\fP] [\fB-m\fP]
+ 
+ .SH JSON QUERIES
+ 

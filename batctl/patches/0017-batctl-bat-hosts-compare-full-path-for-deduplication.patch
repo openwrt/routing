@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 15:06:20 +0200
+Subject: batctl: bat-hosts: compare full path for deduplication
+
+The deduplication code uses realpath to store the real path of a provided
+configuration file. The code then tries to compare these paths but
+accidentally only comparse only the first CONF_DIR_LEN (256) bytes of the
+path.
+
+The number of bytes must be set to the same length as the path size slot in
+the normalized buffer.
+
+Fixes: db97c2a77e81 ("batctl: fix crash in bat-hosts parser on embedded systems")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=65d8c6d78d745264a2bb49fa79baaa8865e6d5f7
+
+--- a/bat-hosts.c
++++ b/bat-hosts.c
+@@ -203,7 +203,7 @@ void bat_hosts_init(int read_opt)
+ 		for (j = 0; j < i; j++) {
+ 			if (strncmp(normalized + (i * PATH_MAX),
+ 				    normalized + (j * PATH_MAX),
+-				    CONF_DIR_LEN) == 0) {
++				    PATH_MAX) == 0) {
+ 				parse = 0;
+ 				break;
+ 			}

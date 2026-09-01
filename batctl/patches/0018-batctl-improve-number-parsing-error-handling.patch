@@ -1,0 +1,204 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 11:05:04 +0200
+Subject: batctl: improve number parsing error handling
+
+The strtoul error handling is rather complicated and it is not only about
+checking the return value. The possible error indicators are:
+
+* endptr is NULL
+* endptr is not pointing to end delimiter
+* endptr is pointing at nptr (because it might have been an empty string)
+* returned value is larger than the expected maximum value range
+
+THe last two conditions were not checked even when it is a potential
+problem for multiple places.
+
+Fixes: df5c452a4469 ("batctl: Add elp_interval setting command")
+Fixes: 74b6d3bd7763 ("batctl: Parse the arguments for gw_mode")
+Fixes: cde0af829351 ("batctl: Add hop_penalty setting command")
+Fixes: a319ec4dcbff ("batctl: Support generic netlink for isolation_mark command")
+Fixes: 1ca604d5a0f2 ("batctl: add switch for setting multicast_fanout")
+Fixes: c49893119205 ("batctl: Support generic netlink for orig_interval command")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: backported, https://git.open-mesh.org/batctl.git/commit/?id=20f137cb0a2addb761ab88ba66121c887c9f2fec
+
+--- a/elp_interval.c
++++ b/elp_interval.c
+@@ -22,6 +22,7 @@ static int parse_elp_interval(struct sta
+ {
+ 	struct settings_data *settings = state->cmd->arg;
+ 	struct elp_interval_data *data = settings->data;
++	unsigned long elp_interval;
+ 	char *endptr;
+ 
+ 	if (argc != 2) {
+@@ -29,12 +30,14 @@ static int parse_elp_interval(struct sta
+ 		return -EINVAL;
+ 	}
+ 
+-	data->elp_interval = strtoul(argv[1], &endptr, 0);
+-	if (!endptr || *endptr != '\0') {
++	elp_interval = strtoul(argv[1], &endptr, 0);
++	if (!endptr || *endptr != '\0' || endptr == argv[1] || elp_interval > UINT32_MAX) {
+ 		fprintf(stderr, "Error - the supplied argument is invalid: %s\n", argv[1]);
+ 		return -EINVAL;
+ 	}
+ 
++	data->elp_interval = elp_interval;
++
+ 	return 0;
+ }
+ 
+--- a/functions.c
++++ b/functions.c
+@@ -982,7 +982,7 @@ bool parse_throughput(char *buff, const
+ 	}
+ 
+ 	lthroughput = strtoull(buff, &endptr, 10);
+-	if (!endptr || *endptr != '\0') {
++	if (!endptr || *endptr != '\0' || endptr == buff) {
+ 		fprintf(stderr, "Invalid throughput speed for %s: %s\n",
+ 			description, buff);
+ 		return false;
+--- a/gw_mode.c
++++ b/gw_mode.c
+@@ -90,6 +90,7 @@ static int parse_gw_limit(char *buff)
+ 
+ static int parse_gw(struct state *state, int argc, char *argv[])
+ {
++	unsigned long sel_class;
+ 	char buff[256];
+ 	char *endptr;
+ 	int ret;
+@@ -131,13 +132,16 @@ static int parse_gw(struct state *state,
+ 					      &gw_globals.sel_class))
+ 				return -EINVAL;
+ 		} else {
+-			gw_globals.sel_class = strtoul(buff, &endptr, 0);
+-			if (!endptr || *endptr != '\0') {
++			sel_class = strtoul(buff, &endptr, 0);
++			if (!endptr || *endptr != '\0' || endptr == buff ||
++			    sel_class > UINT32_MAX) {
+ 				fprintf(stderr,
+ 					"Error - unexpected argument for mode \"client\": %s\n",
+ 					buff);
+ 				return -EINVAL;
+ 			}
++
++			gw_globals.sel_class = sel_class;
+ 		}
+ 
+ 		gw_globals.sel_class_found = 1;
+--- a/hop_penalty.c
++++ b/hop_penalty.c
+@@ -22,6 +22,7 @@ static int parse_hop_penalty(struct stat
+ {
+ 	struct settings_data *settings = state->cmd->arg;
+ 	struct hop_penalty_data *data = settings->data;
++	unsigned long hop_penalty;
+ 	char *endptr;
+ 
+ 	if (argc != 2) {
+@@ -29,12 +30,14 @@ static int parse_hop_penalty(struct stat
+ 		return -EINVAL;
+ 	}
+ 
+-	data->hop_penalty = strtoul(argv[1], &endptr, 0);
+-	if (!endptr || *endptr != '\0') {
++	hop_penalty = strtoul(argv[1], &endptr, 0);
++	if (!endptr || *endptr != '\0' || endptr == argv[1] || hop_penalty > UINT8_MAX) {
+ 		fprintf(stderr, "Error - the supplied argument is invalid: %s\n", argv[1]);
+ 		return -EINVAL;
+ 	}
+ 
++	data->hop_penalty = hop_penalty;
++
+ 	return 0;
+ }
+ 
+--- a/isolation_mark.c
++++ b/isolation_mark.c
+@@ -23,10 +23,10 @@ static int parse_isolation_mark(struct s
+ {
+ 	struct settings_data *settings = state->cmd->arg;
+ 	struct isolation_mark_data *data = settings->data;
++	unsigned long mark;
++	unsigned long mask;
+ 	char *mask_ptr;
+ 	char buff[256];
+-	uint32_t mark;
+-	uint32_t mask;
+ 	char *endptr;
+ 
+ 	if (argc != 2) {
+@@ -50,13 +50,13 @@ static int parse_isolation_mark(struct s
+ 		 * bitmask and not a prefix length
+ 		 */
+ 		mask = strtoul(mask_ptr, &endptr, 16);
+-		if (!endptr || *endptr != '\0')
++		if (!endptr || *endptr != '\0' || endptr == mask_ptr || mask > UINT32_MAX)
+ 			goto inval_format;
+ 	}
+ 
+ 	/* the mark can be entered in any base */
+ 	mark = strtoul(buff, &endptr, 0);
+-	if (!endptr || *endptr != '\0')
++	if (!endptr || *endptr != '\0' || endptr == buff || mark > UINT32_MAX)
+ 		goto inval_format;
+ 
+ 	data->isolation_mask = mask;
+--- a/multicast_fanout.c
++++ b/multicast_fanout.c
+@@ -22,6 +22,7 @@ static int parse_multicast_fanout(struct
+ {
+ 	struct settings_data *settings = state->cmd->arg;
+ 	struct multicast_fanout_data *data = settings->data;
++	unsigned long multicast_fanout;
+ 	char *endptr;
+ 
+ 	if (argc != 2) {
+@@ -29,12 +30,14 @@ static int parse_multicast_fanout(struct
+ 		return -EINVAL;
+ 	}
+ 
+-	data->multicast_fanout = strtoul(argv[1], &endptr, 0);
+-	if (!endptr || *endptr != '\0') {
++	multicast_fanout = strtoul(argv[1], &endptr, 0);
++	if (!endptr || *endptr != '\0' || endptr == argv[1] || multicast_fanout > UINT32_MAX) {
+ 		fprintf(stderr, "Error - the supplied argument is invalid: %s\n", argv[1]);
+ 		return -EINVAL;
+ 	}
+ 
++	data->multicast_fanout = multicast_fanout;
++
+ 	return 0;
+ }
+ 
+--- a/orig_interval.c
++++ b/orig_interval.c
+@@ -22,6 +22,7 @@ static int parse_orig_interval(struct st
+ {
+ 	struct settings_data *settings = state->cmd->arg;
+ 	struct orig_interval_data *data = settings->data;
++	unsigned long orig_interval;
+ 	char *endptr;
+ 
+ 	if (argc != 2) {
+@@ -29,12 +30,14 @@ static int parse_orig_interval(struct st
+ 		return -EINVAL;
+ 	}
+ 
+-	data->orig_interval = strtoul(argv[1], &endptr, 0);
+-	if (!endptr || *endptr != '\0') {
++	orig_interval = strtoul(argv[1], &endptr, 0);
++	if (!endptr || *endptr != '\0' || endptr == argv[1] || orig_interval > UINT32_MAX) {
+ 		fprintf(stderr, "Error - the supplied argument is invalid: %s\n", argv[1]);
+ 		return -EINVAL;
+ 	}
+ 
++	data->orig_interval = orig_interval;
++
+ 	return 0;
+ }
+ 

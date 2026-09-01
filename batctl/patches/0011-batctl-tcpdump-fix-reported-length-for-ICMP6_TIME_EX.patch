@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 14:25:08 +0200
+Subject: batctl: tcpdump: fix reported length for ICMP6_TIME_EXCEEDED
+
+The remaining buffer size for ICMP6_TIME_EXCEEDED is only the buffer length
+minus the IPv6 header. It could now be discussed whether the output length
+should now be with or without the icmp6_hdr length. The length with
+icmp6_hdr was chosen because the code looks like a simple copy and paste
+error and ip6_hdr's length was most likely the actual intent for the
+calculation.
+
+Fixes: 35b37756f4a3 ("add IPv6 support to tcpdump parser")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=2653fa20705098a8c90ee30265bef4c5d0277aed
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -668,7 +668,7 @@ static void dump_ipv6(unsigned char *pac
+ 			break;
+ 		case ICMP6_TIME_EXCEEDED:
+ 			printf(" time exceeded in-transit, length %zu\n",
+-			       (size_t)buff_len - sizeof(struct icmp6_hdr));
++			       (size_t)buff_len - sizeof(struct ip6_hdr));
+ 			break;
+ 		case ND_NEIGHBOR_SOLICIT:
+ 			LEN_CHECK((size_t)buff_len - (size_t)(sizeof(struct ip6_hdr)),

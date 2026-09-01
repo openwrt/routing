@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 08:13:51 +0200
+Subject: batctl: netlink: report dump errors signalled in the NLMSG_DONE message
+
+When a dump is terminated with a non-zero error code in its NLMSG_DONE
+message, "Error received" is printed but it is missed to update the global
+error state (last_err). netlink_print_common() therefore returns 0 and the
+command exits EXIT_SUCCESS despite the error just printed.
+
+Fixes: 854835788001 ("batctl: Move routing_algo specific code it command source file")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=5d92fd26f616020852748db5c0e131f3044c83ff
+
+--- a/netlink.c
++++ b/netlink.c
+@@ -316,8 +316,10 @@ int netlink_stop_callback(struct nl_msg
+ 	struct nlmsghdr *nlh = nlmsg_hdr(msg);
+ 	int *error = nlmsg_data(nlh);
+ 
+-	if (*error)
++	if (*error) {
+ 		fprintf(stderr, "Error received: %s\n", strerror(-*error));
++		last_err = *error;
++	}
+ 
+ 	return NL_STOP;
+ }

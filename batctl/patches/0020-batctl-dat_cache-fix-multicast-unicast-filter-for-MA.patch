@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:12:56 +0200
+Subject: batctl: dat_cache: fix multicast/unicast filter for MAC address
+
+The -u/-m filters in the DAT cache callback test addr[0], but addr in this
+callback is function is the text representation of the mac address - not
+the binary representation like in all other functions. The binary check of
+the multicast-bit will therefore not correctly identify multicast entries.
+
+The kernel reply BATADV_ATTR_DAT_CACHE_HWADDRESS has to be checked instead.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=c664029d507daf261a55e30be53929a69b07538b
+
+--- a/dat_cache.c
++++ b/dat_cache.c
+@@ -76,10 +76,10 @@ static int dat_cache_callback(struct nl_
+ 	last_seen_msecs = last_seen_msecs % 60000;
+ 	last_seen_secs = last_seen_msecs / 1000;
+ 
+-	if (opts->read_opt & MULTICAST_ONLY && !(addr[0] & 0x01))
++	if (opts->read_opt & MULTICAST_ONLY && !(hwaddr[0] & 0x01))
+ 		return NL_OK;
+ 
+-	if (opts->read_opt & UNICAST_ONLY && (addr[0] & 0x01))
++	if (opts->read_opt & UNICAST_ONLY && (hwaddr[0] & 0x01))
+ 		return NL_OK;
+ 
+ 	printf(" * %15s ", addr);

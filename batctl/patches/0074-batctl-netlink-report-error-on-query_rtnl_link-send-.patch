@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 15:01:15 +0200
+Subject: batctl: netlink: report error on query_rtnl_link send failure
+
+When nl_send_auto_complete() fails, an explicit error must be set or
+otherwise query_rtnl_link() will return 0 (no error).
+
+Fixes: 60e519bfeaa3 ("batctl: Use rtnl to query list of softif devices")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=51aa9290b0a9dd2a7178cd38b14764fa031cdf5f
+
+--- a/functions.c
++++ b/functions.c
+@@ -504,8 +504,10 @@ int query_rtnl_link(int ifindex, nl_recv
+ 	}
+ 
+ 	ret = nl_send_auto_complete(sock, msg);
+-	if (ret < 0)
++	if (ret < 0) {
++		err = -EIO;
+ 		goto err_free_msg;
++	}
+ 
+ 	ret = nl_recvmsgs(sock, cb);
+ 	if (ret < 0)

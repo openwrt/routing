@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 04:44:37 +0200
+Subject: batctl: debug: don't return negative error codes from handle_debug_table
+
+handle_debug_table() returns the result of the netlink dump function
+directly. This is a negative errno code on failure and main() passes it
+straight to exit(). The process then terminates with a mangled exit status
+like 161 (-95 & 0xff).
+
+Limit the return codes to EXIT_SUCCESS and EXIT_FAILURE.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=2f1b8b367ffab60b0f7f969bfc73c4a9b4bfc6d3
+
+--- a/debug.c
++++ b/debug.c
+@@ -152,5 +152,8 @@ int handle_debug_table(struct state *sta
+ 
+ 	err = debug_table->netlink_fn(state, orig_iface, read_opt,
+ 				      orig_timeout, watch_interval);
+-	return err;
++	if (err < 0)
++		return EXIT_FAILURE;
++
++	return EXIT_SUCCESS;
+ }

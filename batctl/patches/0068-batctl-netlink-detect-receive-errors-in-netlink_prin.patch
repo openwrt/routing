@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 11:46:43 +0200
+Subject: batctl: netlink: detect receive errors in netlink_print_common
+
+netlink_print_common() clears last_err to 0 before each dump and then
+ignores the return value of nl_recvmsgs(). It will therefore only print
+errors which were received in netlink messages - but not the major errors
+when communicating with the kernel.
+
+Capture the nl_recvmsgs() return value, matching the sibling helper
+netlink_query_common().
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=c7cc6e10d280b7724ff3bd9cb6abef91437f48c1
+
+--- a/netlink.c
++++ b/netlink.c
+@@ -537,6 +537,7 @@ int netlink_print_common(struct state *s
+ 	};
+ 	int hardifindex = 0;
+ 	struct nl_msg *msg;
++	int ret;
+ 
+ 	if (!state->sock) {
+ 		last_err = -EOPNOTSUPP;
+@@ -588,7 +589,9 @@ int netlink_print_common(struct state *s
+ 		nlmsg_free(msg);
+ 
+ 		last_err = 0;
+-		nl_recvmsgs(state->sock, state->cb);
++		ret = nl_recvmsgs(state->sock, state->cb);
++		if (ret < 0)
++			last_err = -EIO;
+ 
+ 		/* the header should still be printed when no entry was received */
+ 		if (!last_err)

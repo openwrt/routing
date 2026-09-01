@@ -1,0 +1,52 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 14:10:31 +0200
+Subject: batctl: debug: reject non-finite/negative interval/timeout values
+
+A "%f" sscanf conversion accepts the textual floating point literals "nan",
+"inf" and "infinity", and an out-of-range magnitude such as "1e9999" is
+converted to infinity. There are calculations and comparisons performed
+with the values. They must therefore be well defined non-negative and
+finite numbers.
+
+Fixes: 302a41a73915 ("batctl: Add timeout filtering option for originators")
+Fixes: e4a7b7733faf ("batctl: Add an optional interval for watch-mode")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=b258fe1884c090a571d9881e76b04bac5a763007
+
+--- a/debug.c
++++ b/debug.c
+@@ -10,6 +10,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <errno.h>
++#include <math.h>
+ 
+ #include "debug.h"
+ #include "functions.h"
+@@ -68,9 +69,10 @@ int handle_debug_table(struct state *sta
+ 			if (!optarg)
+ 				break;
+ 
+-			if (sscanf(optarg, "%f%c", &watch_interval, &tmp) != 1) {
++			if (sscanf(optarg, "%f%c", &watch_interval, &tmp) != 1 ||
++			    !isfinite(watch_interval) || watch_interval < 0) {
+ 				fprintf(stderr,
+-					"Error - provided argument of '-%c' is not a number\n",
++					"Error - provided argument of '-%c' is not a positive number\n",
+ 					optchar);
+ 				return EXIT_FAILURE;
+ 			}
+@@ -83,9 +85,10 @@ int handle_debug_table(struct state *sta
+ 			}
+ 
+ 			read_opt |= NO_OLD_ORIGS;
+-			if (sscanf(optarg, "%f%c", &orig_timeout, &tmp) != 1) {
++			if (sscanf(optarg, "%f%c", &orig_timeout, &tmp) != 1 ||
++			    !isfinite(orig_timeout) || orig_timeout < 0) {
+ 				fprintf(stderr,
+-					"Error - provided argument of '-%c' is not a number\n",
++					"Error - provided argument of '-%c' is not a positive number\n",
+ 					optchar);
+ 				return EXIT_FAILURE;
+ 			}

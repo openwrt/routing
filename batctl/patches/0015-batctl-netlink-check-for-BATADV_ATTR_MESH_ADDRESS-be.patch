@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 13:11:06 +0200
+Subject: batctl: netlink: check for BATADV_ATTR_MESH_ADDRESS before accessing it
+
+info_callback expects the BATADV_ATTR_MESH_ADDRESS attribute to be set. But
+it never checked if it is not NULL.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=fcac106f46bcf2b6339560ee81548a25a5cb3498
+
+--- a/netlink.c
++++ b/netlink.c
+@@ -325,6 +325,7 @@ int netlink_stop_callback(struct nl_msg
+ static const int info_mandatory[] = {
+ 	BATADV_ATTR_MESH_IFINDEX,
+ 	BATADV_ATTR_MESH_IFNAME,
++	BATADV_ATTR_MESH_ADDRESS,
+ };
+ 
+ static const int info_hard_mandatory[] = {

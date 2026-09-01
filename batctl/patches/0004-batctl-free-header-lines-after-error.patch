@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 09:47:02 +0200
+Subject: batctl: free header lines after error
+
+If the common netlink helper or the routing algorithm code never printed
+the header, nothing would clean up the remaining_headers. Explicitly free
+it up to avoid a minor memory leak.
+
+Fixes: 5401c71adfad ("batctl: Use debugfs fallback when netlink not supported")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=de6f6f554697836141892966d97f883f46beac4f
+
+--- a/netlink.c
++++ b/netlink.c
+@@ -589,6 +589,10 @@ int netlink_print_common(struct state *s
+ 
+ 	} while (!last_err && read_opt & (CONT_READ | CLR_CONT_READ));
+ 
++	/* free a header that was prepared but never printed (e.g. on error) */
++	free(opts.remaining_header);
++	opts.remaining_header = NULL;
++
+ 	bat_hosts_free();
+ 
+ 	return last_err;
+--- a/routing_algo.c
++++ b/routing_algo.c
+@@ -108,8 +108,12 @@ static int print_routing_algos(struct st
+ 
+ 	nl_recvmsgs(state->sock, cb);
+ 
+-	if (!last_err)
++	if (!last_err) {
+ 		netlink_print_remaining_header(&opts);
++	} else {
++		free(opts.remaining_header);
++		opts.remaining_header = NULL;
++	}
+ 
+ 	return last_err;
+ }

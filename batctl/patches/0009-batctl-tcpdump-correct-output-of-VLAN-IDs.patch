@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 14:06:47 +0200
+Subject: batctl: tcpdump: correct output of VLAN IDs
+
+The 16 bit TCI header for VLAN tagging (IEEE 802.1Q) stores 12 bit for the
+12 bit VID, 1 bit DEI and 3 bit PCP. It is therefore unexpected to print
+the 16 bit as vlan identifier without masking out the upper 4 bit.
+
+At the same time, also split the DEI ( Drop Eligible Indicator) and the PCP
+(Priority Code Point) in separate output fields.
+
+Fixes: 7738b534fb07 ("batctl: tcpdump - add vlan support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=cd0ba25ad03a27226617678638ebb666b7f8eeb1
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -822,7 +822,8 @@ static void dump_vlan(unsigned char *pac
+ 		time_printed = print_time();
+ 
+ 	vlanhdr->vid = ntohs(vlanhdr->vid);
+-	printf("vlan %u, p %u, ", vlanhdr->vid, vlanhdr->vid >> 12);
++	printf("vlan %u, d %u, p %u, ", vlanhdr->vid & 0x0fff, (vlanhdr->vid >> 12) & 0x1,
++	       vlanhdr->vid >> 13);
+ 
+ 	/* overwrite vlan tags */
+ 	memmove(packet_buff + 4, packet_buff, 2 * ETH_ALEN);

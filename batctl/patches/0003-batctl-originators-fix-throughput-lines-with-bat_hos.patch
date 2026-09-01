@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 09:22:14 +0200
+Subject: batctl: originators: fix throughput lines with bat_hosts
+
+When bat_hosts is used, the output should be the same as without it. But
+for B.A.T.M.A.N. V, there were two major differences:
+
+* when no hostname was found: extra space before the nexthop neighbor
+* when hostname was found: best-flag character before the hostname
+
+Sync the implementation with the B.A.T.M.A.N. IV implementation to get rid
+of the unexpected differences.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=08fd004f9eaf2d443f4f89bd50cd1f96a723f52e
+
+--- a/originators.c
++++ b/originators.c
+@@ -130,9 +130,9 @@ static int originators_callback(struct n
+ 			       throughput_mbits, throughput_kbits / 100);
+ 			bat_host = bat_hosts_find_by_mac((char *)neigh);
+ 			if (bat_host)
+-				printf(" %c %17s ", c, bat_host->name);
++				printf("%17s ", bat_host->name);
+ 			else
+-				printf(" %02x:%02x:%02x:%02x:%02x:%02x ",
++				printf("%02x:%02x:%02x:%02x:%02x:%02x ",
+ 				       neigh[0], neigh[1], neigh[2],
+ 				       neigh[3], neigh[4], neigh[5]);
+ 			printf("[%10s]\n", ifname);

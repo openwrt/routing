@@ -1,0 +1,301 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 08:49:38 +0200
+Subject: batctl: fix parsing of parameters with arguments
+
+If using a getopt argument with an argument, it can be supplied via:
+
+* -m asd
+* -m=asd
+* -masd
+
+Only the first version is correctly handled by the found_args
+implementation (without causing undefined behavior). But it can be instead
+simplified and fixed at the same time by directly using the optind variable
+from getopt.
+
+Fixes: 87ade2869cf3 ("add interval and loop count options")
+Fixes: 3bdfc388e74b ("implement simple tcpdump, first only batman packets")
+Fixes: ece05e1c4c1f ("[batctl] bisect (a tool to analyze logfiles) added")
+Fixes: f3c9cf9e730e ("source out calculation of round trip time to functions.c add abbreviation for modules, example ping = p add traceroute module, not complete")
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=26b997032052b0d7ab842a156f65fab5441581a7
+
+--- a/bisect_iv.c
++++ b/bisect_iv.c
+@@ -1493,7 +1493,6 @@ static int bisect_iv(struct state *state
+ 	int num_parsed_files;
+ 	long long tmp_seqno;
+ 	char orig[NAME_LEN];
+-	int found_args = 1;
+ 	char *dash_ptr;
+ 	int optchar;
+ 	int res;
+@@ -1508,19 +1507,15 @@ static int bisect_iv(struct state *state
+ 			return EXIT_SUCCESS;
+ 		case 'l':
+ 			loop_orig_ptr = optarg;
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		case 'n':
+ 			read_opt &= ~USE_BAT_HOSTS;
+-			found_args += 1;
+ 			break;
+ 		case 'o':
+ 			filter_orig_ptr = optarg;
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		case 'r':
+ 			rt_orig_ptr = optarg;
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		case 's':
+ 			dash_ptr = strchr(optarg, '-');
+@@ -1547,11 +1542,9 @@ static int bisect_iv(struct state *state
+ 				*dash_ptr = '-';
+ 			}
+ 
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		case 't':
+ 			trace_orig_ptr = optarg;
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		default:
+ 			bisect_iv_usage();
+@@ -1559,7 +1552,7 @@ static int bisect_iv(struct state *state
+ 		}
+ 	}
+ 
+-	if (argc <= found_args + 1) {
++	if (argc <= optind + 1) {
+ 		fprintf(stderr, "Error - need at least 2 log files to compare\n");
+ 		bisect_iv_usage();
+ 		goto err;
+@@ -1622,13 +1615,13 @@ static int bisect_iv(struct state *state
+ 			goto err;
+ 	}
+ 
+-	while (argc > found_args) {
+-		res = parse_log_file(argv[found_args]);
++	while (argc > optind) {
++		res = parse_log_file(argv[optind]);
+ 
+ 		if (res > 0)
+ 			num_parsed_files++;
+ 
+-		found_args++;
++		optind++;
+ 	}
+ 
+ 	if (num_parsed_files < 2) {
+--- a/main.c
++++ b/main.c
+@@ -357,7 +357,7 @@ int main(int argc, char **argv)
+ 			fprintf(stderr,
+ 				"Warning - option -m was deprecated and will be removed in the future\n");
+ 
+-			state.arg_iface = argv[2];
++			state.arg_iface = optarg;
+ 			break;
+ 		case 'v':
+ 			version();
+--- a/ping.c
++++ b/ping.c
+@@ -75,7 +75,6 @@ static int ping(struct state *state, int
+ 	uint8_t last_rr_cur = 0;
+ 	int ret = EXIT_FAILURE;
+ 	int loop_count = -1;
+-	int found_args = 1;
+ 	size_t packet_len;
+ 	struct timeval tv;
+ 	double time_delta;
+@@ -100,7 +99,6 @@ static int ping(struct state *state, int
+ 			loop_count = strtol(optarg, NULL, 10);
+ 			if (loop_count < 1)
+ 				loop_count = -1;
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		case 'h':
+ 			ping_usage();
+@@ -117,21 +115,17 @@ static int ping(struct state *state, int
+ 			fractional_part = modf(ping_interval, &integral_part);
+ 			loop_interval.tv_sec = (time_t)integral_part;
+ 			loop_interval.tv_nsec = (long)(fractional_part * 1000000000l);
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		case 't':
+ 			timeout = strtol(optarg, NULL, 10);
+ 			if (timeout < 1)
+ 				timeout = 1;
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		case 'R':
+ 			rr = 1;
+-			found_args++;
+ 			break;
+ 		case 'T':
+ 			disable_translate_mac = 1;
+-			found_args += 1;
+ 			break;
+ 		default:
+ 			ping_usage();
+@@ -139,13 +133,13 @@ static int ping(struct state *state, int
+ 		}
+ 	}
+ 
+-	if (argc <= found_args) {
++	if (optind >= argc) {
+ 		fprintf(stderr, "Error - target mac address or bat-host name not specified\n");
+ 		ping_usage();
+ 		return EXIT_FAILURE;
+ 	}
+ 
+-	dst_string = argv[found_args];
++	dst_string = argv[optind];
+ 	bat_hosts_init(0);
+ 	bat_host = bat_hosts_find_by_name(dst_string);
+ 
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1493,7 +1493,6 @@ static int tcpdump(struct state *state _
+ 	fd_set tmp_wait_sockets;
+ 	int ret = EXIT_FAILURE;
+ 	fd_set wait_sockets;
+-	int found_args = 1;
+ 	struct timeval tv;
+ 	int max_sock = 0;
+ 	ssize_t read_len;
+@@ -1507,26 +1506,22 @@ static int tcpdump(struct state *state _
+ 		switch (optchar) {
+ 		case 'c':
+ 			read_opt |= COMPAT_FILTER;
+-			found_args += 1;
+ 			break;
+ 		case 'h':
+ 			tcpdump_usage();
+ 			return EXIT_SUCCESS;
+ 		case 'n':
+ 			read_opt &= ~USE_BAT_HOSTS;
+-			found_args += 1;
+ 			break;
+ 		case 'p':
+ 			tmp = strtol(optarg, NULL, 10);
+ 			if (tmp > 0 && tmp <= dump_level_all)
+ 				dump_level = tmp;
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		case 'x':
+ 			tmp = strtol(optarg, NULL, 10);
+ 			if (tmp > 0 && tmp <= dump_level_all)
+ 				dump_level &= ~tmp;
+-			found_args += ((*((char *)(optarg - 1)) == optchar) ? 1 : 2);
+ 			break;
+ 		default:
+ 			tcpdump_usage();
+@@ -1534,7 +1529,7 @@ static int tcpdump(struct state *state _
+ 		}
+ 	}
+ 
+-	if (argc <= found_args) {
++	if (optind >= argc) {
+ 		fprintf(stderr, "Error - target interface not specified\n");
+ 		tcpdump_usage();
+ 		return EXIT_FAILURE;
+@@ -1549,8 +1544,8 @@ static int tcpdump(struct state *state _
+ 	INIT_LIST_HEAD(&dump_if_list);
+ 	FD_ZERO(&wait_sockets);
+ 
+-	while (argc > found_args) {
+-		dump_if = create_dump_interface(argv[found_args]);
++	while (optind < argc) {
++		dump_if = create_dump_interface(argv[optind]);
+ 		if (!dump_if)
+ 			goto out;
+ 
+@@ -1559,7 +1554,7 @@ static int tcpdump(struct state *state _
+ 
+ 		FD_SET(dump_if->raw_sock, &wait_sockets);
+ 		list_add_tail(&dump_if->list, &dump_if_list);
+-		found_args++;
++		optind++;
+ 	}
+ 
+ 	while (!is_aborted) {
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -326,7 +326,6 @@ static int throughputmeter(struct state
+ 	struct bat_host *bat_host;
+ 	int ret = EXIT_FAILURE;
+ 	uint64_t throughput;
+-	int found_args = 1;
+ 	uint32_t time = 0;
+ 	char *dst_string;
+ 	int optchar;
+@@ -334,12 +333,10 @@ static int throughputmeter(struct state
+ 	while ((optchar = getopt(argc, argv, "t:n")) != -1) {
+ 		switch (optchar) {
+ 		case 't':
+-			found_args += 2;
+ 			time = strtoul(optarg, NULL, 10);
+ 			break;
+ 		case 'n':
+ 			read_opt &= ~USE_BAT_HOSTS;
+-			found_args += 1;
+ 			break;
+ 		default:
+ 			tp_meter_usage();
+@@ -347,12 +344,12 @@ static int throughputmeter(struct state
+ 		}
+ 	}
+ 
+-	if (argc <= found_args) {
++	if (optind >= argc) {
+ 		tp_meter_usage();
+ 		return EXIT_FAILURE;
+ 	}
+ 
+-	dst_string = argv[found_args];
++	dst_string = argv[optind];
+ 	bat_hosts_init(read_opt);
+ 	bat_host = bat_hosts_find_by_name(dst_string);
+ 
+--- a/traceroute.c
++++ b/traceroute.c
+@@ -48,7 +48,6 @@ static int traceroute(struct state *stat
+ 	int ret = EXIT_FAILURE;
+ 	char dst_reached = 0;
+ 	int seq_counter = 0;
+-	int found_args = 1;
+ 	struct timeval tv;
+ 	ssize_t read_len;
+ 	char *dst_string;
+@@ -65,11 +64,9 @@ static int traceroute(struct state *stat
+ 			return EXIT_SUCCESS;
+ 		case 'n':
+ 			read_opt &= ~USE_BAT_HOSTS;
+-			found_args += 1;
+ 			break;
+ 		case 'T':
+ 			disable_translate_mac = 1;
+-			found_args += 1;
+ 			break;
+ 		default:
+ 			traceroute_usage();
+@@ -77,13 +74,13 @@ static int traceroute(struct state *stat
+ 		}
+ 	}
+ 
+-	if (argc <= found_args) {
++	if (optind >= argc) {
+ 		fprintf(stderr, "Error - target mac address or bat-host name not specified\n");
+ 		traceroute_usage();
+ 		return EXIT_FAILURE;
+ 	}
+ 
+-	dst_string = argv[found_args];
++	dst_string = argv[optind];
+ 	bat_hosts_init(read_opt);
+ 	bat_host = bat_hosts_find_by_name(dst_string);
+ 

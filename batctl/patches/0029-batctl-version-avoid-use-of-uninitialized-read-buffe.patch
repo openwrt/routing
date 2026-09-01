@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:02:28 +0200
+Subject: batctl: version: avoid use of uninitialized read buffer
+
+version() strips the trailing newline from line_ptr before checking whether
+read_file() actually succeeded. If the read_file() returned an error, it
+could be that line_ptr was allocated buyt not yet initialized. It could
+therefore not contain any \0 delimiter - making the strlen read outside the
+buffer. The write of the \0 could therefore also be outside the buffer.
+
+Only attempt to access the buffer when a success was indicated.
+
+Fixes: dbc4a8c8e585 ("batctl: version also prints the kernel module version if available")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: backported, https://git.open-mesh.org/batctl.git/commit/?id=f4d637a2ab51505d72d7b02735cecd990b22c7fb
+
+--- a/main.c
++++ b/main.c
+@@ -132,13 +132,14 @@ static void version(void)
+ 	printf("batctl %s [batman-adv: ", SOURCE_VERSION);
+ 
+ 	ret = read_file(module_ver_path, USE_READ_BUFF | SILENCE_ERRORS);
+-	if ((line_ptr) && (line_ptr[strlen(line_ptr) - 1] == '\n'))
+-		line_ptr[strlen(line_ptr) - 1] = '\0';
++	if (ret == EXIT_SUCCESS) {
++		if (line_ptr[strlen(line_ptr) - 1] == '\n')
++			line_ptr[strlen(line_ptr) - 1] = '\0';
+ 
+-	if (ret == EXIT_SUCCESS)
+ 		printf("%s]\n", line_ptr);
+-	else
++	} else {
+ 		printf("module not loaded]\n");
++	}
+ 
+ 	free(line_ptr);
+ 	exit(EXIT_SUCCESS);

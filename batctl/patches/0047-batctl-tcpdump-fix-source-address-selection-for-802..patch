@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 04:46:13 +0200
+Subject: batctl: tcpdump: fix source address selection for 802.11 data frames
+
+For non-AMSDU data frame, we need to select as source host:
+
+* neither from/to DS: addr2
+* from DS: addr3
+* to DS: addr2
+* from+to DS: addr4
+
+But the code is actually selecting:
+
+* neither from/to DS: addr2
+* from DS: addr3
+* to DS: addr4
+* from+to DS: addr3
+
+Instead of checking single bits, the special cases "from+to DS" and "from
+DS" have to be checked separately.
+
+Fixes: 5143e351a77b ("batctl: add raw wifi packet decapsulation support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=980ed5d0bb53d6552bcc0be522d6327bf298b4b7
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1369,10 +1369,10 @@ static void parse_wifi_hdr(unsigned char
+ 		return;
+ 
+ 	shost = wifi_hdr->addr2;
+-	if (fc & IEEE80211_FCTL_FROMDS)
+-		shost = wifi_hdr->addr3;
+-	else if (fc & IEEE80211_FCTL_TODS)
++	if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
+ 		shost = wifi_hdr->addr4;
++	else if (fc & IEEE80211_FCTL_FROMDS)
++		shost = wifi_hdr->addr3;
+ 
+ 	dhost = wifi_hdr->addr1;
+ 	if (fc & IEEE80211_FCTL_TODS)

@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 13:51:21 +0200
+Subject: batctl: return only initialized icmp destination unreached bytes
+
+When icmp_interface_write() fails with an unreachable destination, it
+prepares a reply packet using original packet but changes the message type
+to BATADV_DESTINATION_UNREACHABLE. But when icmp_interface_read() tries to
+retrieve this data, the requested packet len could be higher than the
+length of the original packet. In this case, the returned packet length
+must be truncated to the number of bytes of the original one.
+
+Fixes: 4bd751eed4dc ("batctl: Implement non-routing batadv_icmp in userspace")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=7dab91c978f43cd8b84187511ba58e60d8d953ef
+
+--- a/icmp_helper.c
++++ b/icmp_helper.c
+@@ -470,6 +470,12 @@ ssize_t icmp_interface_read(struct batad
+ 		packet_len = len;
+ 
+ 	if (direct_reply_len > 0) {
++		/* never deliver more than was actually stored by the
++		 * dst_unreachable path, nor more than the caller's buffer holds
++		 */
++		if (packet_len > direct_reply_len)
++			packet_len = direct_reply_len;
++
+ 		memcpy(icmp_packet, icmp_buffer, packet_len);
+ 		direct_reply_len = 0;
+ 		return (ssize_t)packet_len;

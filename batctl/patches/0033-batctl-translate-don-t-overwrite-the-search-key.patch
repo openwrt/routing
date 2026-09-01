@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 14:32:25 +0200
+Subject: batctl: translate: don't overwrite the search key
+
+translate_mac_netlink_cb() walks the whole global translation table dump
+and searches for an originator address for the provided TT mac address. It
+stored that originator back into opts->mac (used for the search key). But
+since NL_STOP is no longer used, it might continue to traverse the
+translation table but would now use the wrong search key.
+
+Split ethernet address in search key and result field to avoid this
+confusion.
+
+Fixes: e2a3d3599cb2 ("batctl: Use common genl socket for netlink_query_common")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=7eb2f4b811d13b8d0c9860867822268a2fc1bf64
+
+--- a/netlink.c
++++ b/netlink.c
+@@ -684,7 +684,8 @@ static const int translate_mac_netlink_m
+ };
+ 
+ struct translate_mac_netlink_opts {
+-	struct ether_addr mac;
++	struct ether_addr search;
++	struct ether_addr result;
+ 	uint8_t found:1;
+ 	struct nlquery_opts query_opts;
+ };
+@@ -725,10 +726,10 @@ static int translate_mac_netlink_cb(stru
+ 	if (!attrs[BATADV_ATTR_FLAG_BEST])
+ 		return NL_OK;
+ 
+-	if (memcmp(&opts->mac, addr, ETH_ALEN) != 0)
++	if (memcmp(&opts->search, addr, ETH_ALEN) != 0)
+ 		return NL_OK;
+ 
+-	memcpy(&opts->mac, orig, ETH_ALEN);
++	memcpy(&opts->result, orig, ETH_ALEN);
+ 	opts->found = true;
+ 	opts->query_opts.err = 0;
+ 
+@@ -746,7 +747,7 @@ int translate_mac_netlink(struct state *
+ 	};
+ 	int ret;
+ 
+-	memcpy(&opts.mac, mac, ETH_ALEN);
++	memcpy(&opts.search, mac, ETH_ALEN);
+ 
+ 	ret = netlink_query_common(state, state->mesh_ifindex,
+ 				   BATADV_CMD_GET_TRANSTABLE_GLOBAL,
+@@ -758,7 +759,7 @@ int translate_mac_netlink(struct state *
+ 	if (!opts.found)
+ 		return -ENOENT;
+ 
+-	memcpy(mac_out, &opts.mac, ETH_ALEN);
++	memcpy(mac_out, &opts.result, ETH_ALEN);
+ 
+ 	return 0;
+ }

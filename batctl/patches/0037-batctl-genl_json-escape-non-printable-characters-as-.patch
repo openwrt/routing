@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 04:45:43 +0200
+Subject: batctl: genl_json: escape non-printable characters as valid JSON
+
+sanitize_string() emits non-printable bytes as \xNN inside JSON string
+values. JSON only allows the escape sequences \" \\ \/ \b \f \n \r \t and
+\uXXXX. The latter is the correct option for printing arbitrary character
+values.
+
+Fixes: ae1a3d3f0bb7 ("batctl: genl_json: Add generic JSON interface")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=f81c512c9d71b2acaee88a2a7510d4a309825390
+
+--- a/genl_json.c
++++ b/genl_json.c
+@@ -40,7 +40,7 @@ static void sanitize_string(const char *
+ 			putchar('\\');
+ 			putchar(*c);
+ 		} else if (!isprint(*c)) {
+-			printf("\\x%02x", *c);
++			printf("\\u%04x", *c);
+ 		} else {
+ 			putchar(*c);
+ 		}

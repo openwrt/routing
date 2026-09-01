@@ -1,0 +1,74 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 09:37:32 +0200
+Subject: batctl: handle netlink callback object on error
+
+The libnl callback object is allocated and must be deallocated when it is
+no longer used. This is especially important when an error happened.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=2fb0542f6881c7205dd025774b08789036f110b1
+
+--- a/netlink.c
++++ b/netlink.c
+@@ -489,11 +489,15 @@ char *netlink_get_info(struct state *sta
+ 	nl_cb_err(cb, NL_CB_CUSTOM, netlink_print_error, NULL);
+ 
+ 	ret = nl_recvmsgs(state->sock, cb);
+-	if (ret < 0)
++	if (ret < 0) {
++		nl_cb_put(cb);
+ 		return opts.remaining_header;
++	}
+ 
+ 	nl_wait_for_ack(state->sock);
+ 
++	nl_cb_put(cb);
++
+ 	return opts.remaining_header;
+ }
+ 
+--- a/routing_algo.c
++++ b/routing_algo.c
+@@ -107,6 +107,7 @@ static int print_routing_algos(struct st
+ 	nl_cb_err(cb, NL_CB_CUSTOM, netlink_print_error, NULL);
+ 
+ 	nl_recvmsgs(state->sock, cb);
++	nl_cb_put(cb);
+ 
+ 	if (!last_err) {
+ 		netlink_print_remaining_header(&opts);
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -160,13 +160,18 @@ static int tp_meter_start(struct state *
+ 	int err = 0;
+ 
+ 	cb = nl_cb_alloc(NL_CB_DEFAULT);
++	if (!cb)
++		return -ENOMEM;
++
+ 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, tp_meter_cookie_callback,
+ 		  cookie);
+ 	nl_cb_err(cb, NL_CB_CUSTOM, tpmeter_nl_print_error, cookie);
+ 
+ 	msg = nlmsg_alloc();
+-	if (!msg)
++	if (!msg) {
++		nl_cb_put(cb);
+ 		return -ENOMEM;
++	}
+ 
+ 	genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, state->batadv_family, 0,
+ 		    0, BATADV_CMD_TP_METER, 1);
+@@ -210,6 +215,9 @@ static int tp_recv_result(struct nl_sock
+ 	int ret;
+ 
+ 	cb = nl_cb_alloc(NL_CB_DEFAULT);
++	if (!cb)
++		return -ENOMEM;
++
+ 	nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check, NULL);
+ 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, tp_meter_result_callback,
+ 		  result);

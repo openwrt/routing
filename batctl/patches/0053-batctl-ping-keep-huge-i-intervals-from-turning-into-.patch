@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:18:32 +0200
+Subject: batctl: ping: keep huge '-i' intervals from turning into a flood ping
+
+strtod() happily accepts "inf" or values like 1e300 as ping interval.
+Converting such a value to time_t for the nanosleep interval is undefined
+behavior.
+
+Clamp the interval to a well representable maximum before splitting it
+into seconds and nanoseconds.
+
+Fixes: 4ebe4fb7b08d ("batctl: ping: Add subsecond precision to ping interval")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=ebe0368c1259673ab2518eb9c8b2dd540b6819f2
+
+--- a/ping.c
++++ b/ping.c
+@@ -106,12 +106,14 @@ static int ping(struct state *state, int
+ 		case 'i':
+ 			errno = 0;
+ 			ping_interval = strtod(optarg, &endptr);
+-			if (errno || *endptr != '\0') {
++			if (errno || *endptr != '\0' || endptr == optarg ||
++			    !isfinite(ping_interval) || ping_interval <= 0) {
+ 				fprintf(stderr, "Error - invalid ping interval '%s'\n", optarg);
+ 				goto out;
+ 			}
+ 
+ 			ping_interval = fmax(ping_interval, 0.001);
++			ping_interval = fmin(ping_interval, 1000000000.0);
+ 			fractional_part = modf(ping_interval, &integral_part);
+ 			loop_interval.tv_sec = (time_t)integral_part;
+ 			loop_interval.tv_nsec = (long)(fractional_part * 1000000000l);

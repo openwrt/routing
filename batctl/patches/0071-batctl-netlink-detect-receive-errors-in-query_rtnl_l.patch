@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 07:13:53 +0200
+Subject: batctl: netlink: detect receive errors in query_rtnl_link
+
+query_rtnl_link() ignores the return value of nl_recvmsgs(). Once
+nl_send_auto_complete() succeeds, the local err stays 0 no matter what
+happens while receiving the RTM_GETLINK dump, so a failed or truncated dump
+is reported as success.
+
+Set err to -EIO on an receive error to let the caller handle it as actual
+error.
+
+Fixes: 45548f578683 ("batctl: Use rtnl to query list of softif devices")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=043adfdf579c656b707c60f7a3a08a38e4543f49
+
+--- a/functions.c
++++ b/functions.c
+@@ -507,7 +507,9 @@ int query_rtnl_link(int ifindex, nl_recv
+ 	if (ret < 0)
+ 		goto err_free_msg;
+ 
+-	nl_recvmsgs(sock, cb);
++	ret = nl_recvmsgs(sock, cb);
++	if (ret < 0)
++		err = -EIO;
+ 
+ err_free_msg:
+ 	nlmsg_free(msg);

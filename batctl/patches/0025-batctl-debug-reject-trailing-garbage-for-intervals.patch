@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 13:57:02 +0200
+Subject: batctl: debug: reject trailing garbage for intervals
+
+ A "%f" sscanf conversion stops at the first
+character it cannot consume and reports success for the leading numeric
+part, so trailing garbag are still accepted silently.
+
+Append a "%c" conversion so any trailing character makes sscanf() report
+more than the one expected item.
+
+Fixes: 302a41a73915 ("batctl: Add timeout filtering option for originators")
+Fixes: e4a7b7733faf ("batctl: Add an optional interval for watch-mode")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=543d4053c18efd58e79c91f567a348d7920cd434
+
+--- a/debug.c
++++ b/debug.c
+@@ -51,6 +51,7 @@ int handle_debug_table(struct state *sta
+ 	float watch_interval = 1;
+ 	char *orig_iface = NULL;
+ 	int optchar;
++	char tmp;
+ 	int err;
+ 
+ 	while ((optchar = getopt(argc, argv, "hnw::t:Humi:")) != -1) {
+@@ -67,7 +68,7 @@ int handle_debug_table(struct state *sta
+ 			if (!optarg)
+ 				break;
+ 
+-			if (sscanf(optarg, "%f", &watch_interval) != 1) {
++			if (sscanf(optarg, "%f%c", &watch_interval, &tmp) != 1) {
+ 				fprintf(stderr,
+ 					"Error - provided argument of '-%c' is not a number\n",
+ 					optchar);
+@@ -82,7 +83,7 @@ int handle_debug_table(struct state *sta
+ 			}
+ 
+ 			read_opt |= NO_OLD_ORIGS;
+-			if (sscanf(optarg, "%f", &orig_timeout) != 1) {
++			if (sscanf(optarg, "%f%c", &orig_timeout, &tmp) != 1) {
+ 				fprintf(stderr,
+ 					"Error - provided argument of '-%c' is not a number\n",
+ 					optchar);

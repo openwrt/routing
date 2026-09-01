@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 14:58:06 +0200
+Subject: batctl: version: don't strip newline for empty buffer
+
+When read_file() would return an empty buffer, then version() must not
+strip the last byte. Otherwise it would try to access 1 byte before the
+start of the buffer.
+
+Fixes: dbc4a8c8e585 ("batctl: version also prints the kernel module version if available")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=ce0fa8d53b62ee8f40d34dbd801a1e4b9e89a80a
+
+--- a/main.c
++++ b/main.c
+@@ -133,8 +133,10 @@ static void version(void)
+ 
+ 	ret = read_file(module_ver_path, USE_READ_BUFF | SILENCE_ERRORS);
+ 	if (ret == EXIT_SUCCESS) {
+-		if (line_ptr[strlen(line_ptr) - 1] == '\n')
+-			line_ptr[strlen(line_ptr) - 1] = '\0';
++		size_t line_len = strlen(line_ptr);
++
++		if (line_len > 0 && line_ptr[line_len - 1] == '\n')
++			line_ptr[line_len - 1] = '\0';
+ 
+ 		printf("%s]\n", line_ptr);
+ 	} else {

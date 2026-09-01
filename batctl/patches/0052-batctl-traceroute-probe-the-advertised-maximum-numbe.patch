@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:17:12 +0200
+Subject: batctl: traceroute: probe the advertised maximum number of hops
+
+The hop loop stops when the TTL reaches TTL_MAX, so only 49 hops are probed
+while the header line announces "50 hops max". A destination which is
+exactly TTL_MAX hops away is reported as unreachable even though the last
+probe was never sent.
+
+Run the loop up to and including TTL_MAX.
+
+Fixes: e1c83d9260e8 ("[batctl] traceroute utility updated to latest batman adv")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=718db5633200bfe312b89598d32360b854e3e6b4
+
+--- a/traceroute.c
++++ b/traceroute.c
+@@ -118,7 +118,7 @@ static int traceroute(struct state *stat
+ 	       dst_string, mac_string, TTL_MAX, sizeof(icmp_packet_out));
+ 
+ 	for (icmp_packet_out.ttl = 1;
+-	     !dst_reached && icmp_packet_out.ttl < TTL_MAX;
++	     !dst_reached && icmp_packet_out.ttl <= TTL_MAX;
+ 	     icmp_packet_out.ttl++) {
+ 		return_mac = NULL;
+ 		bat_host = NULL;

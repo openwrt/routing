@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:02:03 +0200
+Subject: batctl: netlink: report send errors in netlink_simple_request
+
+netlink_simple_request() initializes err to 0 and only lets
+ack_errno_handler() update it while receiving. When nl_send_auto_complete()
+fails, the function jumps to the cleanup path with err still set to 0 and
+reports success even though the request never reached the kernel. Callers
+like the interface create/destroy handling then exit without any error
+indication.
+
+Set err to -EIO on the send error path to let the caller handle it as
+actual error.
+
+Fixes: dd2bbe182780 ("batctl: Add command to create/destroy batman-adv interface")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=8cb6fb00dcfefb047f31b599b3b6d83c967cc5cb
+
+--- a/functions.c
++++ b/functions.c
+@@ -563,8 +563,10 @@ int netlink_simple_request(struct nl_msg
+ 	nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_wait_handler, NULL);
+ 
+ 	ret = nl_send_auto_complete(sock, msg);
+-	if (ret < 0)
++	if (ret < 0) {
++		err = -EIO;
+ 		goto err_free_cb;
++	}
+ 
+ 	// ack_errno_handler sets err on errors
+ 	err = 0;

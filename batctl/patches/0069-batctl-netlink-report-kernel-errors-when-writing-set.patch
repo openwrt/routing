@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 04:43:26 +0200
+Subject: batctl: netlink: report kernel errors when writing settings
+
+When writing a setting, sys_simple_nlquery() consumes the kernel reply via
+nl_wait_for_ack(). This helper uses the socket's default callbacks instead
+of state->cb, so sys_simple_nlerror() never runs and its (negative) return
+value is discarded. A set request rejected by the kernel therefore prints
+no error message and exits with EXIT_SUCCESS.
+
+This can be seen easily by calling: "batctl meshif bat0 aggregation 1"
+without CAP_NET_ADMIN.
+
+Receive the reply through state->cb instead, like the read path already
+does. The error handler then prints the kernel error, stores it in result
+and the command exits with EXIT_FAILURE.
+
+Fixes: 0b81e8fbaed5 ("batctl: Consume genl ACKs after setting reads")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=9de9f65aaae6fece0463f39930daac5f50f73bed
+
+--- a/sys.c
++++ b/sys.c
+@@ -109,10 +109,16 @@ int sys_simple_nlquery(struct state *sta
+ 	if (callback) {
+ 		ret = nl_recvmsgs(state->sock, state->cb);
+ 		if (ret < 0)
+-			return ret;
++			return -EIO;
++
++		nl_wait_for_ack(state->sock);
++
++		return result;
+ 	}
+ 
+-	nl_wait_for_ack(state->sock);
++	ret = nl_recvmsgs(state->sock, state->cb);
++	if (ret < 0 && result >= 0)
++		result = -EIO;
+ 
+ 	return result;
+ }

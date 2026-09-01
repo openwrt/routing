@@ -1,0 +1,76 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:12:03 +0200
+Subject: batctl: icmp_helper: return proper errno on syscall failures
+
+icmp_interface_send(), icmp_interface_read() and icmp_interface_filter()
+return the raw syscall results. On failure this is -1 while the callers
+interpret negative values as negative errno codes: ping and traceroute
+print strerror(-res) and thus always report "Operation not permitted" no
+matter why the send, receive or filter setup actually failed (for example
+ENETDOWN when the interface goes down mid-ping or ENOMEM when attaching the
+socket filter). The other error paths of these functions already return
+proper negative errno values.
+
+Convert the syscall failures to -errno before returning them.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=3c6156ecf602e5c135318bac60618046b5c862d5
+
+--- a/icmp_helper.c
++++ b/icmp_helper.c
+@@ -153,7 +153,7 @@ static int icmp_interface_filter(int soc
+ 
+ 	if (setsockopt(sock, SOL_SOCKET, SO_ATTACH_FILTER, &filter,
+ 		       sizeof(filter)))
+-		return -1;
++		return -errno;
+ 
+ 	return 0;
+ }
+@@ -339,6 +339,7 @@ static int icmp_interface_send(struct ba
+ {
+ 	struct ether_header header;
+ 	struct iovec vector[2];
++	ssize_t ret;
+ 
+ 	header.ether_type = htons(ETH_P_BATMAN);
+ 	memcpy(header.ether_shost, iface->mac, ETH_ALEN);
+@@ -349,7 +350,11 @@ static int icmp_interface_send(struct ba
+ 	vector[1].iov_base = icmp_packet;
+ 	vector[1].iov_len  = packet_len;
+ 
+-	return (int)writev(iface->sock, vector, 2);
++	ret = writev(iface->sock, vector, 2);
++	if (ret < 0)
++		return -errno;
++
++	return (int)ret;
+ }
+ 
+ int icmp_interface_write(struct state *state,
+@@ -485,9 +490,12 @@ retry:
+ 	max_sock = icmp_interface_preselect(&read_sockets);
+ 
+ 	res = select(max_sock, &read_sockets, NULL, NULL, tv);
+-	/* timeout, or < 0 error */
+-	if (res <= 0)
+-		return res;
++	if (res < 0)
++		return -errno;
++
++	/* timeout */
++	if (res == 0)
++		return 0;
+ 
+ 	read_sock = icmp_interface_get_read_sock(&read_sockets, &iface);
+ 	if (read_sock < 0)
+@@ -500,7 +508,7 @@ retry:
+ 
+ 	read_len = readv(read_sock, vector, 2);
+ 	if (read_len < 0)
+-		return read_len;
++		return -errno;
+ 
+ 	if (read_len < ETH_HLEN)
+ 		goto retry;

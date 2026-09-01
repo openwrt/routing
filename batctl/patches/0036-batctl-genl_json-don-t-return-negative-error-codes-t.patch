@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 04:45:15 +0200
+Subject: batctl: genl_json: don't return negative error codes to main
+
+handle_json_query() returns the result of netlink_print_query_json()
+directly. This is a negative errno code on failure and main() passes it
+straight to exit(). The process then terminates with a mangled exit status
+like 161 (-95 & 0xff).
+
+Limit the return codes to EXIT_SUCCESS and EXIT_FAILURE.
+
+Fixes: 57cc3c472a7d ("batctl: Introduce handler for JSON_* command types")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=baeb0179229295c74c1f2a56bea5c3292037350a
+
+--- a/genl_json.c
++++ b/genl_json.c
+@@ -600,6 +600,8 @@ int handle_json_query(struct state *stat
+ 	}
+ 
+ 	err = netlink_print_query_json(state, json_query);
++	if (err < 0)
++		return EXIT_FAILURE;
+ 
+-	return err;
++	return EXIT_SUCCESS;
+ }

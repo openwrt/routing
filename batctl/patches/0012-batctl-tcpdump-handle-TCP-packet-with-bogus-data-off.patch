@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 14:31:58 +0200
+Subject: batctl: tcpdump: handle TCP packet with bogus data offset
+
+dump_tcp() computes length as (buff_len - ip6_header_len - tcp_header_len),
+but the only bounds guard ensures 20 bytes, while doff allows a higher
+header length (60 bytes). With a doff of 15 (60 bytes) and only 20 bytes
+available in the buffer, the calculation would underflow and show a bugus
+length of the TCP payload. For now, set the payload length to zero for such
+a packet.
+
+Fixes: 35b37756f4a3 ("add IPv6 support to tcpdump parser")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=18c101bc28440f5638865cbdcf6faa64c5974a33
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -536,18 +536,20 @@ static void dump_tcp(const char ip_strin
+ {
+ 	uint16_t tcp_header_len;
+ 	struct tcphdr *tcphdr;
++	size_t tcp_len;
+ 
+ 	LEN_CHECK((size_t)buff_len - ip6_header_len,
+ 		  sizeof(struct tcphdr), "TCP");
+ 	tcphdr = (struct tcphdr *)(packet_buff + ip6_header_len);
+ 	tcp_header_len = tcphdr->doff * 4;
++	tcp_len = (size_t)buff_len - ip6_header_len;
+ 	printf("%s %s.%i > ", ip_string, src_addr, ntohs(tcphdr->source));
+ 	printf("%s.%i: TCP, Flags [%c%c%c%c%c%c], length %zu\n",
+ 	       dst_addr, ntohs(tcphdr->dest),
+ 	       (tcphdr->fin ? 'F' : '.'), (tcphdr->syn ? 'S' : '.'),
+ 	       (tcphdr->rst ? 'R' : '.'), (tcphdr->psh ? 'P' : '.'),
+ 	       (tcphdr->ack ? 'A' : '.'), (tcphdr->urg ? 'U' : '.'),
+-	       (size_t)buff_len - ip6_header_len - tcp_header_len);
++	       tcp_len > tcp_header_len ? tcp_len - tcp_header_len : 0);
+ }
+ 
+ static void dump_udp(const char ip_string[], unsigned char *packet_buff,

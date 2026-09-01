@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 07:01:01 +0200
+Subject: batctl: tcpdump: print the unreachable host for ICMP port unreachable
+
+When decoding an ICMP port-unreachable message, tcpdump prints the
+destination of the ICMP repply packet. The actual relevant IP (the original
+destination) is only in the inner IP header.
+
+The destinatin IP from the already validated tmp_udphdr must be used
+instead.
+
+Fixes: f08a28dcffb1 ("batctl: tcpdump - fix IP header parsing")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=26e7eb43e8422810f941f5afb7ed0e4046226b10
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -713,6 +713,7 @@ static void dump_ip(unsigned char *packe
+ 		    int time_printed)
+ {
+ 	static const char ip_string[] = "IP";
++	char ipinner[INET_ADDRSTRLEN];
+ 	char ipsrc[INET_ADDRSTRLEN];
+ 	char ipdst[INET_ADDRSTRLEN];
+ 	struct udphdr *tmp_udphdr;
+@@ -769,9 +770,15 @@ static void dump_ip(unsigned char *packe
+ 
+ 				tmp_udphdr = (struct udphdr *)(((char *)tmp_iphdr) + (tmp_iphdr->ihl * 4));
+ 
++				if (!inet_ntop(AF_INET, &tmp_iphdr->daddr, ipinner,
++					       sizeof(ipinner))) {
++					fprintf(stderr, "Cannot decode unreachable destination IP\n");
++					return;
++				}
++
+ 				printf("%s: ICMP ", ipdst);
+ 				printf("%s udp port %hu unreachable, length %zu\n",
+-				       ipdst, ntohs(tmp_udphdr->dest),
++				       ipinner, ntohs(tmp_udphdr->dest),
+ 				       (size_t)buff_len - (iphdr->ihl * 4));
+ 				break;
+ 			default:

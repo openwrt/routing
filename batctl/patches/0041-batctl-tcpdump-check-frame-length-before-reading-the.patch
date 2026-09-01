@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:09:12 +0200
+Subject: batctl: tcpdump: check frame length before reading the ethernet header
+
+parse_eth_hdr() reads ether_type without checking that the buffer actually
+contains a complete ethernet header. Use an header length check like in all
+other functions.
+
+Fixes: 3bdfc388e74b ("implement simple tcpdump, first only batman packets")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=e69b8fefded470adbb952d0c6a0ac6dd6c9d88b2
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1200,6 +1200,8 @@ static void parse_eth_hdr(unsigned char
+ 	struct batadv_ogm_packet *batman_ogm_packet;
+ 	struct ether_header *eth_hdr;
+ 
++	LEN_CHECK(buff_len, sizeof(*eth_hdr), "ETH HEADER");
++
+ 	eth_hdr = (struct ether_header *)packet_buff;
+ 
+ 	switch (ntohs(eth_hdr->ether_type)) {

@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 9 Jul 2026 21:26:13 +0200
+Subject: batman-adv: mcast: linearize skbuff for packet generation
+
+batadv_mcast_forw_packet() and batadv_mcast_forw_packet() is not only
+called by the unsharing+linearizing batadv_recv_mcast_packet() handler.
+When it is called by batadv_mcast_forw_mcsend() then it will be unshared
+but not linearized. The SKB_LINEAR_ASSERT() can therefore cause a fatal
+BUG().
+
+The linearization should happen during the expansion of the head because
+the call chain because the scrape function can be hit already during the
+initial batadv_mcast_forw_mode() selection code:
+
+* batadv_interface_tx
+* batadv_mcast_forw_mode
+* batadv_mcast_forw_mode_by_count()
+* batadv_mcast_forw_push()
+  -> calls batadv_mcast_forw_expand_head() before everything else
+* batadv_mcast_forw_push_tvlvs()
+* batadv_mcast_forw_push_dests()
+* batadv_mcast_forw_push_adjust_padding()
+* batadv_mcast_forw_scrape()
+
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Fixes: 8ed36122d709 ("batman-adv: mcast: implement multicast packet reception and forwarding")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=426e36bbbc8497bcef8a7ea3fee5f93a563efe16
+
+--- a/net/batman-adv/multicast_forw.c
++++ b/net/batman-adv/multicast_forw.c
+@@ -1103,6 +1103,10 @@ static int batadv_mcast_forw_expand_head
+ 	if (skb_cow(skb, hdr_size) < 0)
+ 		return -ENOMEM;
+ 
++	/* batadv_mcast_forw_scrape() + batadv_mcast_forw_packet() require linearized skb */
++	if (skb_linearize(skb) < 0)
++		return -ENOMEM;
++
+ 	return 0;
+ }
+ 

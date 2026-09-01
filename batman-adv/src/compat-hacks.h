@@ -5,6 +5,29 @@
 #include <linux/version.h>	/* LINUX_VERSION_CODE */
 #include <linux/types.h>
 
+#if LINUX_VERSION_IS_LESS(7, 3, 0)
+
+#include <linux/skbuff.h>
+
+static inline bool __must_check
+batadv_skb_set_transport_header_careful(struct sk_buff *skb, const int offset)
+{
+	long thoff = skb->data - skb->head + offset;
+
+	if (unlikely(thoff != (typeof(skb->transport_header))thoff))
+		return false;
+
+	if (unlikely(thoff == (typeof(skb->transport_header))~0U))
+		return false;
+
+	skb->transport_header = thoff;
+	return true;
+}
+
+#define skb_set_transport_header_careful batadv_skb_set_transport_header_careful
+
+#endif /* LINUX_VERSION_IS_LESS(7, 3, 0) */
+
 /* <DECLARE_EWMA> */
 
 #include <linux/version.h>

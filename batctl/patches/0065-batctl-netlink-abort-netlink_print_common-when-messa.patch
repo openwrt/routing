@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:07:05 +0200
+Subject: batctl: netlink: abort netlink_print_common when message allocation fails
+
+When nlmsg_alloc() fails, netlink_print_common() just continues. In
+one-shot mode this leaves the loop with the stale last_err of 0 and the
+command reports success even though nothing was queried or printed. In
+watch mode the loop retries immediately without the usleep() pause and
+leaks the header that netlink_get_info() prepared in the previous
+iteration.
+
+Treat the allocation failure as -ENOMEM and leave the query loop.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=0e93dc083e07bafc6efd1f7b13302cb320f7f1fb
+
+--- a/netlink.c
++++ b/netlink.c
+@@ -567,8 +567,10 @@ int netlink_print_common(struct state *s
+ 								 header);
+ 
+ 		msg = nlmsg_alloc();
+-		if (!msg)
+-			continue;
++		if (!msg) {
++			last_err = -ENOMEM;
++			break;
++		}
+ 
+ 		genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, state->batadv_family,
+ 			    0, NLM_F_DUMP, nl_cmd, 1);

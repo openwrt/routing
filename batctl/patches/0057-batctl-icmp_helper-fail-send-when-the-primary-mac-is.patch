@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 08:21:31 +0200
+Subject: batctl: icmp_helper: fail send when the primary mac is unknown
+
+icmp_interface_update() calls get_primarymac_netlink() but discards its
+return value. That helper only writes the output buffer on success; on
+failure (netlink error, or BATADV_ATTR_HARD_ADDRESS missing from the
+BATADV_CMD_GET_MESH_INFO reply) it returns a negative errno and leaves the
+buffer untouched. primary_mac is a zero-initialised static and this is the
+only place that ever writes it, so a failed query leaves it as
+00:00:00:00:00:00. And address which the receiver cannot use to send a
+reply.
+
+Propagate the failure out of icmp_interface_update() and abort the send.
+
+Fixes: 4bd751eed4dc ("batctl: Implement non-routing batadv_icmp in userspace")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=61324450de7be775eb838ffaee866f71990a7295
+
+--- a/icmp_helper.c
++++ b/icmp_helper.c
+@@ -328,9 +328,7 @@ static int icmp_interface_update(struct
+ 	/* remove old interfaces */
+ 	icmp_interface_sweep();
+ 
+-	get_primarymac_netlink(state, primary_mac);
+-
+-	return 0;
++	return get_primarymac_netlink(state, primary_mac);
+ }
+ 
+ static int icmp_interface_send(struct batadv_icmp_header *icmp_packet,
+@@ -382,7 +380,9 @@ int icmp_interface_write(struct state *s
+ 	if (icmp_packet->msg_type != BATADV_ECHO_REQUEST)
+ 		return -EINVAL;
+ 
+-	icmp_interface_update(state);
++	ret = icmp_interface_update(state);
++	if (ret < 0)
++		return ret;
+ 
+ 	if (list_empty(&interface_list))
+ 		return -EFAULT;

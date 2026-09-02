@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 14:19:06 +0200
+Subject: batctl: tcpdump: resolve bat-host name for ROAMv1 client
+
+Every packet parser in tcpdump forwards its read_opt argument to
+get_name_by_macaddr(), which only consults the bat-hosts table when
+read_opt carries USE_BAT_HOSTS. This was (without reason) not done in the
+TVLV ROAMv1 parser and the NO_FLAGS is hardcoded for the
+get_name_by_macaddr().
+
+Just forward the read_opts flags like in all other functions to have the
+same user experience.
+
+Fixes: 4c39fb823b86 ("batctl: tcpdump - parse TVLV containers")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=6bf0ae6d831bdd1743a4f0bdafbbc8e04bf3dd3d
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -201,7 +201,7 @@ static void batctl_tvlv_parse_tt_v1(void
+ }
+ 
+ static void batctl_tvlv_parse_roam_v1(void *buff, ssize_t buff_len,
+-				      int read_opt __maybe_unused)
++				      int read_opt)
+ {
+ 	struct batadv_tvlv_roam_adv *tvlv = buff;
+ 
+@@ -213,7 +213,7 @@ static void batctl_tvlv_parse_roam_v1(vo
+ 	}
+ 
+ 	printf("\tTVLV ROAMv1: client %s, VLAN ID %d\n",
+-	       get_name_by_macaddr((struct ether_addr *)tvlv->client, NO_FLAGS),
++	       get_name_by_macaddr((struct ether_addr *)tvlv->client, read_opt),
+ 	       BATADV_PRINT_VID(ntohs(tvlv->vid)));
+ }
+ 

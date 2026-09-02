@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 04:51:06 +0200
+Subject: batctl: isolation_mark: fix error message for invalid mark/mask values
+
+When the mark or mask argument fails to parse, error message claims
+"incorrect number of arguments (expected 1)" even though exactly one
+argument was given.
+
+Print the offending value and say that the format is invalid instead.
+
+Fixes: a319ec4dcbff ("batctl: Support generic netlink for isolation_mark command")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=847e8a576b3b3abc64abf3044167b6bcd590c31a
+
+--- a/isolation_mark.c
++++ b/isolation_mark.c
+@@ -66,7 +66,8 @@ static int parse_isolation_mark(struct s
+ 	return 0;
+ 
+ inval_format:
+-	fprintf(stderr, "Error - incorrect number of arguments (expected 1)\n");
++	fprintf(stderr, "Error - invalid isolation mark/mask format: %s\n",
++		argv[1]);
+ 	fprintf(stderr, "The following formats for mark(/mask) are allowed:\n");
+ 	fprintf(stderr, " * 0x12345678\n");
+ 	fprintf(stderr, " * 0x12345678/0xabcdef09\n");

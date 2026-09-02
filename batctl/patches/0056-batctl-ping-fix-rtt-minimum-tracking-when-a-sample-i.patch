@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 07:14:59 +0200
+Subject: batctl: ping: fix rtt minimum tracking when a sample is 0.0
+
+The rtt minimum is tracked with "if (time_delta < min || min == 0.0)",
+using min's initial value of 0.0 as a "not set yet" sentinel. But 0.0 is
+also a valid measurement which must be accepted as minimum.
+
+packets_in is still 0 while the first reply is processed (it is incremented
+afterwards), so use it to detect the first sample instead of overloading
+min == 0.0.
+
+Fixes: 2474249a6312 ("[batctl] ping utility updated to latest batman adv")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=b8a1b4344ce4a96dfc9f5a0a98daae2fcc1a6f27
+
+--- a/ping.c
++++ b/ping.c
+@@ -294,10 +294,14 @@ read_packet:
+ 
+ 			printf("\n");
+ 
+-			if (time_delta < min || min == 0.0)
++			if (packets_in == 0)
+ 				min = time_delta;
++
++			min = fmin(time_delta, min);
++
+ 			if (time_delta > max)
+ 				max = time_delta;
++
+ 			avg += time_delta;
+ 			mdev += time_delta * time_delta;
+ 			packets_in++;

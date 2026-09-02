@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 19:32:40 +0200
+Subject: batman-adv: dat: fix tie-break for candidate selection
+
+The original version of the candidate selection for DAT attempted to
+compare both candidate and max_orig_node to identify which has the smaller
+MAC address. This comparison is required as tie-break when a hash collision
+happened.
+
+But the used function returned 0 when the function was not equal and a
+non-zero value when it was equal. As result, the actually selected
+node was dependent on the order of entries in the orig_hash and not
+actually on the mac addresses. The last originator in the hash collision
+would always win.
+
+To have a proper ordering, it must diff the actual MAC address bytes and
+reject the candidate when the diff is not smaller than 0.
+
+Fixes: 34b3c3850e7d ("batman-adv: Distributed ARP Table - create DHT helper functions")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=b9185d1d5d7b5031f41d65913056532f78802d50
+
+--- a/net/batman-adv/distributed-arp-table.c
++++ b/net/batman-adv/distributed-arp-table.c
+@@ -545,7 +545,7 @@ static bool batadv_is_orig_node_eligible
+ 	 * the one with the lowest address
+ 	 */
+ 	if (tmp_max == max && max_orig_node &&
+-	    batadv_compare_eth(candidate->orig, max_orig_node->orig))
++	    memcmp(candidate->orig, max_orig_node->orig, ETH_ALEN) >= 0)
+ 		goto out;
+ 
+ 	ret = true;

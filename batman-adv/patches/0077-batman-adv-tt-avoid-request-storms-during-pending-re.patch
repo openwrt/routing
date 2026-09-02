@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 20:56:14 +0200
+Subject: batman-adv: tt: avoid request storms during pending request
+
+batadv_send_tt_request() allocates a tt_req_node when none exists for the
+destination originator node. This should prevent that a multiple TT
+requests are send at the same time to an originator.
+
+But if allocation of the send buffer failed, this request must be cleaned
+up again. But indicator for such a failure is "ret == false". But the
+actual implementation is checking for "ret == true".
+
+The check must be inverted to not loose the information about the TT
+request directly after it was attempted to be sent out. This should avoid
+potential request storms.
+
+Fixes: 6228419df3a5 ("batman-adv: tvlv - convert tt query packet to use tvlv unicast packets")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=1315afbabaa985f87fa772616b70df025bbe3dcc
+
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -3003,7 +3003,7 @@ static bool batadv_send_tt_request(struc
+ out:
+ 	batadv_hardif_put(primary_if);
+ 
+-	if (ret && tt_req_node) {
++	if (!ret && tt_req_node) {
+ 		spin_lock_bh(&bat_priv->tt.req_list_lock);
+ 		if (!hlist_unhashed(&tt_req_node->list)) {
+ 			hlist_del_init(&tt_req_node->list);

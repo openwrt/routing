@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 14:17:09 +0200
+Subject: batctl: tcpdump: drop hardcoded IPv6 buffer sizes
+
+The inet_ntop expects to know the dst size buffer. But instead of
+specifying how to calculate the size of this buffer, just a value was
+hardcoded - which might not fulfill the "INET6_ADDRSTRLEN" size
+requirements.
+
+Evaluate the size of the buffer at compile time to avoid potential
+discrepancies.
+
+Fixes: 35b37756f4a3 ("add IPv6 support to tcpdump parser")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=12165ffbd5e4d14bb71270a2108274754584615e
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -675,7 +675,7 @@ static void dump_ipv6(unsigned char *pac
+ 				  sizeof(*nd_neigh_sol), "ICMPv6 Neighbor Solicitation");
+ 			nd_neigh_sol = (struct nd_neighbor_solicit *)icmphdr;
+ 			inet_ntop(AF_INET6, &nd_neigh_sol->nd_ns_target,
+-				  nd_nas_target, 40);
++				  nd_nas_target, sizeof(nd_nas_target));
+ 			printf(" neighbor solicitation, who has %s, length %zd\n",
+ 			       nd_nas_target, buff_len);
+ 			break;
+@@ -684,7 +684,7 @@ static void dump_ipv6(unsigned char *pac
+ 				  sizeof(*nd_advert), "ICMPv6 Neighbor Advertisement");
+ 			nd_advert = (struct nd_neighbor_advert *)icmphdr;
+ 			inet_ntop(AF_INET6, &nd_advert->nd_na_target,
+-				  nd_nas_target, 40);
++				  nd_nas_target, sizeof(nd_nas_target));
+ 			printf(" neighbor advertisement, tgt is %s, length %zd\n",
+ 			       nd_nas_target, buff_len);
+ 			break;

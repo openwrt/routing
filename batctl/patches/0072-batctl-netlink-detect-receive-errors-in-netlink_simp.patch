@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 11:46:19 +0200
+Subject: batctl: netlink: detect receive errors in netlink_simple_request
+
+netlink_simple_request() ignores the return value of nl_recvmsgs(). Once
+nl_send_auto_complete() succeeds, the local err stays 0 no matter what
+happens while receiving the RTM_GETLINK dump, so a failed or truncated dump
+is reported as success.
+
+Set err to -EIO on an receive error to let the caller handle it as actual
+error.
+
+Fixes: dd2bbe182780 ("batctl: Add command to create/destroy batman-adv interface")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=c2a77e573b63eaa22d3a7096296164a9aa190eab
+
+--- a/functions.c
++++ b/functions.c
+@@ -572,7 +572,9 @@ int netlink_simple_request(struct nl_msg
+ 
+ 	// ack_errno_handler sets err on errors
+ 	err = 0;
+-	nl_recvmsgs(sock, cb);
++	ret = nl_recvmsgs(sock, cb);
++	if (ret < 0)
++		err = ret;
+ 
+ err_free_cb:
+ 	nl_cb_put(cb);

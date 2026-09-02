@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 04:48:58 +0200
+Subject: batctl: tpmeter: abort result wait on receive errors
+
+tp_recv_result() loops on nl_recvmsgs() until the tp_meter result
+notification arrives, but never checks its return value. When the receive
+fails (receive queue overrun and drops notification, socket failed
+completely, ...), the loop just calls nl_recvmsgs() again and blocks
+forever in recvmsg() waiting for a message that will never arrive.
+
+Leave the receive loop on errors instead; the existing checks below then
+report the failure to the caller.
+
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=3e64e20048e1459fe6afca55898a4b62ec4f83af
+
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -198,6 +198,7 @@ static int tp_recv_result(struct nl_sock
+ {
+ 	struct nl_cb *cb;
+ 	int err = 0;
++	int ret;
+ 
+ 	cb = nl_cb_alloc(NL_CB_DEFAULT);
+ 	nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check, NULL);
+@@ -205,8 +206,11 @@ static int tp_recv_result(struct nl_sock
+ 		  result);
+ 	nl_cb_err(cb, NL_CB_CUSTOM, tpmeter_nl_print_error, result);
+ 
+-	while (result->error == 0 && !result->found)
+-		nl_recvmsgs(sock, cb);
++	while (result->error == 0 && !result->found) {
++		ret = nl_recvmsgs(sock, cb);
++		if (ret < 0)
++			break;
++	}
+ 
+ 	nl_cb_put(cb);
+ 

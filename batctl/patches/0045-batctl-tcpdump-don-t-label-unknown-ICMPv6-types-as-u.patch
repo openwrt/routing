@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 07:02:41 +0200
+Subject: batctl: tcpdump: don't label unknown ICMPv6 types as unreachable
+
+The default case of the ICMPv6 type switch prints ", destination
+unreachable, unknown icmp6 type (N)". Every ICMPv6 type that is not
+explicitly handled is therefore mislabelled as a destination unreachable
+message.
+
+Just report "unknown icmp6 type" instead.
+
+Fixes: 35b37756f4a3 ("add IPv6 support to tcpdump parser")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=020ccec918cbd7ab0da0d0988b49f515e711bbfe
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -691,7 +691,7 @@ static void dump_ipv6(unsigned char *pac
+ 			       nd_nas_target, buff_len);
+ 			break;
+ 		default:
+-			printf(", destination unreachable, unknown icmp6 type (%u)\n",
++			printf(", unknown icmp6 type (%u)\n",
+ 			       icmphdr->icmp6_type);
+ 			break;
+ 		}

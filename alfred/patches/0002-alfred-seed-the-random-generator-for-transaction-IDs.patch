@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 08:25:05 +0200
+Subject: alfred: seed the random() generator for transaction IDs
+
+time_random_seed() initialized the PRNG with srand(), but the only
+consumer, get_random_id(), draws its values from random(). srand()/rand()
+and srandom()/random() are two independent generators which can have
+separate state; seeding one does not affect the other.
+
+Seed random() with srandom() so the generator that is actually used gets
+the computed seed.
+
+Fixes: fcfe26c690ce ("alfred: Add transaction management block to push_data")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/alfred.git/commit/?id=b175725a5ac75a832370cefd604ee80e0cc226b4
+
+--- a/util.c
++++ b/util.c
+@@ -46,7 +46,7 @@ void time_random_seed(void)
+ 		s += c[i];
+ 	}
+ 
+-	srand(s);
++	srandom(s);
+ }
+ 
+ uint16_t get_random_id(void)

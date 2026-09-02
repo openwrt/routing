@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:17:54 +0200
+Subject: batctl: tpmeter: don't use negative errno as exit status
+
+The netlink error codes from tp_meter_start() and tp_recv_result() are
+returned unmodified as command result, which main() passes to exit(). A
+failure like -EOPNOTSUPP therefore turns into the meaningless exit status
+instead of EXIT_FAILURE.
+
+Report EXIT_FAILURE after printing the error.
+
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=aa4148ec99e308df403115fa1e6aeb2a80445c3a
+
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -383,6 +383,7 @@ static int throughputmeter(struct state
+ 	ret = tp_meter_start(state, dst_mac, time, &cookie);
+ 	if (ret < 0) {
+ 		printf("Failed to send tp_meter request to kernel: %d\n", ret);
++		ret = EXIT_FAILURE;
+ 		goto out;
+ 	}
+ 
+@@ -390,6 +391,7 @@ static int throughputmeter(struct state
+ 	ret = tp_recv_result(listen_sock, &result);
+ 	if (ret < 0) {
+ 		printf("Failed to recv tp_meter result from kernel: %d\n", ret);
++		ret = EXIT_FAILURE;
+ 		goto out;
+ 	}
+ 

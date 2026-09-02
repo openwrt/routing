@@ -1,0 +1,55 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 13:55:09 +0200
+Subject: batctl: ping: reject invalid packet count argument
+
+The -c option parsed its argument with strtol and only mapped the result to
+the internal "endless" value when it was smaller than 1. But it ignores any
+invalid parameter silently. The manpage also only documented the "missing
+-c" as valid selection of the endless loop and not an invalid or smaller
+than 1 value.
+
+Use the same strto* validation as the rest of batctl and print a user
+readable error in case of an parsing error.
+
+Fixes: 87ade2869cf3 ("add interval and loop count options")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=73c9bb12e9114e265b42118c0f09a93517d7d90d
+
+--- a/ping.c
++++ b/ping.c
+@@ -8,6 +8,7 @@
+ 
+ #include <netinet/in.h>
+ #include <errno.h>
++#include <limits.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <unistd.h>
+@@ -90,15 +91,23 @@ static int ping(struct state *state, int
+ 	char *endptr;
+ 	int optchar;
+ 	int rr = 0;
++	long tmp;
+ 	int res;
+ 	int i;
+ 
+ 	while ((optchar = getopt(argc, argv, "hc:i:t:RT")) != -1) {
+ 		switch (optchar) {
+ 		case 'c':
+-			loop_count = strtol(optarg, NULL, 10);
+-			if (loop_count < 1)
+-				loop_count = -1;
++			tmp = strtol(optarg, &endptr, 10);
++			if (!endptr || *endptr != '\0' || endptr == optarg ||
++			    tmp < 1 || tmp > INT_MAX) {
++				fprintf(stderr,
++					"Error - the supplied packet count is invalid: %s\n",
++					optarg);
++				ping_usage();
++				return EXIT_FAILURE;
++			}
++			loop_count = tmp;
+ 			break;
+ 		case 'h':
+ 			ping_usage();

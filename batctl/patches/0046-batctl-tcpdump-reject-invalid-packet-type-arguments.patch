@@ -1,0 +1,79 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 11:48:47 +0200
+Subject: batctl: tcpdump: reject invalid packet type arguments
+
+The strtol error handling is rather complicated and it is not only about
+checking the return value. The possible error indicators are:
+
+* endptr is NULL
+* endptr is not pointing to end delimiter
+* endptr is pointing at nptr (because it might have been an empty string)
+* returned value is larger/smaller than the expected maximum/minimum value
+  range
+
+The first tree conditions were not checked even when it is a potential
+problem for multiple places. And the user was never informed about the
+parsing errors. The old value was simply used.
+
+Perform the needed validation steps and stop with an user readable error on
+parsing problems. At the same time, switch to the unsigned number parsing
+function strtoul because no negative numbers are allowed as inputs.
+
+Fixes: fca4ef98aa99 ("change mac convert functions, add icmp packet output")
+Fixes: c6ed60c0f6fd ("batctl: tcpdump - add option to select all packet types except specified")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=9cefbc4c37969c5502494ee68e72381a1694eb8a
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1506,12 +1506,13 @@ static int tcpdump(struct state *state _
+ 	fd_set tmp_wait_sockets;
+ 	int ret = EXIT_FAILURE;
+ 	fd_set wait_sockets;
++	unsigned long tmp;
+ 	struct timeval tv;
+ 	int max_sock = 0;
+ 	ssize_t read_len;
++	char *endptr;
+ 	int optchar;
+ 	int res;
+-	int tmp;
+ 
+ 	dump_level = dump_level_all;
+ 
+@@ -1527,14 +1528,28 @@ static int tcpdump(struct state *state _
+ 			read_opt &= ~USE_BAT_HOSTS;
+ 			break;
+ 		case 'p':
+-			tmp = strtol(optarg, NULL, 10);
+-			if (tmp > 0 && tmp <= dump_level_all)
+-				dump_level = tmp;
++			tmp = strtoul(optarg, &endptr, 10);
++			if (!endptr || *endptr != '\0' || endptr == optarg ||
++			    tmp == 0 || tmp > dump_level_all) {
++				fprintf(stderr,
++					"Error - the supplied packet type is invalid: %s\n",
++					optarg);
++				tcpdump_usage();
++				return EXIT_FAILURE;
++			}
++			dump_level = tmp;
+ 			break;
+ 		case 'x':
+-			tmp = strtol(optarg, NULL, 10);
+-			if (tmp > 0 && tmp <= dump_level_all)
+-				dump_level &= ~tmp;
++			tmp = strtoul(optarg, &endptr, 10);
++			if (!endptr || *endptr != '\0' || endptr == optarg ||
++			    tmp == 0 || tmp > dump_level_all) {
++				fprintf(stderr,
++					"Error - the supplied packet type is invalid: %s\n",
++					optarg);
++				tcpdump_usage();
++				return EXIT_FAILURE;
++			}
++			dump_level &= ~tmp;
+ 			break;
+ 		default:
+ 			tcpdump_usage();

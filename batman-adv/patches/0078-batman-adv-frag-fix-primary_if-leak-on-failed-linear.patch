@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 20:51:44 +0200
+Subject: batman-adv: frag: fix primary_if leak on failed linearization
+
+If the skb has a frag_list, it must be linearized before it can be split
+using skb_split(). But when this step failed, it must not only free the skb
+but also take care of the reference to the already found primary_if.
+
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Fixes: d467720acaf1 ("batman-adv: Don't skb_split skbuffs with frag_list")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=54ddb49d2d97e1667bd5f2b6a8ee291a668f37f2
+
+--- a/net/batman-adv/fragmentation.c
++++ b/net/batman-adv/fragmentation.c
+@@ -543,7 +543,7 @@ int batadv_frag_send_packet(struct sk_bu
+ 	 */
+ 	if (skb_has_frag_list(skb) && __skb_linearize(skb)) {
+ 		ret = -ENOMEM;
+-		goto free_skb;
++		goto put_primary_if;
+ 	}
+ 
+ 	/* Create one header to be copied to all fragments */

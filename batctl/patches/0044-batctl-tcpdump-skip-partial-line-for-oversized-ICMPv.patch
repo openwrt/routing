@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 07:01:29 +0200
+Subject: batctl: tcpdump: skip partial line for oversized ICMPv6 errors
+
+dump_ipv6() prints the "IP6 <src> > <dst> " line prefix before it checks
+whether an ICMPv6 error message exceeds IPV6_MIN_MTU. The length check
+might just stop the processing and causes some truncated output on stdout.
+Which is then also not terminated by a newline.
+
+Move the size check ahead of the printf to avoid this partial line.
+
+Fixes: 35b37756f4a3 ("add IPv6 support to tcpdump parser")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=d5a305d7c8c8aa2b18233aa16a332cf4ac1f0a78
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -623,7 +623,6 @@ static void dump_ipv6(unsigned char *pac
+ 		icmphdr = (struct icmp6_hdr *)(packet_buff +
+ 					       sizeof(struct ip6_hdr));
+ 
+-		printf("%s %s > %s ", ip_string, ipsrc, ipdst);
+ 		if (icmphdr->icmp6_type < ICMP6_INFOMSG_MASK &&
+ 		    (size_t)(buff_len) > IPV6_MIN_MTU) {
+ 			fprintf(stderr,
+@@ -632,6 +631,7 @@ static void dump_ipv6(unsigned char *pac
+ 			return;
+ 		}
+ 
++		printf("%s %s > %s ", ip_string, ipsrc, ipdst);
+ 		printf("ICMP6");
+ 		switch (icmphdr->icmp6_type) {
+ 		case ICMP6_DST_UNREACH:

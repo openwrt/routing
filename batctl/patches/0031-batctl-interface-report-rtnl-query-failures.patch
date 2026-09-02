@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:23:44 +0200
+Subject: batctl: interface: report rtnl query failures
+
+print_interfaces() ignores the query_rtnl_link() result. When the rtnl
+socket setup or the dump request fails, batctl interface prints nothing and
+exits with EXIT_SUCCESS. This is indistinguishable from a
+meshif without any slave interfaces.
+
+Check the result and fail with an error message instead.
+
+Fixes: 60e519bfeaa3 ("batctl: Use rtnl to query list of softif devices")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=7d9bfae7a98603bd45f5e9261b10eff71a7634f4
+
+--- a/interface.c
++++ b/interface.c
+@@ -169,11 +169,17 @@ static int print_interfaces(struct state
+ 	if (ret < 0)
+ 		return EXIT_FAILURE;
+ 
+-	query_rtnl_link(state->mesh_ifindex, print_interfaces_rtnl_parse,
+-			state);
++	ret = query_rtnl_link(state->mesh_ifindex, print_interfaces_rtnl_parse,
++			      state);
+ 
+ 	netlink_destroy(state);
+ 
++	if (ret < 0) {
++		fprintf(stderr, "Error - could not query interfaces: %s\n",
++			strerror(-ret));
++		return EXIT_FAILURE;
++	}
++
+ 	return EXIT_SUCCESS;
+ }
+ 

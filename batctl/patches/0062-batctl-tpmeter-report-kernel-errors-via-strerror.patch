@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 22:10:05 +0200
+Subject: batctl: tpmeter: report kernel errors via strerror
+
+tp_meter_start() and tp_recv_result() return a negative system errno
+captured from the kernel's netlink error reply. Both failure paths in
+throughputmeter() printed that value with "%d", so the user saw a raw
+negative number instead of a readable message. In batctl, this is usually
+formatted with strerror() to get a human readable version.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=0d5537a5c2ac46f74d5dbaf8601594383e0961bb
+
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -397,7 +397,8 @@ static int throughputmeter(struct state
+ 
+ 	ret = tp_meter_start(state, dst_mac, time, &cookie);
+ 	if (ret < 0) {
+-		printf("Failed to send tp_meter request to kernel: %d\n", ret);
++		printf("Failed to send tp_meter request to kernel: %s\n",
++		       strerror(-ret));
+ 		ret = EXIT_FAILURE;
+ 		goto out;
+ 	}
+@@ -405,7 +406,8 @@ static int throughputmeter(struct state
+ 	result.cookie = cookie.cookie;
+ 	ret = tp_recv_result(listen_sock, &result);
+ 	if (ret < 0) {
+-		printf("Failed to recv tp_meter result from kernel: %d\n", ret);
++		printf("Failed to recv tp_meter result from kernel: %s\n",
++		       strerror(-ret));
+ 		ret = EXIT_FAILURE;
+ 		goto out;
+ 	}

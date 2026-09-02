@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:07:42 +0200
+Subject: batctl: netlink: don't format NULL extra_info in info_callback
+
+When asprintf() or strdup() fail to create the extra_info string,
+info_callback() continues with extra_info set to NULL and passes it as
+%s argument to the following asprintf(). Passing NULL to %s is
+undefined behavior.
+
+Fall back to an empty string when extra_info could not be allocated.
+
+Fixes: d8dd1ff1a0fe ("batctl: Use netlink to replace some of debugfs")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=a199671424f13ff04e60ba114448a0fd663f1af9
+
+--- a/netlink.c
++++ b/netlink.c
+@@ -440,7 +440,8 @@ static int info_callback(struct nl_msg *
+ 			       mesh_name,
+ 			       mesh_mac[0], mesh_mac[1], mesh_mac[2],
+ 			       mesh_mac[3], mesh_mac[4], mesh_mac[5],
+-			       algo_name, extra_info, extra_header);
++			       algo_name, extra_info ? extra_info : "",
++			       extra_header);
+ 		if (ret < 0)
+ 			opts->remaining_header = NULL;
+ 

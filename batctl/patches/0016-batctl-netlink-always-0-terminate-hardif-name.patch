@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 14:55:05 +0200
+Subject: batctl: netlink: always 0-terminate hardif name
+
+The kernel should not send non-0 terminated interface name name or an
+interface name larger than IFNAMSIZ. Just to be on the safe side, still
+force the last byte to the 0-delimiter.
+
+Fixes: 426e48c8d9ca ("batctl: ping: Get outgoing ifname from netlink")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=60b8ff8b56dd90ba5c6b0cfc98295b2696eebaff
+
+--- a/netlink.c
++++ b/netlink.c
+@@ -824,7 +824,8 @@ static int get_nexthop_netlink_cb(struct
+ 
+ 	if (attrs[BATADV_ATTR_HARD_IFNAME]) {
+ 		ifname = nla_get_string(attrs[BATADV_ATTR_HARD_IFNAME]);
+-		strncpy(opts->ifname, ifname, IFNAMSIZ);
++		strncpy(opts->ifname, ifname, IFNAMSIZ - 1);
++		opts->ifname[IFNAMSIZ - 1] = '\0';
+ 	} else {
+ 		/* compatibility for Linux < 5.14/batman-adv < 2021.2 */
+ 		ifname = if_indextoname(index, opts->ifname);

@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 Date: Thu, 6 Apr 2023 18:05:50 -0500
 Subject: fix batadv_is_cfg80211_netdev

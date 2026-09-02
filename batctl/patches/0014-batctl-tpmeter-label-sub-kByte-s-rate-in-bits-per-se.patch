@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 14:20:03 +0200
+Subject: batctl: tpmeter: label sub-kByte/s rate in bits per second
+
+The throughput result is printed as a bytes-per-second value followed by
+the same rate in bits per second in parentheses. The GB/s, MB/s and KB/s
+branches correctly label the parenthesised "throughput * 8" value as
+Gbps/Mbps/Kbps (lower-case "b" for bits), but the fallback branch for
+rates below one kByte/s labels it "Bps" (upper-case "B", conventionally
+bytes per second). That makes the line self-contradictory, e.g.
+
+	5 Bytes/s (40 Bps)
+
+which reads as "40 bytes/s" while the value is actually 40 bits/s.
+
+Use the lower-case "bps" suffix so the unit matches the other branches
+and the value it describes.
+
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Sven Eckelmann <se@simonwunderlich.de>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=904f2bc9f50482eb5262525a7c99c4a7b7f71147
+
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -443,7 +443,7 @@ static int throughputmeter(struct state
+ 			       (float)throughput / (1 << 10),
+ 			       (float)throughput * 8 / 1000);
+ 		else
+-			printf("%" PRIu64 " Bytes/s (%" PRIu64 " Bps)\n",
++			printf("%" PRIu64 " Bytes/s (%" PRIu64 " bps)\n",
+ 			       throughput, throughput * 8);
+ 
+ 		ret = 0;

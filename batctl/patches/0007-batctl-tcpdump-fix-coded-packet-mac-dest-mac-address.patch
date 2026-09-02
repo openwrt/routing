@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 13:57:33 +0200
+Subject: batctl: tcpdump: fix coded packet mac dest mac addresses
+
+get_name_by_macaddr uses returns shared buffer. The content of the buffer
+must therefore be processed first before the next get_name_by_macaddr()
+call is performed.
+
+Fixes: 9aae3c9f27b8 ("batctl: tcpdump: Add support for coded packets")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=760aa456b45ae73e840aa211c5b58b95f8752af2
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1152,9 +1152,10 @@ static void dump_batman_coded(unsigned c
+ 	       get_name_by_macaddr((struct ether_addr *)ether_header->ether_shost,
+ 				   read_opt));
+ 
+-	printf("%s|%s: CODED, ttvn %d|%d, ttl %hhu\n",
++	printf("%s|",
+ 	       get_name_by_macaddr((struct ether_addr *)coded_packet->first_orig_dest,
+-				   read_opt),
++				   read_opt));
++	printf("%s: CODED, ttvn %d|%d, ttl %hhu\n",
+ 	       get_name_by_macaddr((struct ether_addr *)coded_packet->second_dest,
+ 				   read_opt),
+ 	       coded_packet->first_ttvn, coded_packet->second_ttvn,

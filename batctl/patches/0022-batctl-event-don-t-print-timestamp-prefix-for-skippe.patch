@@ -1,0 +1,126 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:23:05 +0200
+Subject: batctl: event: don't print timestamp prefix for skipped events
+
+The timestamp is printed before the event is parsed. Each parse function
+can still decide to skip the event without printing anything In these cases
+a bare "1234.567890: " fragment without newline remains on the line and the
+next event is appended to it, corrupting the output stream.
+
+Format the timestamp into a prefix string instead and let the parse
+functions print it together with their first line.
+
+Fixes: 5d7850e3582e ("batctl: Add command to monitor for netlink events")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=eb4f3c97db42d6e85339385b758318b26f219870
+
+--- a/event.c
++++ b/event.c
+@@ -114,7 +114,7 @@ static const int tp_meter_mandatory[] =
+ 	BATADV_ATTR_TPMETER_RESULT,
+ };
+ 
+-static void event_parse_tp_meter(struct nlattr **attrs)
++static void event_parse_tp_meter(struct nlattr **attrs, const char *prefix)
+ {
+ 	const char *result_str;
+ 	uint32_t cookie;
+@@ -155,10 +155,10 @@ static void event_parse_tp_meter(struct
+ 		break;
+ 	}
+ 
+-	printf("tp_meter 0x%08x: %s\n", cookie, result_str);
++	printf("%stp_meter 0x%08x: %s\n", prefix, cookie, result_str);
+ }
+ 
+-static void event_parse_set_mesh(struct nlattr **attrs)
++static void event_parse_set_mesh(struct nlattr **attrs, const char *prefix)
+ {
+ 	static const int mesh_mandatory[] = {
+ 		BATADV_ATTR_MESH_IFINDEX,
+@@ -183,7 +183,7 @@ static void event_parse_set_mesh(struct
+ 			return;
+ 	}
+ 
+-	printf("%s: set mesh:\n", meshif_name);
++	printf("%s%s: set mesh:\n", prefix, meshif_name);
+ 
+ 	if (attrs[BATADV_ATTR_AGGREGATED_OGMS_ENABLED])
+ 		printf("* aggregated_ogms %s\n",
+@@ -287,7 +287,7 @@ static void event_parse_set_mesh(struct
+ 		       nla_get_u32(attrs[BATADV_ATTR_ORIG_INTERVAL]));
+ }
+ 
+-static void event_parse_set_hardif(struct nlattr **attrs)
++static void event_parse_set_hardif(struct nlattr **attrs, const char *prefix)
+ {
+ 	static const int hardif_mandatory[] = {
+ 		BATADV_ATTR_MESH_IFINDEX,
+@@ -325,7 +325,7 @@ static void event_parse_set_hardif(struc
+ 			return;
+ 	}
+ 
+-	printf("%s (%s): set hardif:\n", meshif_name, hardif_name);
++	printf("%s%s (%s): set hardif:\n", prefix, meshif_name, hardif_name);
+ 
+ 	if (attrs[BATADV_ATTR_HOP_PENALTY])
+ 		printf("* hop_penalty %u\n",
+@@ -344,7 +344,7 @@ static void event_parse_set_hardif(struc
+ 	}
+ }
+ 
+-static void event_parse_set_vlan(struct nlattr **attrs)
++static void event_parse_set_vlan(struct nlattr **attrs, const char *prefix)
+ {
+ 	static const int vlan_mandatory[] = {
+ 		BATADV_ATTR_MESH_IFINDEX,
+@@ -372,7 +372,7 @@ static void event_parse_set_vlan(struct
+ 
+ 	vid = nla_get_u16(attrs[BATADV_ATTR_VLANID]);
+ 
+-	printf("%s (vid %u): set vlan:\n", meshif_name, vid);
++	printf("%s%s (vid %u): set vlan:\n", prefix, meshif_name, vid);
+ 
+ 	if (attrs[BATADV_ATTR_AP_ISOLATION_ENABLED])
+ 		printf("* ap_isolation %s\n",
+@@ -403,6 +403,7 @@ static int event_parse(struct nl_msg *ms
+ 	struct event_args *event_args = arg;
+ 	unsigned long long timestamp;
+ 	struct genlmsghdr *ghdr;
++	char prefix[32] = "";
+ 
+ 	if (!genlmsg_valid_hdr(nlh, 0))
+ 		return NL_OK;
+@@ -417,24 +418,25 @@ static int event_parse(struct nl_msg *ms
+ 
+ 	if (event_args->mode != EVENT_TIME_NO) {
+ 		timestamp = get_timestamp(event_args);
+-		printf("%llu.%06llu: ", timestamp / 1000000, timestamp % 1000000);
++		snprintf(prefix, sizeof(prefix), "%llu.%06llu: ",
++			 timestamp / 1000000, timestamp % 1000000);
+ 	}
+ 
+ 	switch (ghdr->cmd) {
+ 	case BATADV_CMD_TP_METER:
+-		event_parse_tp_meter(attrs);
++		event_parse_tp_meter(attrs, prefix);
+ 		break;
+ 	case BATADV_CMD_SET_MESH:
+-		event_parse_set_mesh(attrs);
++		event_parse_set_mesh(attrs, prefix);
+ 		break;
+ 	case BATADV_CMD_SET_HARDIF:
+-		event_parse_set_hardif(attrs);
++		event_parse_set_hardif(attrs, prefix);
+ 		break;
+ 	case BATADV_CMD_SET_VLAN:
+-		event_parse_set_vlan(attrs);
++		event_parse_set_vlan(attrs, prefix);
+ 		break;
+ 	default:
+-		printf("Received unknown event %u\n", ghdr->cmd);
++		printf("%sReceived unknown event %u\n", prefix, ghdr->cmd);
+ 		break;
+ 	}
+ 

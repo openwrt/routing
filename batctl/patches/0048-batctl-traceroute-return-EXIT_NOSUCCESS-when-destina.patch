@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 07:14:35 +0200
+Subject: batctl: traceroute: return EXIT_NOSUCCESS when destination not reached
+
+traceroute sets ret to EXIT_SUCCESS unconditionally once the probe loop
+finishes. dst_reached is only set on an actual echo reply, so when the
+target never answers within TTL_MAX hops, it is unreachable or all
+probes time out. But this information is ignored when traceroute exits. A
+script will not be able to distinguish a failed and working traceroute.
+
+Use the same error codes as the ping but make it depend on the dst_reached
+variable.
+
+Fixes: e1c83d9260e8 ("[batctl] traceroute utility updated to latest batman adv")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=68e764875f9e9cb0652b0729ba408e0de43e5642
+
+--- a/traceroute.c
++++ b/traceroute.c
+@@ -207,7 +207,10 @@ read_packet:
+ 		printf("\n");
+ 	}
+ 
+-	ret = EXIT_SUCCESS;
++	if (dst_reached)
++		ret = EXIT_SUCCESS;
++	else
++		ret = EXIT_NOSUCCESS;
+ 
+ out:
+ 	icmp_interfaces_clean();

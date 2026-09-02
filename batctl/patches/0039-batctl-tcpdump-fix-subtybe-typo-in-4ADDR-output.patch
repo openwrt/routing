@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 07:01:53 +0200
+Subject: batctl: tcpdump: fix "subtybe" typo in 4ADDR output
+
+The unicast-4addr packet dump prints the field label as "subtybe"
+instead of "subtype".
+
+Fixes: 02921f7519a2 ("batctl: tcpdump - print subtype for UNICAST4ADDR packets")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=8e911500ff96ddec47e53b66cf7613f918a4fbcb
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1184,7 +1184,7 @@ static void dump_batman_4addr(unsigned c
+ 	printf("BAT %s > ",
+ 	       get_name_by_macaddr((struct ether_addr *)ether_header->ether_shost, read_opt));
+ 
+-	printf("%s: 4ADDR, subtybe %hhu, ttvn %d, ttl %hhu, ",
++	printf("%s: 4ADDR, subtype %hhu, ttvn %d, ttl %hhu, ",
+ 	       get_name_by_macaddr((struct ether_addr *)unicast_4addr_packet->u.dest, read_opt),
+ 	       unicast_4addr_packet->subtype, unicast_4addr_packet->u.ttvn,
+ 	       unicast_4addr_packet->u.ttl);

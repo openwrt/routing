@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 20:21:16 +0200
+Subject: batman-adv: frag: free unfragmentable packet
+
+The caller of batadv_frag_send_packet() assume that the skb provided to the
+function are always consumed. But the pre-check for an empty payload or the
+zero fragment size returned an error without any further actions.
+
+A failed pre-check must use the same error handling code as the rest of the
+function.
+
+Fixes: db56e4ecf5c2 ("batman-adv: Fragment and send skbs larger than mtu")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=2cc7404af2a7d18357134237a41a55b303eea700
+
+--- a/net/batman-adv/fragmentation.c
++++ b/net/batman-adv/fragmentation.c
+@@ -516,8 +516,10 @@ int batadv_frag_send_packet(struct sk_bu
+ 	mtu = min_t(unsigned int, mtu, BATADV_FRAG_MAX_FRAG_SIZE);
+ 	max_fragment_size = mtu - header_size;
+ 
+-	if (skb->len == 0 || max_fragment_size == 0)
+-		return -EINVAL;
++	if (skb->len == 0 || max_fragment_size == 0) {
++		ret = -EINVAL;
++		goto free_skb;
++	}
+ 
+ 	num_fragments = (skb->len - 1) / max_fragment_size + 1;
+ 	max_fragment_size = (skb->len - 1) / num_fragments + 1;

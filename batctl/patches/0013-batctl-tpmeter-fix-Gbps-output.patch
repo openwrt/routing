@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 14:43:31 +0200
+Subject: batctl: tpmeter: fix Gbps output
+
+The formatter for the Gbps result should print 2 digits after the dot. But
+the format specifier was different than in all other branches and didn't
+specify the precision after the dot. Instead a minimal number of digits (or
+spaces) before the dot was defined.
+
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=3842d2e62b26f4c34621d18cef1d7dfd48557023
+
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -431,7 +431,7 @@ static int throughputmeter(struct state
+ 		if (throughput == UINT64_MAX)
+ 			printf("inf\n");
+ 		else if (throughput > (1UL << 30))
+-			printf("%.2f GB/s (%2.f Gbps)\n",
++			printf("%.2f GB/s (%.2f Gbps)\n",
+ 			       (float)throughput / (1 << 30),
+ 			       (float)throughput * 8 / 1000000000);
+ 		else if (throughput > (1UL << 20))

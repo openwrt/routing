@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 13:31:32 +0200
+Subject: batctl: ping: count sent and not received pings
+
+packets_out was increased whenever a read of a packet was started. But the
+read was repeated whenever the sequence number of a received packet was
+incorrect. The packets_out would then be higher then the actual sent ones.
+
+Fixes: 2474249a6312 ("[batctl] ping utility updated to latest batman adv")
+Fixes: 2ecb2c8b060b ("batctl: tr / ping - ignore packets with wrong sequence number")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=714c6b0ff18a7fc1e7d2c547d0142ad639a40946
+
+--- a/ping.c
++++ b/ping.c
+@@ -207,6 +207,8 @@ static int ping(struct state *state, int
+ 			goto sleep;
+ 		}
+ 
++		packets_out++;
++
+ read_packet:
+ 		start_timer();
+ 
+@@ -216,8 +218,6 @@ read_packet:
+ 		if (is_aborted)
+ 			break;
+ 
+-		packets_out++;
+-
+ 		if (read_len == 0) {
+ 			printf("Reply from host %s timed out\n", dst_string);
+ 			goto sleep;

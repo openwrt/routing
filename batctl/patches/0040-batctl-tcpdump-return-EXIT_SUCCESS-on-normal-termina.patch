@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 04:47:02 +0200
+Subject: batctl: tcpdump: return EXIT_SUCCESS on normal termination
+
+The main capture loop of tcpdump ends when SIGINT/SIGTERM sets
+is_aborted. In this case, the return value should reflect this clean
+shutdown.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=e8629a0e169e44c3f9fa7f12cc5a8eadb07ea89a
+
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1618,6 +1618,8 @@ static int tcpdump(struct state *state _
+ 		}
+ 	}
+ 
++	ret = EXIT_SUCCESS;
++
+ out:
+ 	list_for_each_entry_safe(dump_if, dump_if_tmp, &dump_if_list, list) {
+ 		if (dump_if->raw_sock >= 0)

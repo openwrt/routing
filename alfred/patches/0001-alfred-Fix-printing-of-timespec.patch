@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sun, 8 Mar 2026 16:07:25 +0100
 Subject: alfred: Fix printing of timespec

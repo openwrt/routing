@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 21 Jun 2026 13:20:12 +0200
+Subject: batctl: traceroute: handle fast replies
+
+If a reply for a traceroute is received faster than the CLOCK_MONOTONIC
+precision or (in the rather unlikely scenario) the double precision,
+time_delta[i] would be 0. In this case, the packet would be counted as
+lost. Introduce a new array "received" to only track whether the packet was
+received or not.
+
+Fixes: 0641511400dc ("batctl: traceroute - use all received packets to retrieve neighbor mac")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=eda6c454d6909324a7f771239dc3ef334df42143
+
+--- a/traceroute.c
++++ b/traceroute.c
+@@ -42,6 +42,7 @@ static int traceroute(struct state *stat
+ 	struct batadv_icmp_packet icmp_packet_in;
+ 	struct ether_addr *dst_mac = NULL;
+ 	double time_delta[NUM_PACKETS];
++	uint8_t received[NUM_PACKETS];
+ 	int disable_translate_mac = 0;
+ 	int read_opt = USE_BAT_HOSTS;
+ 	struct bat_host *bat_host;
+@@ -125,6 +126,7 @@ static int traceroute(struct state *stat
+ 		for (i = 0; i < NUM_PACKETS; i++) {
+ 			icmp_packet_out.seqno = htons(++seq_counter);
+ 			time_delta[i] = 0.0;
++			received[i] = 0;
+ 
+ 			res = icmp_interface_write(state,
+ 						   (struct batadv_icmp_header *)&icmp_packet_out,
+@@ -162,6 +164,7 @@ read_packet:
+ 				/* fall through */
+ 			case BATADV_TTL_EXCEEDED:
+ 				time_delta[i] = end_timer();
++				received[i] = 1;
+ 
+ 				if (!return_mac) {
+ 					return_mac = ether_ntoa_long((struct ether_addr *)&icmp_packet_in.orig);
+@@ -195,7 +198,7 @@ read_packet:
+ 			       bat_host->name, return_mac);
+ 
+ 		for (i = 0; i < NUM_PACKETS; i++) {
+-			if (time_delta[i])
++			if (received[i])
+ 				printf("  %.3f ms", time_delta[i]);
+ 			else
+ 				printf("   *");

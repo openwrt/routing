@@ -1,0 +1,92 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 30 Jul 2026 10:57:53 +0200
+Subject: batman-adv: tvlv: handle negative tvlv processing return codes
+
+batadv_tvlv_containers_process() was implemented with only two return codes
+from the handlers in mind:
+
+* NET_RX_SUCCESS (0)
+* NET_RX_DROP (1)
+
+The multicast handlers broke this convention and are also returning
+negative return codes. But the processing code was never updated to
+correctly aggregate them.
+
+To handle negative return codes for non-OGM(2) handlers, they are now
+aggregated to:
+
+* NET_RX_SUCCESS when no handlers returned a different return code
+* the last negative return code when at least one handler returned a
+  negative return code
+* NET_RX_DROP otherwise
+
+Fixes: 8ed36122d709 ("batman-adv: mcast: implement multicast packet reception and forwarding")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=fb5afe23d039f942f109abed8e4581c4bef5da68
+
+--- a/net/batman-adv/routing.c
++++ b/net/batman-adv/routing.c
+@@ -1334,7 +1334,9 @@ out:
+  * contents of its TVLV forwards it and/or decapsulates it to hand it to the
+  * mesh interface.
+  *
+- * Return: NET_RX_DROP if the skb is not consumed, NET_RX_SUCCESS otherwise.
++ * Return: NET_RX_SUCCESS if the skb was locally received, NET_RX_DROP otherwise
++ * or a negative errno code when the multicast tracker TVLV could not be
++ * processed
+  */
+ int batadv_recv_mcast_packet(struct sk_buff *skb,
+ 			     struct batadv_hard_iface *recv_if)
+--- a/net/batman-adv/tvlv.c
++++ b/net/batman-adv/tvlv.c
+@@ -370,8 +370,9 @@ end:
+  * @tvlv_value: tvlv content
+  * @tvlv_value_len: tvlv content length
+  *
+- * Return: success if the handler was not found or the return value of the
+- * handler callback.
++ * Return: NET_RX_SUCCESS if the handler was not found or the return value of
++ * the handler callback. The latter is NET_RX_SUCCESS or NET_RX_DROP for the
++ * unicast handler and additionally a negative errno code for the mcast handler.
+  */
+ static int batadv_tvlv_call_handler(struct batadv_priv *bat_priv,
+ 				    struct batadv_tvlv_handler *tvlv_handler,
+@@ -481,8 +482,9 @@ static bool batadv_tvlv_containers_conta
+  * @tvlv_value: tvlv content
+  * @tvlv_value_len: tvlv content length
+  *
+- * Return: success when processing an OGM or the return value of all called
+- * handler callbacks.
++ * Return: NET_RX_SUCCESS when processing an OGM or the combined return value of
++ * all called handler callbacks. The latter is NET_RX_SUCCESS, NET_RX_DROP or,
++ * for BATADV_MCAST packets, a negative errno code.
+  */
+ int batadv_tvlv_containers_process(struct batadv_priv *bat_priv,
+ 				   u8 packet_type,
+@@ -497,6 +499,7 @@ int batadv_tvlv_containers_process(struc
+ 	u16 tvlv_value_cont_len;
+ 	u8 cifnotfound = BATADV_TVLV_HANDLER_OGM_CIFNOTFND;
+ 	int ret = NET_RX_SUCCESS;
++	int res;
+ 
+ 	while (tvlv_value_len >= sizeof(*tvlv_hdr)) {
+ 		tvlv_hdr = tvlv_value;
+@@ -517,10 +520,13 @@ int batadv_tvlv_containers_process(struc
+ 						       tvlv_hdr->type,
+ 						       tvlv_hdr->version);
+ 
+-		ret |= batadv_tvlv_call_handler(bat_priv, tvlv_handler,
+-						packet_type, orig_node, skb,
+-						tvlv_value,
+-						tvlv_value_cont_len);
++		res = batadv_tvlv_call_handler(bat_priv, tvlv_handler,
++					       packet_type, orig_node, skb,
++					       tvlv_value,
++					       tvlv_value_cont_len);
++		if (ret == NET_RX_SUCCESS || res < 0)
++			ret = res;
++
+ 		batadv_tvlv_handler_put(tvlv_handler);
+ 		tvlv_value = (u8 *)tvlv_value + tvlv_value_cont_len;
+ 		tvlv_value_len -= tvlv_value_cont_len;

@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 20:41:13 +0200
+Subject: batman-adv: fix VLAN priority offset
+
+The batadv_skb_set_priority() receives an SKB with the inner ethernet
+header at position "offset". When it tries to extract the IPv4 and IPv6
+header, it needs to skip the ethernet header to get access to the IP
+header.
+
+But for VLAN header, it performs the access with the struct vlan_ethhdr.
+This struct contains both both the ethernet header and the VLAN header. It
+is therefore incorrect to skip over the whole vlan_ethhdr size to get
+access to the vlan_ethhdr.
+
+Fixes: eb7643628a60 ("batman-adv: set skb priority according to content")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=23b07325f689f8b88db714b1388d8dee136bc9d9
+
+--- a/net/batman-adv/main.c
++++ b/net/batman-adv/main.c
+@@ -354,7 +354,7 @@ void batadv_skb_set_priority(struct sk_b
+ 
+ 	switch (ethhdr->h_proto) {
+ 	case htons(ETH_P_8021Q):
+-		vhdr = skb_header_pointer(skb, offset + sizeof(*vhdr),
++		vhdr = skb_header_pointer(skb, offset,
+ 					  sizeof(*vhdr), &vhdr_tmp);
+ 		if (!vhdr)
+ 			return;

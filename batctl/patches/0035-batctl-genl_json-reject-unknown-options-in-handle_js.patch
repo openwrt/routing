@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:08:10 +0200
+Subject: batctl: genl_json: reject unknown options in handle_json_query
+
+Print the usage and return a failure for unknown options.
+
+Fixes: 57cc3c472a7d ("batctl: Introduce handler for JSON_* command types")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=ff9bd36e6d77c412efb504e140c708b6c99fba23
+
+--- a/genl_json.c
++++ b/genl_json.c
+@@ -593,6 +593,9 @@ int handle_json_query(struct state *stat
+ 		case 'h':
+ 			json_query_usage(state);
+ 			return EXIT_SUCCESS;
++		default:
++			json_query_usage(state);
++			return EXIT_FAILURE;
+ 		}
+ 	}
+ 

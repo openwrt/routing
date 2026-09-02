@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:04:11 +0200
+Subject: batctl: bat-hosts: free bat_host when hash_add fails
+
+If the hash_add fails (OOM or duplicated entry), then the allocated
+bat_host would leak. The user would also not be informed about this
+problem.
+
+Check the return value and handle the error to make this problem visible to
+the user.
+
+Fixes: c7c76f63c1f9 ("[batctl] integrating batman hash implementation / move bat-hosts stuff into an extra set of files")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=a48555e14dacb99eeb31cde8c88d27a5cf67a456
+
+--- a/bat-hosts.c
++++ b/bat-hosts.c
+@@ -130,7 +130,14 @@ static void parse_hosts_file(struct hash
+ 		strncpy(bat_host->name, name, HOST_NAME_MAX_LEN);
+ 		bat_host->name[HOST_NAME_MAX_LEN - 1] = '\0';
+ 
+-		hash_add(*hash, bat_host);
++		if (hash_add(*hash, bat_host) < 0) {
++			if (read_opt & USE_BAT_HOSTS)
++				fprintf(stderr,
++					"Error - could not add bat host: %s\n",
++					name);
++			free(bat_host);
++			continue;
++		}
+ 
+ 		if ((*hash)->elements * 4 > (*hash)->size) {
+ 			swaphash = hash_resize((*hash), (*hash)->size * 2);

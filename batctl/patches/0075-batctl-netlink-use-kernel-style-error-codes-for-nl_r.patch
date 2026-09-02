@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 22:09:32 +0200
+Subject: batctl: netlink: use kernel-style error codes for nl_recvmsgs
+
+When nl_recvmsgs() fails, it doesn't return a kernel/errno style error
+codes. It is instead using negative NLE_* return codes. Since the rest of
+the batctl code uses kernel style codes, just handle it as EIO error.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=63c5a4724ab9c825604092ae83615968023b553d
+
+--- a/functions.c
++++ b/functions.c
+@@ -576,7 +576,7 @@ int netlink_simple_request(struct nl_msg
+ 	err = 0;
+ 	ret = nl_recvmsgs(sock, cb);
+ 	if (ret < 0)
+-		err = ret;
++		err = -EIO;
+ 
+ err_free_cb:
+ 	nl_cb_put(cb);
+--- a/netlink.c
++++ b/netlink.c
+@@ -677,7 +677,8 @@ int netlink_query_common(struct state *s
+ 
+ 	ret = nl_recvmsgs(state->sock, cb);
+ 	if (ret < 0) {
+-		query_opts->err = ret;
++		if (query_opts->err == 0)
++			query_opts->err = -EIO;
+ 		goto err_free_cb;
+ 	}
+ 

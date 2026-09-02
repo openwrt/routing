@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kyle Zeng <kylebot@openai.com>
+Date: Mon, 17 Aug 2026 08:49:54 +0000
+Subject: batman-adv: reject unrepresentable multicast TVLV offsets
+
+The network and transport header fields in struct sk_buff are 16-bit
+offsets from skb->head, and U16_MAX is reserved as the unset transport
+header value. batadv_tvlv_call_handler() sets both fields from a received
+multicast TVLV without checking whether the TVLV end is representable.
+
+If the end offset exceeds the field's range, skb_set_transport_header()
+truncates it so that the transport header precedes the network header.
+The negative difference is then returned by skb_network_header_len() as
+a large u32. batadv_mcast_forw_packet() consequently accepts an oversized
+multicast tracker and accesses memory beyond the skb data.
+
+Add skb_set_transport_header_careful(), an offset-aware counterpart to
+skb_reset_transport_header_careful(), which validates the final
+head-relative offset before assigning it. Use the new helper in
+batadv_tvlv_call_handler() and reject unrepresentable TVLVs before
+setting the network header.
+
+Fixes: 8ed36122d709 ("batman-adv: mcast: implement multicast packet reception and forwarding")
+Suggested-by: Sven Eckelmann <sven@narfation.org>
+Assisted-by: Codex:gpt-5.6-sol Codex:gpt-5.5-cyber
+Signed-off-by: Kyle Zeng <kylebot@openai.com>
+Co-developed-by: David Lee <david.lee@trailofbits.com>
+Signed-off-by: David Lee <david.lee@trailofbits.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: backported, https://git.open-mesh.org/batman-adv.git/commit/?id=1a89187fb01aefde94abf5ec65ec594b900257b6
+
+--- a/net/batman-adv/tvlv.c
++++ b/net/batman-adv/tvlv.c
+@@ -421,8 +421,11 @@ static int batadv_tvlv_call_handler(stru
+ 			return NET_RX_SUCCESS;
+ 
+ 		tvlv_offset = (unsigned char *)tvlv_value - skb->data;
++		if (!skb_set_transport_header_careful(skb,
++						      tvlv_offset + tvlv_value_len))
++			return -EINVAL;
++
+ 		skb_set_network_header(skb, tvlv_offset);
+-		skb_set_transport_header(skb, tvlv_offset + tvlv_value_len);
+ 
+ 		return tvlv_handler->mcast_handler(bat_priv, skb);
+ 	}

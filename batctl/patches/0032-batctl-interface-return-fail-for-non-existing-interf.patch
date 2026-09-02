@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 08:12:11 +0200
+Subject: batctl: interface: return fail for non-existing interface
+
+The add/del loop skips a non-existent interface name with a plain continue
+and returns a success when no other error class was detected. Which causes
+scripts (depending on the return value) to miss the problem.
+
+Remember that a name could not be resolved and return EXIT_FAILURE at
+the end, while still processing the remaining interfaces.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=6fd8c94dc36c36bc2c8e9e8a8e9a3e67afd588f5
+
+--- a/interface.c
++++ b/interface.c
+@@ -410,6 +410,7 @@ err_free_msg:
+ static int interface(struct state *state, int argc, char **argv)
+ {
+ 	struct interface_create_params create_params = {};
++	bool iface_error = false;
+ 	bool manual_mode = false;
+ 	unsigned int ifmaster;
+ 	unsigned int ifindex;
+@@ -543,6 +544,7 @@ static int interface(struct state *state
+ 
+ 		if (!ifindex) {
+ 			fprintf(stderr, "Error - interface does not exist: %s\n", rest_argv[i]);
++			iface_error = true;
+ 			continue;
+ 		}
+ 
+@@ -573,6 +575,9 @@ static int interface(struct state *state
+ 				state->mesh_iface, state->mesh_iface);
+ 	}
+ 
++	if (iface_error)
++		return EXIT_FAILURE;
++
+ 	return EXIT_SUCCESS;
+ 
+ err:

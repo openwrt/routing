@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 12:22:10 +0200
+Subject: batctl: tpmeter: reject invalid test duration argument
+
+The -t option parses its argument with strtoul and
+assigns the result straight into the uint32_t test length without any
+validation.
+
+Use the same strto* validation as the rest of batctl and print a user
+readable error in case of an parsing error.
+
+Fixes: f109b3473f86 ("batctl: introduce throughput meter support")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: backported, https://git.open-mesh.org/batctl.git/commit/?id=6ff39c6d5b9fc3763d84d55c7e8119cf683b238e
+
+--- a/throughputmeter.c
++++ b/throughputmeter.c
+@@ -335,11 +335,22 @@ static int throughputmeter(struct state
+ 		.cookie = 0,
+ 		.found = false,
+ 	};
++	unsigned long time_arg;
++	char *endptr;
+ 
+ 	while ((optchar = getopt(argc, argv, "t:n")) != -1) {
+ 		switch (optchar) {
+ 		case 't':
+-			time = strtoul(optarg, NULL, 10);
++			time_arg = strtoul(optarg, &endptr, 10);
++			if (!endptr || *endptr != '\0' || endptr == optarg ||
++			    time_arg > UINT32_MAX) {
++				fprintf(stderr,
++					"Error - the supplied test duration is invalid: %s\n",
++					optarg);
++				tp_meter_usage();
++				return EXIT_FAILURE;
++			}
++			time = time_arg;
+ 			break;
+ 		case 'n':
+ 			read_opt &= ~USE_BAT_HOSTS;

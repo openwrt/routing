@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 3 Jul 2026 20:33:20 +0200
+Subject: batman-adv: mcast: avoid OOB read of num_dests header
+
+Before the access to struct batadv_tvlv_mcast_tracker's num_dests, it is
+attempted to check whether enough space is actually in the network header.
+But instead of using offsetofend() to check for the whole size (2) which
+must be accessible, offsetof() of is called. The latter is always returning
+0. The comparison with the network header length will always return that
+enough data is available - even when only 1 or 0 bytes are accessible.
+
+Instead of using offsetofend(), use the more common check for the whole
+header.
+
+Fixes: 8ed36122d709 ("batman-adv: mcast: implement multicast packet reception and forwarding")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=34d3097e0313f9a2b44c96fb99d941c1acb896fa
+
+--- a/net/batman-adv/multicast_forw.c
++++ b/net/batman-adv/multicast_forw.c
+@@ -927,11 +927,11 @@ static int batadv_mcast_forw_packet(stru
+ {
+ 	struct batadv_tvlv_mcast_tracker *mcast_tracker;
+ 	struct batadv_neigh_node *neigh_node;
+-	unsigned long offset, num_dests_off;
+ 	struct sk_buff *nexthop_skb;
+ 	unsigned char *skb_net_hdr;
+ 	bool local_recv = false;
+ 	unsigned int tvlv_len;
++	unsigned long offset;
+ 	bool xmitted = false;
+ 	u8 *dest, *next_dest;
+ 	u16 num_dests;
+@@ -940,9 +940,8 @@ static int batadv_mcast_forw_packet(stru
+ 	/* (at least) TVLV part needs to be linearized */
+ 	SKB_LINEAR_ASSERT(skb);
+ 
+-	/* check if num_dests is within skb length */
+-	num_dests_off = offsetof(struct batadv_tvlv_mcast_tracker, num_dests);
+-	if (num_dests_off > skb_network_header_len(skb))
++	/* check if batadv_tvlv_mcast_tracker header is within skb length */
++	if (sizeof(*mcast_tracker) > skb_network_header_len(skb))
+ 		return -EINVAL;
+ 
+ 	skb_net_hdr = skb_network_header(skb);

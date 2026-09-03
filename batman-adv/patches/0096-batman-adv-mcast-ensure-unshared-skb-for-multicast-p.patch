@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 9 Jul 2026 21:17:08 +0200
+Subject: batman-adv: mcast: ensure unshared skb for multicast packets
+
+When a packet is transmitted via a batman-adv interface and has already
+enough room for the header then the nothing will make sure that the skbuff
+is unshared. But it is now allowed to modify a currently shared skbuff.
+
+Always make sure that the pskb_expand_head() is not only called for a too
+small header but also for shared skbuffs.
+
+Fixes: be9b0169c840 ("batman-adv: mcast: implement multicast packet generation")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=e30382561093d4adefc64bd46d2273c4921543ac
+
+--- a/net/batman-adv/multicast_forw.c
++++ b/net/batman-adv/multicast_forw.c
+@@ -1100,8 +1100,7 @@ static int batadv_mcast_forw_expand_head
+ 		return -EINVAL;
+ 	}
+ 
+-	if (skb_headroom(skb) < hdr_size &&
+-	    pskb_expand_head(skb, hdr_size, 0, GFP_ATOMIC) < 0)
++	if (skb_cow(skb, hdr_size) < 0)
+ 		return -ENOMEM;
+ 
+ 	return 0;

@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 2 Jul 2026 10:06:19 +0200
+Subject: batctl: genl_json: avoid negative chars in sanitize_string
+
+char is signed on common platforms. Passing a "negative" string byte to
+isprint() is undefined behavior when it is not EOF. The manpage for isprint
+is therefore requesting to provide the argument as unsigned char.
+
+Fixes: ae1a3d3f0bb7 ("batctl: genl_json: Add generic JSON interface")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batctl.git/commit/?id=1db9b42918f4ef9f7b4f0cb070fb486cc3e543f4
+
+--- a/genl_json.c
++++ b/genl_json.c
+@@ -33,16 +33,18 @@ struct nla_policy_json {
+ 
+ static void sanitize_string(const char *str)
+ {
+-	while (*str) {
+-		if (*str == '"' || *str == '\\') {
++	const unsigned char *c = (const unsigned char *)str;
++
++	while (*c) {
++		if (*c == '"' || *c == '\\') {
+ 			putchar('\\');
+-			putchar(*str);
+-		} else if (!isprint(*str)) {
+-			printf("\\x%02x", *str);
++			putchar(*c);
++		} else if (!isprint(*c)) {
++			printf("\\x%02x", *c);
+ 		} else {
+-			putchar(*str);
++			putchar(*c);
+ 		}
+-		str++;
++		c++;
+ 	}
+ }
+ 

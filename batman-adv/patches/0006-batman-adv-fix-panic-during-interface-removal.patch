@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andy Strohman <andrew@andrewstrohman.com>
 Date: Thu, 9 Jan 2025 02:27:56 +0000
 Subject: batman-adv: fix panic during interface removal

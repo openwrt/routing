@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Sven Eckelmann <sven@narfation.org>
 Date: Sun, 28 Jun 2026 10:37:07 +0200
 Subject: batman-adv: dat: ensure accessible eth_hdr proto field

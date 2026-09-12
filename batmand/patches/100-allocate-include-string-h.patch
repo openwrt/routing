@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Josef Schlehofer <pepe.schlehofer@gmail.com>
+Date: Wed, 6 Aug 2026 12:00:00 +0200
+Subject: [PATCH] allocate: include string.h for memcpy
+
+memcpy() is used in debugRealloc() without including string.h. Since
+GCC 14 treats implicit function declarations as a hard error, the
+build fails:
+
+    allocate.c:349:17: error: implicit declaration of function
+    'memcpy' [-Wimplicit-function-declaration]
+
+Signed-off-by: Josef Schlehofer <pepe.schlehofer@gmail.com>
+---
+ allocate.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+--- a/allocate.c
++++ b/allocate.c
+@@ -23,6 +23,7 @@
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <string.h>
+ 
+ #include "os.h"
+ #include "allocate.h"

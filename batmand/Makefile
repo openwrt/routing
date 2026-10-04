@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=batmand
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://git.open-mesh.org/batmand.git
@@ -37,7 +37,6 @@ B.A.T.M.A.N. layer 3 routing daemon
 endef
 
 MAKE_FLAGS += \
-	EXTRA_CFLAGS='-DDEBUG_MALLOC -DMEMORY_USAGE -DPROFILE_DATA -DREVISION_VERSION=\"\ rv$(PKG_SOURCE_VERSION)\" -D_GNU_SOURCE' \
 	REVISION="$(PKG_SOURCE_VERSION)" \
 	CC="$(TARGET_CC)" \
 	UNAME="Linux" \

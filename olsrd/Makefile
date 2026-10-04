@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=olsrd
 PKG_SOURCE_DATE:=2024-06-09
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/OLSR/olsrd.git
@@ -17,6 +17,7 @@ PKG_MIRROR_HASH:=e05d2724e6c76233148ce460b9611bafccff2114904542fa3b5caf75dc1c4e0
 PKG_MAINTAINER:=Nick Hainke <vincent@systemli.org>
 PKG_BUILD_PARALLEL:=0
 PKG_LICENSE:=BSD-3-Clause
+PKG_LICENSE_FILES:=license.txt
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -26,9 +27,8 @@ define Package/olsrd/template
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Routing and Redirection
-  MAINTAINER:=Saverio Proto <zioproto@gmail.com>
   TITLE:=OLSR (Optimized Link State Routing) daemon
-  URL:=http://www.olsr.org/
+  URL:=https://www.olsr.org/
 endef
 
 define Package/olsrd
@@ -159,7 +159,7 @@ endef
 
 define Package/olsrd-utils
   $(call Package/olsrd/template)
-  DEPENDS:=olsrd
+  DEPENDS:=olsrd +jshn
   TITLE:=Utils for OLSRD
 endef
 
@@ -177,6 +177,7 @@ endef
 
 MAKE_FLAGS+= \
 	NO_DEBUG_MESSAGES=1 \
+	VERS="$(PKG_VERSION)" \
 	OS="linux" \
 	DESTDIR="$(PKG_INSTALL_DIR)" \
 	STRIP="true" \

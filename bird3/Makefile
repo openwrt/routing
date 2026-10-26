@@ -3,12 +3,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bird3
-PKG_VERSION:=3.2.2
+PKG_VERSION:=3.3.3
 PKG_RELEASE:=1
 
 PKG_SOURCE:=bird-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://bird.nic.cz/download/
-PKG_HASH:=5b275f0f91c063bd0369a2996982f8f578736eb9b4b5c0fb62a275ec663f74df
+PKG_HASH:=7e8b28a17dd619eb73eba959ef6a944dd9c11cf5c1700a2ecbb8eb13bd4a8a57
 
 PKG_MAINTAINER:=Toke Høiland-Jørgensen <toke@toke.dk>, Nick Hainke <vincent@systemli.org>
 PKG_LICENSE:=GPL-2.0-or-later

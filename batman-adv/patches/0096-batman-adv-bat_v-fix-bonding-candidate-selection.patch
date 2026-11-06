@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 6 Aug 2026 20:33:19 +0200
+Subject: batman-adv: bat_v: fix bonding candidate selection
+
+batadv_v_neigh_is_sob() implements the metric (throughput) similarity check
+as:
+
+  neigh2 (the reference) has a better throughput than 3/4 of the neigh1
+  (candidate) throughput
+
+But this results in a selection of bonding candidates in
+batadv_find_router() which have a really low throughput. But the goal must
+be to select candidates which have a good throughput.
+
+The neigh1/neigh2 operands must be swapped in the comparison to use the
+reference as such and select only neighbor+interface combinations with good
+throughput.
+
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Fixes: b05bbab5e1fc ("batman-adv: B.A.T.M.A.N. V - implement neighbor comparison API calls")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: backported, https://git.open-mesh.org/batman-adv.git/commit/?id=2a77475e24bd3340d6450886add64728a9d018e8
+
+--- a/net/batman-adv/bat_v.c
++++ b/net/batman-adv/bat_v.c
+@@ -486,10 +486,10 @@ static bool batadv_v_neigh_is_sob(struct
+ 	if (!ifinfo2)
+ 		goto err_ifinfo2;
+ 
+-	threshold = ifinfo1->bat_v.throughput / 4;
+-	threshold = ifinfo1->bat_v.throughput - threshold;
++	threshold = ifinfo2->bat_v.throughput / 4;
++	threshold = ifinfo2->bat_v.throughput - threshold;
+ 
+-	ret = ifinfo2->bat_v.throughput > threshold;
++	ret = ifinfo1->bat_v.throughput > threshold;
+ 
+ 	batadv_neigh_ifinfo_put(ifinfo2);
+ err_ifinfo2:

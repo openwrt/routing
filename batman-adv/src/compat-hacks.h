@@ -15,6 +15,13 @@
 #include <linux/crc32c.h>
 #endif /* LINUX_VERSION_IS_LESS(6, 15, 0) */
 
+#if LINUX_VERSION_IS_LESS(6, 15, 0) && \
+    !(LINUX_VERSION_IS_GEQ(6, 12, 114) && LINUX_VERSION_IS_LESS(6, 13, 0))
+
+#define netns_immutable netns_local
+
+#endif /* LINUX_VERSION_IS_LESS(6, 15, 0) */
+
 #if LINUX_VERSION_IS_LESS(6, 16, 0)
 
 #define timer_container_of(var, callback_timer, timer_fieldname)	\

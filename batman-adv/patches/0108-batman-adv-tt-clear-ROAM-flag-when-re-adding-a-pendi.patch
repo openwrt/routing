@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 7 Oct 2026 13:02:45 +0200
+Subject: batman-adv: tt: clear ROAM flag when re-adding a pending local client
+
+When a ROAMING_ADV is received for an announced local client,
+batadv_tt_local_mark_removed() sets BATADV_TT_CLIENT_ROAM, queues a
+DEL|ROAM change and marks the entry as BATADV_TT_CLIENT_PENDING. If the
+client sends a frame again before the next TTVN commit,
+batadv_tt_local_add_existing() only clears the PENDING flag and returns
+early. The ADD cancels the queued DEL, but the entry keeps the ROAM flag:
+
+* batadv_is_my_client() reports the client as not served by this node
+* batadv_tt_local_client_is_roaming() reroutes unicast frames for it to
+  the node which sent the ROAMING_ADV
+
+The ROAM flag is only removed with the next frame of the client.
+
+Since BATADV_TT_CLIENT_ROAM is set together with BATADV_TT_CLIENT_PENDING,
+it has to be cleared also at the same time with BATADV_TT_CLIENT_PENDING
+when the client roamed back.
+
+Fixes: 2443ba383c7d ("batman-adv: roaming handling mechanism redesign")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: backported, https://git.open-mesh.org/batman-adv.git/commit/?id=d00f07a6f331f46bdd87e2f43f28b1730c215d3a
+
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -642,6 +642,7 @@ bool batadv_tt_local_add(struct net_devi
+ 	int hash_added, table_size, packet_size_max;
+ 	bool ret = false;
+ 	bool roamed_back = false;
++	bool added = false;
+ 	u8 remote_flags;
+ 	u32 match_mark;
+ 
+@@ -668,7 +669,7 @@ bool batadv_tt_local_add(struct net_devi
+ 			 * flag can be reset like it was never enqueued
+ 			 */
+ 			tt_local->common.flags &= ~BATADV_TT_CLIENT_PENDING;
+-			goto add_event;
++			added = true;
+ 		}
+ 
+ 		if (tt_local->common.flags & BATADV_TT_CLIENT_ROAM) {
+@@ -749,10 +750,12 @@ bool batadv_tt_local_add(struct net_devi
+ 		goto out;
+ 	}
+ 
+-add_event:
+-	batadv_tt_local_event(bat_priv, tt_local, BATADV_NO_FLAGS);
++	added = true;
+ 
+ check_roaming:
++	if (added)
++		batadv_tt_local_event(bat_priv, tt_local, BATADV_NO_FLAGS);
++
+ 	/* Check whether it is a roaming, but don't do anything if the roaming
+ 	 * process has already been handled
+ 	 */

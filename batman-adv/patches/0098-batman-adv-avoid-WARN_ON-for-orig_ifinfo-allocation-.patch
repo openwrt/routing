@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Deepanshu Kartikey <kartikey406@gmail.com>
+Date: Sun, 13 Sep 2026 08:49:06 +0530
+Subject: batman-adv: avoid WARN_ON for orig_ifinfo allocation failure
+
+batadv_orig_ifinfo_new() returns NULL only when its GFP_ATOMIC
+allocation fails, which is a normal runtime condition and not a bug.
+batadv_v_ogm_forward() already handles this the same way, simply
+checking for NULL without a WARN_ON.
+
+Do the same in batadv_iv_ogm_update_seqnos() to avoid a spurious
+WARN_ON splat when the allocation fails (e.g. under fault injection).
+
+Fixes: de6bcc76ea84 ("batman-adv: split out router from orig_node")
+Reported-by: syzbot+a079f084653164a652d1@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=a079f084653164a652d1
+Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=745e4677a44d6ba07a82ea8a23cce34f0a8fcfbe
+
+--- a/net/batman-adv/bat_iv_ogm.c
++++ b/net/batman-adv/bat_iv_ogm.c
+@@ -1298,7 +1298,7 @@ batadv_iv_ogm_update_seqnos(const struct
+ 		return BATADV_NO_DUP;
+ 
+ 	orig_ifinfo = batadv_orig_ifinfo_new(orig_node, if_outgoing);
+-	if (WARN_ON(!orig_ifinfo)) {
++	if (!orig_ifinfo) {
+ 		batadv_orig_node_put(orig_node);
+ 		return 0;
+ 	}

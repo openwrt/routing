@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 4 Oct 2026 10:06:22 +0200
+Subject: batman-adv: dat: initialize orig_node of unfilled candidate slots
+
+batadv_dat_select_candidates() allocates the candidate array without
+zeroing it. batadv_choose_next_candidate() marks each slot as
+BATADV_DAT_CANDIDATE_NOT_FOUND but only sets orig_node when an eligible
+originator was found. In the following rounds,
+batadv_is_orig_node_eligible() compares res[j].orig_node of all previous
+slots against the evaluated originator. For slots without candidates, it
+reads uninitialized memory.
+
+The orig_node has to be cleared together with the
+BATADV_DAT_CANDIDATE_NOT_FOUND type.
+
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Closes: https://sashiko.dev/#/bug/linux-b25d9aa4-10bb-427c-a145-ccaadc2a1bb9
+Fixes: 34b3c3850e7d ("batman-adv: Distributed ARP Table - create DHT helper functions")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=c704e3f266aa2b576797913ce0b556c44886c28d
+
+--- a/net/batman-adv/distributed-arp-table.c
++++ b/net/batman-adv/distributed-arp-table.c
+@@ -582,6 +582,7 @@ static void batadv_choose_next_candidate
+ 	 * NOT_FOUND
+ 	 */
+ 	cands[select].type = BATADV_DAT_CANDIDATE_NOT_FOUND;
++	cands[select].orig_node = NULL;
+ 
+ 	/* iterate over the originator list and find the node with the closest
+ 	 * dat_address which has not been selected yet

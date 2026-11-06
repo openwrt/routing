@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Sun, 18 Oct 2026 18:42:40 +0200
+Subject: batman-adv: compat: use netns_immutable in Linux 6.12.114
+
+The commit 0c493da86374 ("net: rename netns_local to netns_immutable") was
+backported back to Linux 6.12.114. batman-adv must therefore stop to use
+netns_local for newer 6.12.y kernels.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=8ecfdfe4e838f4dd632617d262597f984886abfd
+
+--- a/compat-include/linux/netdevice.h
++++ b/compat-include/linux/netdevice.h
+@@ -68,4 +68,11 @@ static inline int batadv_netif_rx(struct
+ 
+ #endif /* LINUX_VERSION_IS_LESS(5, 18, 0) */
+ 
++#if LINUX_VERSION_IS_LESS(6, 15, 0) && \
++    !(LINUX_VERSION_IS_GEQ(6, 12, 114) && LINUX_VERSION_IS_LESS(6, 13, 0))
++
++#define netns_immutable netns_local
++
++#endif /* LINUX_VERSION_IS_LESS(6, 15, 0) */
++
+ #endif	/* _NET_BATMAN_ADV_COMPAT_LINUX_NETDEVICE_H_ */
+--- a/net/batman-adv/mesh-interface.c
++++ b/net/batman-adv/mesh-interface.c
+@@ -1016,13 +1016,10 @@ static void batadv_meshif_init_early(str
+ 	dev->priv_destructor = batadv_meshif_free;
+ 	dev->features |= NETIF_F_HW_VLAN_CTAG_FILTER;
+ 	dev->priv_flags |= IFF_NO_QUEUE;
+-#if LINUX_VERSION_IS_GEQ(6, 15, 0) // UGLY_HACK_NEW
++#if LINUX_VERSION_IS_GEQ(6, 12, 0) // UGLY_HACK_NEW
+ 	dev->lltx = true;
+ 	dev->netns_immutable = true;
+-#elif LINUX_VERSION_IS_GEQ(6, 12, 0) // UGLY_HACK_OLD
+-	dev->lltx = true;
+-	dev->netns_local = true;
+-#else
++#else // UGLY_HACK_OLD
+ 	dev->features |= NETIF_F_LLTX | NETIF_F_NETNS_LOCAL;
+ #endif // UGLY_HACK_STOP
+ 

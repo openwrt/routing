@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 8 Oct 2026 12:00:27 +0200
+Subject: batman-adv: tt: send ROAM_ADV on each roamed back client
+
+When a ROAMING_ADV is received for an announced local client,
+batadv_roam_tvlv_unicast_handler_v1() creates a global entry with the
+BATADV_TT_CLIENT_ROAM flag set.
+
+If the client sends a frame again before the next TTVN commit,
+batadv_tt_local_add_roam() is expected to announce this return via a
+ROAM_ADV frame. But this doesn't happen because the global entry (created
+by the first ROAMING_ADV) carries BATADV_TT_CLIENT_ROAM until the new
+originator announces the client.
+
+Let batadv_tt_local_add_roam() always handle a roamed back client -
+independent of the ROAM flag of the global entry:
+
+* trigger sending of the ROAM_ADV frame(s)
+* remove the (with the roaming) associated global entry
+
+Fixes: b8416c21f9fe ("batman-adv: send ROAMING_ADV once")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=d9bfd9406f15a2c2ef1d6e921886b196df98c095
+
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -759,7 +759,8 @@ check_roaming:
+ 	/* Check whether it is a roaming, but don't do anything if the roaming
+ 	 * process has already been handled
+ 	 */
+-	if (tt_global && !(tt_global->common.flags & BATADV_TT_CLIENT_ROAM)) {
++	if (tt_global &&
++	    (roamed_back || !(tt_global->common.flags & BATADV_TT_CLIENT_ROAM))) {
+ 		/* These node are probably going to update their tt table */
+ 		head = &tt_global->orig_list;
+ 		rcu_read_lock();

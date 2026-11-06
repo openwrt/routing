@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Tue, 13 Oct 2026 11:23:34 +0000
+Subject: batman-adv: fix skb leak when hard_iface is being released
+
+batadv_batman_skb_recv() owns the skb it is given. When the hard_iface
+refcount already dropped to zero, the function jumped to err_out, which
+only returned NET_RX_DROP and skipped the kfree_skb() under err_free.
+
+To avoid a leak, free the skb before returning in this case.
+
+Fixes: fee73a8578d3 ("batman-adv: Check hard_iface refcnt when receiving skb")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=116616d59c0496b91a51163c3b8cdb3ebd7a6356
+
+--- a/net/batman-adv/main.c
++++ b/net/batman-adv/main.c
+@@ -427,8 +427,10 @@ int batadv_batman_skb_recv(struct sk_buf
+ 	 * shut down otherwise the packet may trigger de-reference errors
+ 	 * further down in the receive path.
+ 	 */
+-	if (!kref_get_unless_zero(&hard_iface->refcount))
+-		goto err_out;
++	if (!kref_get_unless_zero(&hard_iface->refcount)) {
++		kfree_skb(skb);
++		return NET_RX_DROP;
++	}
+ 
+ 	skb = skb_share_check(skb, GFP_ATOMIC);
+ 
+@@ -487,7 +489,6 @@ err_free:
+ 	kfree_skb(skb);
+ err_put:
+ 	batadv_hardif_put(hard_iface);
+-err_out:
+ 	return NET_RX_DROP;
+ }
+ 

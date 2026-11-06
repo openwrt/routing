@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Tue, 1 Sep 2026 18:29:29 +0200
+Subject: batman-adv: bla: avoid double free after failed backbone_hash alloc
+
+When batadv_bla_init() fails to initialize the backbone_hash, it is freeing
+the (previously) allocated claim_hash. The initialization function will
+then return an error and the net_device initialization will stop. The
+destructor will be called instead and (indirectly via batadv_mesh_free() ->
+batadv_bla_free()) will try to free the bat_priv->bla.claim_hash again.
+
+The pointer must therefore be set to NULL after freeing it in the
+initialization error path.
+
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Closes: https://sashiko.dev/#/patchset/20260831135117.574836-1-sw%40simonwunderlich.de?part=6
+Fixes: 0631e0825c81 ("batman-adv: fix error handling")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=9c7a6f34298562179691007cf8698d0405891e3c
+
+--- a/net/batman-adv/bridge_loop_avoidance.c
++++ b/net/batman-adv/bridge_loop_avoidance.c
+@@ -1615,6 +1615,7 @@ int batadv_bla_init(struct batadv_priv *
+ 	bat_priv->bla.backbone_hash = batadv_hash_new(32);
+ 	if (!bat_priv->bla.backbone_hash) {
+ 		batadv_hash_destroy(bat_priv->bla.claim_hash);
++		bat_priv->bla.claim_hash = NULL;
+ 		return -ENOMEM;
+ 	}
+ 

@@ -1,0 +1,90 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 7 Oct 2026 13:03:05 +0200
+Subject: batman-adv: tt: only transmit local ROAM flag together with DEL
+
+BATADV_TT_CLIENT_ROAM is part of BATADV_TT_REMOTE_MASK but on the wire it
+only has a defined meaning together with BATADV_TT_CLIENT_DEL: the
+originator no longer serves the client because it roamed to another node.
+Such a DEL is only relevant for events (non-full table requests).
+
+An ADD carrying ROAM is processed (by accident) by the receiver like a
+ROAMING_ADV:
+
+* a newly created global entry is marked as roaming and is excluded from
+  the global CRC. but the sender includes it in its local CRC
+* batadv_tt_global_purge_local() removes a local entry of the receiver
+
+But such a behavior doesn't make sense for non-ROAM_ADV because a new TTVN
+is meant as announced commit of the local TT table of a node and should
+therefore not be used not be used to create a temporary (roam) global entry
+in a node.
+
+At the moment, such an ADD with the BATADV_TT_CLIENT_ROAM flag set can
+happen due to two mechanisms:
+
+batadv_tt_local_valid() copies all flags of the local entry into a full
+table response. It is not synchronized with batadv_tt_local_mark_removed().
+An entry which was marked as ROAM|PENDING by a ROAMING_ADV is still part of
+the current TTVN and is sent with the ROAM flag set. When the requester is
+the node which sent the ROAMING_ADV, it then marks its own (new) local
+client as roamed back to the old originator and drops it when it is still
+NEW. Other receivers will detect a CRC mismatch and request the full table
+again.
+
+The same can happen for an ADD change which is queued for an entry which
+(still) has the ROAM flag set. For example when only the dynamic WIFI or
+ISOLA flags were updated.
+
+It is not triggered by batadv_send_other_tt_response() because
+batadv_tt_global_valid() is already taking care of filtering out
+BATADV_TT_CLIENT_ROAM entries.
+
+For the two problematic announcement mechanism, only send the ROAM flag of
+local entries together with a DEL.
+
+Fixes: d46bf9e69b31 ("batman-adv: correctly pass the client flag on tt_response")
+Fixes: 2443ba383c7d ("batman-adv: roaming handling mechanism redesign")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=1e1540f58fa913c2587175597f2fd618f514a596
+
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -470,7 +470,6 @@ static void batadv_tt_local_event(struct
+ 	if (!tt_change_node)
+ 		return;
+ 
+-	tt_change_node->change.flags = flags;
+ 	memset(tt_change_node->change.reserved, 0,
+ 	       sizeof(tt_change_node->change.reserved));
+ 	ether_addr_copy(tt_change_node->change.addr, common->addr);
+@@ -478,6 +477,15 @@ static void batadv_tt_local_event(struct
+ 
+ 	del_op_requested = flags & BATADV_TT_CLIENT_DEL;
+ 
++	/* the ROAM flag is only meaningful for the receiver in combination
++	 * with a DEL. An ADD with ROAM would be interpreted as a roaming
++	 * advertisement
++	 */
++	if (!del_op_requested)
++		flags &= ~BATADV_TT_CLIENT_ROAM;
++
++	tt_change_node->change.flags = flags;
++
+ 	/* check for ADD+DEL, DEL+ADD, ADD+ADD or DEL+DEL events */
+ 	spin_lock_bh(&bat_priv->tt.changes_list_lock);
+ 	changes = READ_ONCE(bat_priv->tt.local_changes);
+@@ -2752,8 +2760,12 @@ static bool batadv_tt_local_valid(const
+ 	if (tt_common_entry->flags & BATADV_TT_CLIENT_NEW)
+ 		return false;
+ 
++	/* the entry is (still) announced. A ROAM flag of an entry which is
++	 * pending to be removed must not be transmitted. Otherwise, the
++	 * receiver would handle it like a roaming advertisement
++	 */
+ 	if (flags)
+-		*flags = tt_common_entry->flags;
++		*flags = tt_common_entry->flags & ~BATADV_TT_CLIENT_ROAM;
+ 
+ 	return true;
+ }

@@ -1,0 +1,97 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 2 Oct 2026 21:42:07 +0200
+Subject: batman-adv: tt: only update flags for TT events
+
+In the first implementation of the translation table events, it was only
+possible to announce:
+
+* ADD: new locally detected client
+* DEL: disappeared local client
+
+If an ADD event was queued and then a DEL event was queued in the same
+timeslot, it is valid to destroy both events because nothing actually
+changed for remode nodes
+
+But with commit e0eb5f8df352 ("batman-adv: improve the TT component to
+support runtime flag changes") and subsequent changes, it could also happen
+that there are extra ADD events:
+
+* ADD: _NEW_ locally detected client
+* ADD: already existing client with new flags
+* DEL: disappeared local client
+
+The first and the last type of event could in theory still be removed
+together from the (to be announced) events queue. But if the "update flags"
+ADD is dropped together with the DEL, it would still leave global
+translation table of a remote node in the incorrect state - believing that
+the client didn't disappear.
+
+If a detected client was previously announced, a DEL event must only
+overwrite the "update flags" ADD but the DEL itself must still continue to
+exist in the (to be anounced) events queue. For now, adjustment of the
+announced flags is used for everything instead of dropping already queued
+up events completely.
+
+Similarly, a DEL followed by an ADD caused both entries to be deleted. But
+the new ADD could announce flags changes which were not yet present for the
+client before it was marked for DELetion. The new ADD must therefore only
+overwrite the DEL - but still be kept.
+
+Fixes: e0eb5f8df352 ("batman-adv: improve the TT component to support runtime flag changes")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: backported, https://git.open-mesh.org/batman-adv.git/commit/?id=commit 7d8782a140b6a0d2f82d0cc5d057dab1dd687961
+
+--- a/net/batman-adv/translation-table.c
++++ b/net/batman-adv/translation-table.c
+@@ -455,6 +455,9 @@ batadv_tt_orig_list_entry_put(struct bat
+  * @bat_priv: the bat priv with all the mesh interface information
+  * @tt_local_entry: the TT entry involved in the event
+  * @event_flags: flags to store in the event structure
++ *
++ * Only a single change per client is queued. It describes the latest state of
++ * the client and a new event therefore replaces an already queued one.
+  */
+ static void batadv_tt_local_event(struct batadv_priv *bat_priv,
+ 				  struct batadv_tt_local_entry *tt_local_entry,
+@@ -463,7 +466,7 @@ static void batadv_tt_local_event(struct
+ 	struct batadv_tt_change_node *tt_change_node, *entry, *safe;
+ 	struct batadv_tt_common_entry *common = &tt_local_entry->common;
+ 	u8 flags = common->flags | event_flags;
+-	bool del_op_requested, del_op_entry;
++	bool del_op_requested;
+ 	size_t changes;
+ 
+ 	tt_change_node = kmem_cache_alloc(batadv_tt_change_cache, GFP_ATOMIC);
+@@ -497,25 +500,12 @@ static void batadv_tt_local_event(struct
+ 		if (entry->change.vid != tt_change_node->change.vid)
+ 			continue;
+ 
+-		del_op_entry = entry->change.flags & BATADV_TT_CLIENT_DEL;
+-		if (del_op_requested != del_op_entry) {
+-			/* DEL+ADD in the same orig interval have no effect and
+-			 * can be removed to avoid silly behaviour on the
+-			 * receiver side. The  other way around (ADD+DEL) can
+-			 * happen in case of roaming of  a client still in the
+-			 * NEW state. Roaming of NEW clients is now possible due
+-			 * to automatically recognition of "temporary" clients
+-			 */
+-			list_del(&entry->list);
+-			kmem_cache_free(batadv_tt_change_cache, entry);
+-			changes--;
+-		} else {
+-			/* this is a second add or del in the same originator
+-			 * interval. It could mean that flags have been changed
+-			 * (e.g. double add): update them
+-			 */
+-			entry->change.flags = flags;
+-		}
++		/* the other nodes may know the client with different
++		 * flags. A DEL+ADD must therefore still announce the
++		 * current flags and an ADD+DEL must still remove the
++		 * client. ADD+ADD and DEL+DEL only update the flags
++		 */
++		entry->change.flags = flags;
+ 
+ 		kmem_cache_free(batadv_tt_change_cache, tt_change_node);
+ 		goto update_changes;

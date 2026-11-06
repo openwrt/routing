@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Chengfeng Ye <nicoyip.dev@gmail.com>
+Date: Sun, 27 Sep 2026 18:16:24 +0800
+Subject: batman-adv: Close OGM aggregation before transmission
+
+The OGM send worker leaves its forwarding packet on forw_bat_list until
+after batadv_iv_ogm_emit() returns. Aggregation holds forw_bat_list_lock,
+but emission reads and clones the packet without that lock.
+
+CPU 0 can therefore start emitting a queued packet while CPU 1 takes the
+list lock, finds the same packet and appends another OGM. The sender can
+observe the new packet length before the corresponding direct-link flag
+is set, or clone the skb while its length and payload are being updated.
+This can transmit an OGM with incorrect flags or inconsistent data.
+
+KCSAN reported:
+
+  BUG: KCSAN: data-race in batadv_iv_ogm_queue_add / batadv_iv_send_outstanding_bat_ogm_packet
+  write to 0xffff888100fedcf8 of 2 bytes by interrupt on cpu 1:
+  read to 0xffff888100fedcf8 of 2 bytes by task 70 on cpu 2:
+  value changed: 0x00c0 -> 0x00d8
+
+Mark the aggregate as full under forw_bat_list_lock before emission. This
+waits for any ongoing append and prevents further aggregation. Emission
+uses packet_len to walk the OGMs, so all queued packets are still sent.
+Keep the packet on the list so interface purging can find the worker,
+wait for it to finish and free the packet.
+
+Fixes: 8a436b94d731 ("batman-adv: fix rare race conditions on interface removal")
+Assisted-by: GPT-6-Astra
+Signed-off-by: Chengfeng Ye <nicoyip.dev@gmail.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=aba49616932df5bb5c3f43e684248cb4bf72218e
+
+--- a/net/batman-adv/bat_iv_ogm.c
++++ b/net/batman-adv/bat_iv_ogm.c
+@@ -1787,6 +1787,11 @@ static void batadv_iv_send_outstanding_b
+ 		goto out;
+ 	}
+ 
++	/* Mark aggregate as full before forcing emit. */
++	spin_lock_bh(&bat_priv->forw_bat_list_lock);
++	forw_packet->num_packets = BATADV_MAX_AGGREGATION_PACKETS;
++	spin_unlock_bh(&bat_priv->forw_bat_list_lock);
++
+ 	batadv_iv_ogm_emit(forw_packet);
+ 
+ 	/* we have to have at least one packet in the queue to determine the

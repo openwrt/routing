@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Tue, 6 Oct 2026 19:38:15 +0200
+Subject: batman-adv: tpmeter: fix u32 truncation of reported bytes
+
+When more than 4 GB are transferred by the throughput meter,
+batadv_tp_batctl_notify() will cut of the upper 32 bit of the u64 counter
+and thus under-report the actual transferred bytes.
+
+The data type of the temporary storage variable must therefore still
+continue to use u64.
+
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Closes: https://sashiko.dev/#/bug/linux-08bb3be4-6c6a-452d-b4e4-606940c6cfa5
+Fixes: 98d7a766b645 ("batman-adv: throughput meter implementation")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: backported, https://git.open-mesh.org/batman-adv.git/commit/?id=0e1ca3e4fa842c522c28be5cf4f0469e1b69386b
+
+--- a/net/batman-adv/tp_meter.c
++++ b/net/batman-adv/tp_meter.c
+@@ -228,7 +228,7 @@ static void batadv_tp_batctl_notify(enum
+ {
+ 	u32 test_time;
+ 	u8 result;
+-	u32 total_bytes;
++	u64 total_bytes;
+ 
+ 	if (!batadv_tp_is_error(reason)) {
+ 		result = BATADV_TP_REASON_COMPLETE;

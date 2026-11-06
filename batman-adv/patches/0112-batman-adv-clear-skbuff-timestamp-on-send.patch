@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Mon, 2 Nov 2026 19:11:15 +0100
+Subject: batman-adv: clear skbuff timestamp on send
+
+When a packet is forwarded, it can contain a tstamp in CLOCK_REALTIME. But
+fq's scheduler expects a the CLOCK_MONOTONIC timestamp. If the timestamp
+wasn't reset, it will simply drop the packet (horizon_drops).
+
+commit 8203e2d844d3 ("net: clear skb->tstamp in forwarding paths") already
+fixed this problem for the IPv(4|6) code base. A similar approach is taken
+here with the more skb_clear_tstamp() helper function.
+
+Fixes: fb420d5d91c1 ("tcp/fq: move back to CLOCK_MONOTONIC")
+Reported-by: David Lutz <kpanic@ff3l.net>
+Closes: https://www.open-mesh.org/issues/489
+Tested-by: David Lutz <kpanic@ff3l.net>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=350e3f466a2b35cef2e5b782e1eab3c1a79452f0
+
+--- a/net/batman-adv/send.c
++++ b/net/batman-adv/send.c
+@@ -92,6 +92,7 @@ int batadv_send_skb_packet(struct sk_buf
+ 	skb->protocol = htons(ETH_P_BATMAN);
+ 
+ 	skb->dev = hard_iface->net_dev;
++	skb_clear_tstamp(skb);
+ 
+ 	/* dev_queue_xmit() returns a negative result on error.	 However on
+ 	 * congestion and traffic shaping, it drops and returns NET_XMIT_DROP

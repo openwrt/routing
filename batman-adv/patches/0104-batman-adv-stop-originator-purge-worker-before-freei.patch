@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 8 Oct 2026 18:19:44 +0200
+Subject: batman-adv: stop originator purge worker before freeing TT
+
+batadv_mesh_free() releases the translation tables via batadv_tt_free()
+before batadv_originator_free() stops orig_work. The purge worker can
+therefore still run while the TT is torn down. When an originator times
+out, batadv_purge_orig_ref() calls batadv_tt_global_del_orig(), which
+loads tt.global_hash and walks all buckets while taking their locks:
+
+  CPU0                          CPU1
+  batadv_tt_free()              batadv_purge_orig()
+                                  batadv_tt_global_del_orig()
+                                    hash = ...tt.global_hash;
+    batadv_tt_global_table_free()
+      batadv_hash_destroy(hash);
+                                    spin_lock_bh(&hash->list_locks[i]);
+
+Disable orig_work at the beginning of batadv_mesh_free(), directly after
+the mesh was marked as deactivating. The second
+disable_delayed_work_sync() in batadv_originator_free() is harmless because
+it is free'd anyway.
+
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Closes: https://sashiko.dev/#/patchset/20260708091821.314516-1-sw%40simonwunderlich.de?part=3
+Fixes: 21fa2647ad45 ("batman-adv: fix potential TT client + orig-node memory leak")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Origin: upstream, https://git.open-mesh.org/batman-adv.git/commit/?id=3d47da6bea81353735b5276f2044c85746841ce8
+
+--- a/net/batman-adv/main.c
++++ b/net/batman-adv/main.c
+@@ -249,6 +249,11 @@ void batadv_mesh_free(struct net_device
+ 
+ 	atomic_set(&bat_priv->mesh_state, BATADV_MESH_DEACTIVATING);
+ 
++	/* the originator purge worker accesses (among others) the TT tables
++	 * and must therefore be stopped before any of them are freed
++	 */
++	disable_delayed_work_sync(&bat_priv->orig_work);
++
+ 	batadv_purge_outstanding_packets(bat_priv, NULL);
+ 	batadv_tp_stop_all(bat_priv);
+ 

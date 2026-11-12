@@ -29,7 +29,7 @@ define Package/ndppd
   CATEGORY:=Network
   TITLE:=NDP Proxy Daemon
   URL:=http://www.priv.nu/projects/ndppd/
-  MAINTAINER:=Gabriel Kerneis <gabriel@kerneis.info>
+  MAINTAINER:=谢致邦 (XIE Zhibang) <Yeking@Red54.com>
   DEPENDS:=@IPV6 +libstdcpp
 endef
 
